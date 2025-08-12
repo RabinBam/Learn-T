@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Coming Soon - Start Bootstrap Theme</title>
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <!-- Font Awesome icons (free version) -->
+    <script
+      src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Google fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500;1,700&amp;display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Core theme CSS (includes Bootstrap) -->
+    <link href="css/styles.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Background Video -->
+    <video
+      class="bg-video"
+      playsinline="playsinline"
+      autoplay="autoplay"
+      muted="muted"
+      loop="loop"
+    >
+      <source src="assets/mp4/bg.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Masthead -->
+    <div
+      class="masthead d-flex align-items-center justify-content-center vh-100 position-relative"
+      style="z-index: 10; position: relative"
+    >
+      <div class="masthead-content text-white text-center px-4">
+        <h1 class="fst-italic lh-1 mb-4">Get Ready to Dive In</h1>
+        <p class="mb-5">
+          Our website is launching soon! Enter your desired username to be part
+          of our Tailwind CSS playground or game experience.
+        </p>
+
+        <form id="usernameForm">
+          <div class="row justify-content-center mb-3">
+            <div class="col-12 col-md-6">
+              <input
+                class="form-control"
+                id="username"
+                type="text"
+                placeholder="Choose a username..."
+                aria-label="Choose a username"
+                required
+              />
+            </div>
+          </div>
+          <div class="row justify-content-center">
+            <div class="col-auto">
+              <button class="btn btn-primary" id="submitButton" type="submit">
+                Let's Learn IT
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Social Icons -->
+    <div class="social-icons" style="z-index: 10; position: relative">
+      <div
+        class="d-flex flex-row flex-lg-column justify-content-center align-items-center h-100 mt-3 mt-lg-0"
+      >
+        <a class="btn btn-dark m-3" href="#!"><i class="fab fa-twitter"></i></a>
+        <a class="btn btn-dark m-3" href="#!"
+          ><i class="fab fa-facebook-f"></i
+        ></a>
+        <a class="btn btn-dark m-3" href="#!"
+          ><i class="fab fa-instagram"></i
+        ></a>
+      </div>
+    </div>
+
+    <!-- Iframe with the new page, initially hidden -->
+    <iframe
+      id="newPageFrame"
+      src="./index.html"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        border: none;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 1;
+        transition: opacity 2.5s ease;
+      "
+      aria-hidden="true"
+      tabindex="-1"
+    ></iframe>
+
+    <!-- Split Screen Overlay for Animation -->
+    <div
+      class="split-screen-overlay d-none"
+      style="z-index: 9999; position: fixed; top: 0; left: 0"
+    >
+      <div class="left"></div>
+      <div class="right"></div>
+    </div>
+
+    <!-- Bootstrap core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core theme JS -->
+    <script src="js/scripts.js"></script>
+    <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+    <script>
+      document
+        .getElementById("usernameForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const overlay = document.querySelector(".split-screen-overlay");
+          const iframe = document.getElementById("newPageFrame");
+
+          // Show overlay on top
+          overlay.classList.remove("d-none");
+
+          // Start the split animation after slight delay
+          setTimeout(() => overlay.classList.add("animate"), 50);
+
+          // Fade in iframe underneath with new page
+          iframe.style.opacity = "1";
+          iframe.style.pointerEvents = "auto";
+
+          // After animation completes, hide the overlay fully
+          setTimeout(() => {
+            overlay.style.display = "none";
+          }, 2600); // Match your CSS animation duration
+        });
+    </script>
+  </body>
+</html>
