@@ -8,7 +8,7 @@
     />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Coming Soon - Start Bootstrap Theme</title>
+    <title>Leran-T</title>
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
     <!-- Font Awesome icons (free version) -->
     <script
@@ -81,7 +81,7 @@
     <!-- Iframe with the new page, initially hidden -->
     <iframe
       id="newPageFrame"
-      src="./index.html"
+      src="./playground tailwind css.html"
       style="
         position: fixed;
         top: 0;
@@ -119,23 +119,28 @@
         .addEventListener("submit", function (e) {
           e.preventDefault();
 
-          const overlay = document.querySelector(".split-screen-overlay");
+          const masthead = document.querySelector(".masthead");
+          const content = document.querySelector(".masthead-content");
+          const video = document.querySelector(".bg-video");
           const iframe = document.getElementById("newPageFrame");
 
-          // Show overlay on top
-          overlay.classList.remove("d-none");
+          // Add animation classes
+          masthead.classList.add("animating");
+          content.classList.add("animating");
+          video.classList.add("animating");
 
-          // Start the split animation after slight delay
-          setTimeout(() => overlay.classList.add("animate"), 50);
-
-          // Fade in iframe underneath with new page
-          iframe.style.opacity = "1";
+          // Zoom in iframe (next page)
+          iframe.classList.add("zoom-in");
           iframe.style.pointerEvents = "auto";
 
-          // After animation completes, hide the overlay fully
           setTimeout(() => {
-            overlay.style.display = "none";
-          }, 2600); // Match your CSS animation duration
+            iframe.style.opacity = "1";
+          }, 300); // Zoom start
+
+          // Optional: hide masthead after transition
+          setTimeout(() => {
+            masthead.style.display = "none";
+          }, 2600);
         });
     </script>
   </body>
