@@ -11101,3 +11101,7 @@ video.bg-video {
     opacity: 1;
   }
 }
+/* At the end of css/styles.css */
+#newPageFrame {
+  background-color: black; /* matches your design */
+}

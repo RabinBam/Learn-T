@@ -114,34 +114,32 @@
     <script src="js/scripts.js"></script>
     <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
     <script>
-      document
-        .getElementById("usernameForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+    document.getElementById("usernameForm").addEventListener("submit", function (e) {
+  e.preventDefault();
 
-          const masthead = document.querySelector(".masthead");
-          const content = document.querySelector(".masthead-content");
-          const video = document.querySelector(".bg-video");
-          const iframe = document.getElementById("newPageFrame");
+  const masthead = document.querySelector(".masthead");
+  const content = document.querySelector(".masthead-content");
+  const video = document.querySelector(".bg-video");
 
-          // Add animation classes
-          masthead.classList.add("animating");
-          content.classList.add("animating");
-          video.classList.add("animating");
+  // Optional: get username
+  const username = document.getElementById("username").value;
+  console.log("Username:", username);
 
-          // Zoom in iframe (next page)
-          iframe.classList.add("zoom-in");
-          iframe.style.pointerEvents = "auto";
+  masthead.classList.add("animating");
+  content.classList.add("animating");
+  video.classList.add("animating");
 
-          setTimeout(() => {
-            iframe.style.opacity = "1";
-          }, 300); // Zoom start
-
-          // Optional: hide masthead after transition
-          setTimeout(() => {
-            masthead.style.display = "none";
-          }, 2600);
-        });
+  const iframe = document.getElementById("newPageFrame");
+  iframe.style.pointerEvents = "auto";
+  iframe.style.opacity = "1"; // fade in
+  
+// hide masthead + video after iframe is fully visible
+  setTimeout(() => {
+  masthead.style.display = "none";
+  video.style.display = "none";
+  window.location.href = "./playground tailwind css.html";
+ }, 3000);
+});
     </script>
   </body>
 </html>
