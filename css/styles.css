@@ -10966,53 +10966,138 @@ video.bg-video {
   }
 }
 
-.split-screen-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  pointer-events: none; /* prevent interaction */
-  z-index: 9999;
+/* Splitting Added by Oscar*/
+  /* Zoom + split animation on masthead */
+.masthead.animating {
+  transform: scale(1.05);
+  transition: transform 2.5s ease-in-out;
 }
 
-.left, .right {
-  flex: 1;
-  height: 100vh;
-  transition: transform 2.5s ease; /* match with JS timing */
-  position: relative;
+/* Slide black overlay to the left */
+.masthead.animating::before {
+  animation: slideOverlayLeft 2.5s forwards ease-in-out;
 }
 
-/* Initial shape with diagonal edges */
-.left {
-  background-color: rgba(0, 0, 0, 0.85);
-  clip-path: polygon(0 0, 100% 0, 75% 100%, 0% 100%);
-  transform-origin: right center;
+/* Slide content to the left */
+.masthead .masthead-content.animating {
+  animation: slideContentLeft 2.5s forwards ease-in-out;
 }
 
-.right {
-  background: url(../assets/img/bg-mobile-fallback.jpg) no-repeat center center;
-  background-size: cover;
-  clip-path: polygon(25% 0, 100% 0, 100% 100%, 0 100%);
-  transform-origin: left center;
-  position: relative;
+/* Keyframes for black overlay */
+@keyframes slideOverlayLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
-.right::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 128, 0, 0.3); /* green overlay */
-  pointer-events: none;
+/* Keyframes for content */
+@keyframes slideContentLeft {
+  0% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
 }
 
-/* Animation: slide panels out diagonally */
-.split-screen-overlay.animate .left {
-  transform: translateX(-100vw);
+/* Zoom and left slide for bg video */
+.bg-video.animating {
+  animation: moveVideoLeft 2.5s forwards ease-in-out;
 }
 
-.split-screen-overlay.animate .right {
-  transform: translateX(100vw);
+@keyframes moveVideoLeft {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    transform: translate(-150%, -50%) scale(1.1);
+  }
+}
+
+/* Iframe zoom-in effect */
+#newPageFrame.zoom-in {
+  animation: zoomInIframe 2.5s forwards ease-in-out;
+}
+
+@keyframes zoomInIframe {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* Zoom out slightly during animation */
+.masthead.animating {
+  transform: scale(1.05);
+  transition: transform 2.5s ease-in-out;
+  overflow: hidden;
+}
+
+/* Black overlay slides left */
+.masthead.animating::before {
+  animation: slideOverlayLeft 2.5s forwards ease-in-out;
+}
+
+/* Text + form content slides left */
+.masthead .masthead-content.animating {
+  animation: slideContentLeft 2.5s forwards ease-in-out;
+}
+
+/* Green background slides right */
+.bg-video.animating {
+  animation: slideVideoRight 2.5s forwards ease-in-out;
+}
+
+/* Iframe zoom-in effect */
+#newPageFrame.zoom-in {
+  animation: zoomInIframe 2.5s forwards ease-in-out;
+}
+
+/* Keyframes */
+@keyframes slideOverlayLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideContentLeft {
+  0% {
+    transform: translateX(0%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideVideoRight {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    transform: translate(50%, -50%) scale(1.1);
+  }
+}
+
+@keyframes zoomInIframe {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
