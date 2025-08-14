@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Navigation Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: "#06b6d4",
+                600: "#0284c7",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .nav-transition {
+        transition: all 0.3s ease-in-out;
+      }
+      .dropdown:hover .dropdown-menu {
+        display: block;
+      }
+      .mobile-menu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease-in-out;
+      }
+      .mobile-menu.open {
+        max-height: 500px;
+      }
+      .navbar-gradient {
+        background: linear-gradient(to right, #0284c7, #06b6d4 50%, #0284c7);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <nav class="navbar-gradient shadow-md sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Center-aligned container -->
+        <div class="flex justify-center items-center h-16 space-x-6">
+          <!-- Logo -->
+          <div class="flex-shrink-0 flex items-center">
+            <div
+              class="rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden bg-primary"
+            >
+              <img
+                src="./LOGO.jpeg"
+                alt="TailSpark Logo"
+                class="w-full h-full object-contain"
+              />
+            </div>
+            <span class="ml-3 text-xl font-bold text-white">TailSpark</span>
+          </div>
+
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex items-center space-x-4">
+            <a
+              href="#"
+              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >Home</a
+            >
+            <a
+              href="#"
+              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >About</a
+            >
+
+            <!-- Dropdown -->
+            <div class="relative dropdown">
+              <button
+                class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium flex items-center nav-transition"
+              >
+                Learning Page
+                <img
+                  src="icons/chevron-down-solid-full.svg"
+                  alt="Dropdown Icon"
+                  class="ml-1 w-3 h-3"
+                />
+              </button>
+              <div
+                class="dropdown-menu absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden"
+              >
+                <div class="py-1">
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary"
+                    >Beginner</a
+                  >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary"
+                    >Intermediate</a
+                  >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary"
+                    >Professional</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="#"
+              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >Portfolio</a
+            >
+            <a
+              href="#"
+              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >Contact</a
+            >
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden flex items-center">
+            <button
+              id="mobile-menu-button"
+              class="p-2 rounded-md text-white hover:bg-white hover:text-primary focus:outline-none"
+            >
+              <img src="icons/bars-solid-full.svg" alt="Menu" class="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="mobile-menu md:hidden bg-white">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <a
+            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
+            href="#"
+            >Home</a
+          >
+          <a
+            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
+            href="#"
+            >About</a
+          >
+
+          <!-- Mobile Dropdown -->
+          <div class="relative">
+            <button
+              id="mobile-dropdown-button"
+              class="w-full text-left px-3 py-2 text-base font-medium text-primary hover:bg-primary-50 flex justify-between items-center"
+            >
+              Learning Page
+              <img
+                id="mobile-chevron"
+                src="icons/chevron-down-solid-full.svg"
+                alt="Dropdown Icon"
+                class="w-3 h-3"
+              />
+            </button>
+            <div id="mobile-dropdown-menu" class="hidden pl-4">
+              <a
+                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
+                href="#"
+                >Beginner</a
+              >
+              <a
+                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
+                href="#"
+                >Intermediate</a
+              >
+              <a
+                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
+                href="#"
+                >Professional</a
+              >
+            </div>
+          </div>
+
+          <a
+            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
+            href="#"
+            >Portfolio</a
+          >
+          <a
+            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
+            href="#"
+            >Contact</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <script>
+      document
+        .getElementById("mobile-menu-button")
+        .addEventListener("click", function () {
+          document.getElementById("mobile-menu").classList.toggle("open");
+        });
+      document
+        .getElementById("mobile-dropdown-button")
+        .addEventListener("click", function () {
+          const dropdown = document.getElementById("mobile-dropdown-menu");
+          dropdown.classList.toggle("hidden");
+
+          const chevron = document.getElementById("mobile-chevron");
+          chevron.src = chevron.src.includes("chevron-down")
+            ? "icons/chevron-up-solid-full.svg"
+            : "icons/chevron-down-solid-full.svg";
+        });
+    </script>
+  </body>
+</html>
