@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us Card Animation</title>
+<link rel="stylesheet" href="aboutus.css">
+</head>
+<body>
+
+<header>
+    <h1>Our Amazing Team</h1>
+    <p class="tagline">Dedicated to excellence and innovation</p>
+</header>
+
+<section class="about-container">
+    <div class="about-text">
+        <h2>About Us</h2>
+        <p>We are passionate professionals committed to delivering high-quality services to our clients.</p>
+        <button id="readMoreBtn">Read More</button>
+    </div>
+    <div class="about-image">
+        <img src="https://via.placeholder.com/400x300" alt="Team">
+    </div>
+</section>
+
+<section id="merge-section" class="about-section">
+    <!-- Single Card -->
+    <div id="card-container" class="card left">
+        <!-- Overlapping images for blend -->
+        <img src="https://randomuser.me/api/portraits/men/32.jpg" id="profile-pic1" class="profile-pic" alt="Person 1">
+        <img src="https://randomuser.me/api/portraits/women/45.jpg" id="profile-pic2" class="profile-pic overlay" alt="Person 2">
+
+        <div class="description" id="profile-desc">
+            <h3 id="profile-name">Person 1</h3>
+            <p id="profile-text">Expert in design and innovation. Loves creating beautiful and functional solutions.</p>
+        </div>
+    </div>
+</section>
+
+<section class="mission">
+    <h2>Our Mission</h2>
+    <p>We strive to make a difference through our dedication and creativity.</p>
+</section>
+
+<footer>
+    <p>&copy; 2025 Our Company. All rights reserved.</p>
+</footer>
+
+<script src="aboutus.js"></script>
+</body>
+</html>
