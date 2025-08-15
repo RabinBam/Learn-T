@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartoon Progress Map with Star Burst</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {
+  margin: 0;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  background: linear-gradient(to bottom, #a0c4ff 0%, #ffffff 70%);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+.hills { position: absolute; width: 200%; height: 200px; bottom: 0; left: -50%; background: radial-gradient(circle at center, #81b29a 0%, #519872 100%); border-radius: 50%; filter: blur(20px);}
+@keyframes float {0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.cloud { position:absolute; border-radius:50%; background:rgba(255,255,255,0.8); filter: blur(8px); animation: float 8s ease-in-out infinite alternate;}
+@keyframes cartoon-bounce {0%{transform:translateY(0) scale(1) rotate(0deg)}25%{transform:translateY(-8px) scale(1.1) rotate(-5deg)}50%{transform:translateY(0) scale(1.05) rotate(3deg)}75%{transform:translateY(-4px) scale(1.05) rotate(-2deg)}100%{transform:translateY(0) scale(1) rotate(0deg)}}
+.bounce { animation: cartoon-bounce 0.6s ease-in-out; }
+@keyframes pulse { 0%{transform:scale(1)}100%{transform:scale(1.15)} }
+.pulse { animation: pulse 1s infinite alternate; }
+@keyframes dash-move { from{ stroke-dashoffset:20; } to{ stroke-dashoffset:0; } }
+.animated-path { stroke-dasharray:10 10; stroke-dashoffset:20; animation: dash-move 1s linear infinite; filter: drop-shadow(0 0 4px #fff); }
+@keyframes twinkle {0%,100%{transform:scale(1) rotate(0deg);opacity:0.5}50%{transform:scale(1.5) rotate(20deg);opacity:1}}
+.star { animation: twinkle 1.5s infinite alternate; position:absolute; z-index:20; }
+@keyframes dust-float {0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(45deg)}100%{transform:translateY(0) rotate(0)} }
+.dust { width:4px;height:4px;background:rgba(255,255,255,0.3);border-radius:50%;position:absolute;animation:dust-float 3s infinite alternate; z-index:0;}
+.level-circle { width: 64px; height: 64px; border-radius: 50%; display:flex; justify-content:center; align-items:center; font-weight:bold; color:white; box-shadow:0 6px 15px rgba(0,0,0,0.3), inset 0 -4px 0 rgba(255,255,255,0.3); transition: transform 0.2s; cursor:pointer; z-index:10; position:absolute;}
+.level-circle:hover { transform: translateY(-6px) scale(1.1); }
+.level-label { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 500; color: #333; text-shadow:1px 1px 2px #fff;}
+@keyframes star-burst { 0%{transform:translate(0,0) scale(0); opacity:1;} 80%{transform:translate(var(--x), var(--y)) scale(1.2); opacity:1;} 100%{transform:translate(var(--x), var(--y)) scale(0); opacity:0;} }
+.star-burst { width:8px;height:8px;background:yellow;border-radius:50%;position:absolute; animation: star-burst 0.8s forwards; z-index:25;}
+.lives-container { position:absolute; top:10px; left:50%; transform:translateX(-50%); font-size:1.2rem; font-weight:bold; color:#111; display:flex; gap:12px;}
+.life { width:24px; height:24px; border-radius:50%; background:red;}
+.buttons-container { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:16px;}
+</style>
+</head>
+<body class="relative flex flex-col items-center p-6 min-h-screen">
+
+<h1 class="text-4xl font-extrabold text-indigo-800 mb-8 drop-shadow-lg">🌟 Cartoon Progress Map 🌟</h1>
+
+<div class="hills"></div>
+
+<div class="cloud w-40 h-20 top-10 left-20"></div>
+<div class="cloud w-60 h-24 top-40 right-32"></div>
+<div class="cloud w-32 h-16 top-1/2 left-1/4"></div>
+<div class="cloud w-48 h-20 bottom-32 left-64"></div>
+
+<div class="relative w-full max-w-[1200px] h-[450px] rounded-3xl shadow-2xl overflow-x-auto overflow-y-hidden flex items-center px-8 bg-gradient-to-b from-indigo-200 to-indigo-100">
+  <svg id="path-svg" class="absolute top-0 left-0 w-full h-full pointer-events-none"></svg>
+  <div id="levels-container" class="relative flex h-full"></div>
+</div>
+
+<div class="lives-container" id="lives-container" style="position:relative; top:0; margin-bottom:10px;"></div>
+
+<div class="buttons-container">
+  <button id="complete-btn" class="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-500 transition">Complete Level</button>
+  <button id="error-btn" class="px-6 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg hover:bg-red-500 transition">Error</button>
+</div>
+
+<script>
+const totalLevels = 12;
+let currentLevel = 1;
+let lives = 3;
+const completedLevels = new Set();
+const levelsContainer = document.getElementById("levels-container");
+const pathSVG = document.getElementById("path-svg");
+const livesContainer = document.getElementById("lives-container");
+const containerWidth = 1200;
+const containerHeight = 450;
+
+// Level positions
+const levelPositions = [];
+for(let i=0;i<totalLevels;i++){
+  const x = (i+0.5)*(containerWidth/totalLevels);
+  const y = containerHeight/2 + Math.sin(i*1.2)*90;
+  levelPositions.push({x,y});
+}
+
+// Colorful path with gradient
+let pathD = "";
+for(let i=0;i<levelPositions.length;i++){
+  const p=levelPositions[i];
+  if(i===0) {
+    pathD+=`M ${p.x} ${p.y} `;
+  } else {
+    const prev=levelPositions[i-1];
+    if(i === levelPositions.length-1){
+      // last level: go directly to it
+      pathD+=`L ${p.x} ${p.y} `;
+    } else {
+      const cx=(prev.x+p.x)/2;
+      const cy=(prev.y+p.y)/2;
+      pathD+=`Q ${prev.x} ${prev.y} ${cx} ${cy} `;
+    }
+  }
+}
+const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+path.setAttribute("d",pathD);
+path.setAttribute("stroke","url(#grad)");
+path.setAttribute("stroke-width","8");
+path.setAttribute("fill","transparent");
+path.classList.add("animated-path");
+const grad = document.createElementNS("http://www.w3.org/2000/svg","linearGradient");
+grad.setAttribute("id","grad");
+grad.setAttribute("x1","0%");
+grad.setAttribute("y1","0%");
+grad.setAttribute("x2","100%");
+grad.setAttribute("y2","0%");
+["#fcd34d","#fb923c","#f87171","#c084fc","#60a5fa"].forEach((color,idx)=>{
+  const stop = document.createElementNS("http://www.w3.org/2000/svg","stop");
+  stop.setAttribute("offset",`${(idx/4)*100}%`);
+  stop.setAttribute("stop-color",color);
+  grad.appendChild(stop);
+});
+pathSVG.appendChild(grad);
+pathSVG.appendChild(path);
+
+// Dust particles behind circles
+for(let i=0;i<50;i++){
+  const dust=document.createElement("div");
+  dust.className="dust";
+  const posIndex=Math.floor(Math.random()*levelPositions.length);
+  const offsetX=Math.random()*60-30;
+  const offsetY=Math.random()*60-30;
+  const pos=levelPositions[posIndex];
+  dust.style.left=`${pos.x+offsetX}px`;
+  dust.style.top=`${pos.y+offsetY}px`;
+  dust.style.animationDuration=`${2+Math.random()*2}s`;
+  levelsContainer.appendChild(dust);
+}
+
+// Create levels
+levelPositions.forEach((pos,idx)=>{
+  const circle=document.createElement("div");
+  circle.id=`level${idx+1}`;
+  circle.textContent=idx+1;
+  circle.className=`level-circle ${idx===0?"bg-yellow-400 pulse":"bg-indigo-500 bounce"}`;
+  circle.style.left=`${pos.x-32}px`;
+  circle.style.top=`${pos.y-32}px`;
+
+  const label=document.createElement("div");
+  label.textContent=`Lesson ${idx+1}`;
+  label.className="level-label";
+  circle.appendChild(label);
+
+  levelsContainer.appendChild(circle);
+});
+
+// Lives update
+function updateLives(){
+  livesContainer.innerHTML="";
+  for(let i=0;i<lives;i++){
+    const life = document.createElement("div");
+    life.className="life";
+    livesContainer.appendChild(life);
+  }
+}
+
+// Star burst
+function starBurst(x,y){
+  for(let i=0;i<12;i++){
+    const star=document.createElement("div");
+    star.className="star-burst";
+    const angle=Math.random()*2*Math.PI;
+    const dist=30+Math.random()*20;
+    star.style.setProperty("--x",`${Math.cos(angle)*dist}px`);
+    star.style.setProperty("--y",`${Math.sin(angle)*dist}px`);
+    star.style.left=`${x}px`;
+    star.style.top=`${y}px`;
+    levelsContainer.appendChild(star);
+    setTimeout(()=>star.remove(),800);
+  }
+}
+
+// Position helper
+function currentPositions(el){
+  const rect=el.getBoundingClientRect();
+  const parentRect=levelsContainer.getBoundingClientRect();
+  return {x: rect.left - parentRect.left + 32, y: rect.top - parentRect.top + 32};
+}
+
+// Reset levels
+function resetLevels(){
+  for(let i=1;i<=totalLevels;i++){
+    const circle = document.querySelector(`#level${i}`);
+    if(i===currentLevel){
+      circle.className="level-circle bg-yellow-400 pulse";
+    } else if(completedLevels.has(i)){
+      circle.className="level-circle bg-green-500";
+    } else {
+      circle.className="level-circle bg-indigo-500";
+    }
+  }
+}
+
+// Complete button
+document.getElementById("complete-btn").addEventListener("click", () => {
+  if(currentLevel > totalLevels){
+    if(confirm("Do you want to restart from level 1?")){
+      currentLevel = 1;
+      lives = 3;
+      completedLevels.clear();
+      updateLives();
+      resetLevels();
+    }
+    return;
+  }
+
+  const current = document.querySelector(`#level${currentLevel}`);
+  current.className = "level-circle bg-green-500 bounce";
+  completedLevels.add(currentLevel);
+  starBurst(currentPositions(current).x, currentPositions(current).y);
+  setTimeout(() => current.classList.remove("bounce"), 600);
+
+  // Increment level **after completion**
+  currentLevel++;
+  const next = document.querySelector(`#level${currentLevel}`);
+  if(next){
+    next.className = "level-circle bg-yellow-400 pulse bounce";
+    setTimeout(() => next.classList.remove("bounce"), 600);
+  }
+});
+
+// Error button: decrement lives, move back only when lives reach 0
+document.getElementById("error-btn").addEventListener("click", () => {
+  lives--; // first reduce a life
+
+  if(lives > 0){
+    updateLives();
+    return;
+  }
+
+  // If lives are 0 → move back one level
+  lives = 3; // reset lives
+  currentLevel = Math.max(1, currentLevel - 1);
+
+  // Remove completion for current level only
+  completedLevels.delete(currentLevel);
+
+  updateLives();
+  resetLevels();
+});
+
+// Initialize
+updateLives();
+</script>
+</body>
+</html>
