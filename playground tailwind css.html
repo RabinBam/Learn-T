@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tailwind Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=swap"
       rel="stylesheet"
@@ -20,59 +18,58 @@
       }
     </style>
   </head>
-  <body class="bg-gray-100 min-h-screen flex flex-col">
-    <!-- Navbar -->
-    <nav class="bg-white shadow">
-      <div
-        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
-      >
-        <a href="#" class="text-2xl font-bold text-blue-600"
-          >Tailwind Playground</a
-        >
-        <div class="space-x-6">
-          <a href="#" class="text-gray-600 hover:text-blue-600">Home</a>
-          <a href="#" class="text-gray-600 hover:text-blue-600">Docs</a>
-          <a href="#" class="text-gray-600 hover:text-blue-600">Contact</a>
-        </div>
+  <body class="bg-gray-50 h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="bg-gradient-to-r from-blue-600 to-purple-600 shadow text-white">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <a href="#" class="text-2xl font-bold">Tailwind Playground</a>
+      <div class="space-x-6 text-sm">
+        <a href="#" class="hover:underline">Home</a>
+        <a href="#" class="hover:underline">Docs</a>
+        <a href="#" class="hover:underline">Contact</a>
       </div>
-    </nav>
+    </div>
+  </nav>
 
-    <!-- Playground -->
-    <main class="flex-1 p-6 flex flex-col">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
-        <!-- Code Editor -->
-        <div class="flex flex-col min-h-0">
-          <h2 class="text-lg font-bold mb-2">Edit Tailwind HTML</h2>
-          <textarea
-            id="code-editor"
-            class="flex-1 w-full border border-gray-300 rounded p-4 resize-none overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type Tailwind HTML here..."
-          ></textarea>
+  <!-- Playground -->
+  <main class="flex-1 p-6 min-h-0">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full min-h-0">
+      
+      <!-- Code Editor -->
+      <div class="flex flex-col bg-white rounded-xl shadow-lg overflow-hidden min-h-0">
+        <div class="px-4 py-3 bg-gray-100 border-b border-gray-200">
+          <h2 class="text-lg font-bold text-gray-700">Edit Tailwind HTML</h2>
         </div>
-
-        <!-- Live Preview -->
-        <div class="flex flex-col min-h-0">
-          <h2 class="text-lg font-bold mb-2">Live Preview</h2>
-          <iframe
-            id="live-preview"
-            class="flex-1 w-full border border-gray-300 rounded bg-white overflow-auto"
-          ></iframe>
-        </div>
+        <textarea
+          id="code-editor"
+          class="flex-1 h-full p-4 bg-gray-900 text-green-300 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto"
+          placeholder="Type Tailwind HTML here..."
+        ></textarea>
       </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="bg-white py-4 mt-auto shadow-inner">
-      <div
-        class="max-w-7xl mx-auto px-4 flex justify-between text-sm text-gray-500"
-      >
-        <span>© 2025 Your Website</span>
-        <div class="space-x-4">
-          <a href="#" class="hover:text-blue-600">Test</a>
-          <a href="#" class="hover:text-blue-600">Terms</a>
+      <!-- Live Preview -->
+      <div class="flex flex-col bg-white rounded-xl shadow-lg overflow-hidden min-h-0">
+        <div class="px-4 py-3 bg-gray-100 border-b border-gray-200">
+          <h2 class="text-lg font-bold text-gray-700">Live Preview</h2>
         </div>
+        <iframe
+          id="live-preview"
+          class="flex-1 h-full w-full bg-white border-0"
+        ></iframe>
       </div>
-    </footer>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 py-4 shadow-inner">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between text-sm text-gray-500">
+      <span>© 2025 Tailwind Playground</span>
+      <div class="space-x-4">
+        <a href="#" class="hover:text-blue-600">Privacy</a>
+        <a href="#" class="hover:text-blue-600">Terms</a>
+      </div>
+    </div>
+  </footer>
 
     <!-- Playground Script -->
     <script>
@@ -80,20 +77,20 @@
       const preview = document.getElementById("live-preview");
 
       const initialContent = `
-<div class="p-8 bg-white rounded-lg shadow text-center">
-  <div class="text-sm uppercase tracking-widest bg-gradient-to-r from-blue-600 to-pink-500 text-white inline-block px-4 py-2 mb-4">
-    Design · Development · Marketing
-  </div>
-  <div class="text-xl text-gray-500">I can help your business to</div>
-  <h1 class="text-5xl font-extrabold mb-5">
-    Get online and grow fast
-  </h1>
-  <div class="flex justify-center gap-4">
-    <a class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg" href="#">Resume</a>
-    <a class="border border-gray-700 text-gray-800 hover:bg-gray-100 px-6 py-3 rounded-lg" href="#">Projects</a>
-  </div>
-</div>
-`.trim();
+        <div class="p-8 bg-white rounded-lg shadow text-center">
+          <div class="text-sm uppercase tracking-widest bg-gradient-to-r from-blue-600 to-pink-500 text-white inline-block px-4 py-2 mb-4">
+            Design · Development · Marketing
+          </div>
+          <div class="text-xl text-gray-500">I can help your business to</div>
+          <h1 class="text-5xl font-extrabold mb-5">
+            Get online and grow fast
+          </h1>
+          <div class="flex justify-center gap-4">
+            <a class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg" href="#">Resume</a>
+            <a class="border border-gray-700 text-gray-800 hover:bg-gray-100 px-6 py-3 rounded-lg" href="#">Projects</a>
+          </div>
+        </div>
+      `.trim();
 
       editor.value = initialContent;
 
