@@ -187,6 +187,21 @@ levelSelect.addEventListener("change", () => {
 // Initialize
 editor.value = presets[levelSelect.value];
 updatePreview();
+const welcomeModal = document.getElementById("welcome-modal");
+const welcomeClose = document.getElementById("welcome-close");
+
+// Check if the modal has been shown before
+if (!localStorage.getItem("welcomeShown")) {
+  // Show the modal
+  welcomeModal.classList.remove("hidden");
+  // Mark as shown in localStorage
+  localStorage.setItem("welcomeShown", "true");
+}
+
+// Close button logic
+welcomeClose.addEventListener("click", () => {
+  welcomeModal.classList.add("hidden");
+});
 </script>
 </body>
 </html>
