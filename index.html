@@ -129,29 +129,32 @@
     <script src="js/scripts.js"></script>
     <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
     <script>
-      document
-        .getElementById("usernameForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+      document.getElementById("usernameForm").addEventListener("submit", function (e) {
+    e.preventDefault();
 
-          const overlay = document.querySelector(".split-screen-overlay");
-          const iframe = document.getElementById("newPageFrame");
+    const username = document.getElementById("username").value.trim();
+    if (!username) return; // prevent empty
 
-          // Show overlay on top
-          overlay.classList.remove("d-none");
+    // Save to localStorage
+    localStorage.setItem("username", username);
 
-          // Start the split animation after slight delay
-          setTimeout(() => overlay.classList.add("animate"), 50);
+    const overlay = document.querySelector(".split-screen-overlay");
+    const iframe = document.getElementById("newPageFrame");
 
-          // Fade in iframe underneath with new page
-          iframe.style.opacity = "1";
-          iframe.style.pointerEvents = "auto";
+    // Show overlay animation
+    overlay.classList.remove("d-none");
+    setTimeout(() => overlay.classList.add("animate"), 50);
 
-          // After animation completes, hide the overlay fully
-          setTimeout(() => {
-            overlay.style.display = "none";
-          }, 2600); // Match your CSS animation duration
-        });
+    // Load playground page
+    iframe.src = "./playground tailwind css.html";
+    iframe.style.opacity = "1";
+    iframe.style.pointerEvents = "auto";
+
+    // Hide overlay after animation
+    setTimeout(() => {
+        overlay.style.display = "none";
+    }, 2600);
+});
     </script>
   </body>
 </html>

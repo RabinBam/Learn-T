@@ -1,24 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tailwind Playground</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-      }
-      textarea {
-        font-family: monospace;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-50 h-screen flex flex-col">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tailwind Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: "Plus Jakarta Sans", sans-serif; }
+    textarea { font-family: monospace; }
+  </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col">
   <!-- Navbar -->
   <nav class="bg-gradient-to-r from-blue-600 to-purple-600 shadow text-white">
     <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -34,17 +27,19 @@
   <!-- Playground -->
   <main class="flex-1 p-6 min-h-0">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full min-h-0">
-      
       <!-- Code Editor -->
       <div class="flex flex-col bg-white rounded-xl shadow-lg overflow-hidden min-h-0">
-        <div class="px-4 py-3 bg-gray-100 border-b border-gray-200">
+        <div class="px-4 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
           <h2 class="text-lg font-bold text-gray-700">Edit Tailwind HTML</h2>
+          <select id="level-select" class="border rounded px-2 py-1 text-sm bg-white hover:bg-gray-100">
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Expert">Expert</option>
+          </select>
         </div>
-        <textarea
-          id="code-editor"
+        <textarea id="code-editor"
           class="flex-1 h-full p-4 bg-gray-900 text-green-300 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-auto"
-          placeholder="Type Tailwind HTML here..."
-        ></textarea>
+          placeholder="Type Tailwind HTML here..."></textarea>
       </div>
 
       <!-- Live Preview -->
@@ -52,10 +47,7 @@
         <div class="px-4 py-3 bg-gray-100 border-b border-gray-200">
           <h2 class="text-lg font-bold text-gray-700">Live Preview</h2>
         </div>
-        <iframe
-          id="live-preview"
-          class="flex-1 h-full w-full bg-white border-0"
-        ></iframe>
+        <iframe id="live-preview" class="flex-1 h-full w-full bg-white border-0"></iframe>
       </div>
     </div>
   </main>
@@ -71,46 +63,130 @@
     </div>
   </footer>
 
-    <!-- Playground Script -->
-    <script>
-      const editor = document.getElementById("code-editor");
-      const preview = document.getElementById("live-preview");
+  <!-- Welcome Modal -->
+  <div id="welcome-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-lg max-w-md w-full p-6 text-center">
+      <h2 class="text-2xl font-bold mb-3 text-gray-800">Welcome to Tailwind Playground 🎉</h2>
+      <p class="text-gray-600 mb-6">
+        Start experimenting with Tailwind CSS instantly!  
+        Edit the HTML on the left, and see the live preview on the right.
+      </p>
+      <button id="welcome-close" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
+        Let's Go 🚀
+      </button>
+    </div>
+  </div>
 
-      const initialContent = `
-        <div class="p-8 bg-white rounded-lg shadow text-center">
-          <div class="text-sm uppercase tracking-widest bg-gradient-to-r from-blue-600 to-pink-500 text-white inline-block px-4 py-2 mb-4">
-            Design · Development · Marketing
-          </div>
-          <div class="text-xl text-gray-500">I can help your business to</div>
-          <h1 class="text-5xl font-extrabold mb-5">
-            Get online and grow fast
-          </h1>
-          <div class="flex justify-center gap-4">
-            <a class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg" href="#">Resume</a>
-            <a class="border border-gray-700 text-gray-800 hover:bg-gray-100 px-6 py-3 rounded-lg" href="#">Projects</a>
-          </div>
-        </div>
-      `.trim();
+<script>
+const editor = document.getElementById("code-editor");
+const preview = document.getElementById("live-preview");
+const levelSelect = document.getElementById("level-select");
 
-      editor.value = initialContent;
+// Presets
+const presets = {
+  Beginner: `<div class="p-6 bg-white rounded-lg shadow text-center">
+  <h1 class="text-2xl font-bold mb-4">Hello Tailwind!</h1>
+  <p class="text-gray-600">This is a simple beginner layout.</p>
+  <button class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Click Me</button>
+</div>`.trim(),
 
-      function updatePreview() {
-        const content = editor.value;
-        const doc = preview.contentDocument || preview.contentWindow.document;
-        doc.open();
-        doc.write(`
-        <html>
-          <head>
-            <script src="https://cdn.tailwindcss.com"><\/script>
-          </head>
-          <body class="p-4 bg-gray-50">${content}</body>
-        </html>
-      `);
-        doc.close();
+  Intermediate: `<div class="max-w-md mx-auto p-8 bg-white rounded-lg shadow-lg">
+  <h2 class="text-xl font-semibold text-gray-800 mb-2">Intermediate Layout</h2>
+  <p class="text-gray-600 mb-4">This one includes grid layout and spacing utilities.</p>
+  <div class="grid grid-cols-3 gap-4">
+    <div class="bg-blue-100 p-4 rounded-lg">1</div>
+    <div class="bg-blue-200 p-4 rounded-lg">2</div>
+    <div class="bg-blue-300 p-4 rounded-lg">3</div>
+  </div>
+</div>`.trim(),
+
+  Expert: `<div class="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-8">
+  <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full">
+    <h1 class="text-3xl font-extrabold mb-4 text-gray-900">Expert Level UI</h1>
+    <p class="text-gray-600 mb-6">Fully responsive, layered shadows, gradients, and flex/grid combos.</p>
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-yellow-100 p-6 rounded-lg">Card 1</div>
+      <div class="bg-yellow-200 p-6 rounded-lg">Card 2</div>
+    </div>
+    <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90">
+      Launch 🚀
+    </button>
+  </div>
+</div>`.trim()
+};
+
+let baseDOM = new DOMParser().parseFromString(presets[levelSelect.value], "text/html");
+
+// Update live preview
+function updatePreview() {
+  const doc = preview.contentDocument || preview.contentWindow.document;
+  doc.open();
+  doc.write(`
+    <html>
+      <head>
+        <script src="https://cdn.tailwindcss.com"><\/script>
+        <style>body{font-family:'Plus Jakarta Sans', sans-serif;}</style>
+      </head>
+      <body class="p-4 bg-gray-50">${editor.value}</body>
+    </html>
+  `);
+  doc.close();
+}
+
+// Helper: restrict editing by level
+function enforceRestrictions(level) {
+  try {
+    const parser = new DOMParser();
+    const newDOM = parser.parseFromString(editor.value, "text/html");
+
+    // Traverse all nodes
+    const nodes = [...newDOM.body.querySelectorAll("*")];
+    const baseNodes = [...baseDOM.body.querySelectorAll("*")];
+
+    nodes.forEach((node, index) => {
+      const baseNode = baseNodes[index];
+
+      if (!baseNode) return;
+
+      if (level === "Beginner") {
+        // Only allow class changes
+        node.innerHTML = baseNode.innerHTML;
+        node.tagName = baseNode.tagName; // reset tag if changed
+        // Classes are kept as is
+      } else if (level === "Intermediate") {
+        // Allow class + text content, but not tag changes
+        node.tagName = baseNode.tagName; // reset tag if changed
+        node.setAttribute("class", node.getAttribute("class")); // keep user-modified classes
       }
+      // Expert: do nothing
+    });
 
-      updatePreview();
-      editor.addEventListener("input", updatePreview);
-    </script>
-  </body>
+    editor.value = newDOM.body.innerHTML;
+  } catch (err) {
+    // fallback in case of parsing error
+    editor.value = baseDOM.body.innerHTML;
+  }
+}
+
+// On input: enforce restrictions and update preview
+editor.addEventListener("input", () => {
+  const level = levelSelect.value;
+  if (level !== "Expert") {
+    enforceRestrictions(level);
+  }
+  updatePreview();
+});
+
+// On dropdown change: load preset
+levelSelect.addEventListener("change", () => {
+  editor.value = presets[levelSelect.value];
+  baseDOM = new DOMParser().parseFromString(editor.value, "text/html");
+  updatePreview();
+});
+
+// Initialize
+editor.value = presets[levelSelect.value];
+updatePreview();
+</script>
+</body>
 </html>
