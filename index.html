@@ -114,32 +114,34 @@
     <script src="js/scripts.js"></script>
     <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
     <script>
-    document.getElementById("usernameForm").addEventListener("submit", function (e) {
-  e.preventDefault();
+      document
+        .getElementById("usernameForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
 
-  const masthead = document.querySelector(".masthead");
-  const content = document.querySelector(".masthead-content");
-  const video = document.querySelector(".bg-video");
+          const masthead = document.querySelector(".masthead");
+          const content = document.querySelector(".masthead-content");
+          const video = document.querySelector(".bg-video");
 
-  // Optional: get username
-  const username = document.getElementById("username").value;
-  console.log("Username:", username);
+          // Optional: get username
+          const username = document.getElementById("username").value;
+          console.log("Username:", username);
 
-  masthead.classList.add("animating");
-  content.classList.add("animating");
-  video.classList.add("animating");
+          masthead.classList.add("animating");
+          content.classList.add("animating");
+          video.classList.add("animating");
 
-  const iframe = document.getElementById("newPageFrame");
-  iframe.style.pointerEvents = "auto";
-  iframe.style.opacity = "1"; // fade in
-  
-// hide masthead + video after iframe is fully visible
-  setTimeout(() => {
-  masthead.style.display = "none";
-  video.style.display = "none";
-  window.location.href = "./playground tailwind css.html";
- }, 3000);
-});
+          const iframe = document.getElementById("newPageFrame");
+          iframe.style.pointerEvents = "auto";
+          iframe.style.opacity = "1"; // fade in
+
+          // hide masthead + video after iframe is fully visible
+          setTimeout(() => {
+            masthead.style.display = "none";
+            video.style.display = "none";
+            window.location.href = "./playground tailwind css.html";
+          }, 3000);
+        });
     </script>
   </body>
 </html>

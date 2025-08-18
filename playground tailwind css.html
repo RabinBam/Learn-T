@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tailwind Playground</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=swap"
       rel="stylesheet"
@@ -15,87 +13,167 @@
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
       }
-      textarea {
-        font-family: monospace;
+
+      /* Custom scrollbar for editor */
+      #code-editor::-webkit-scrollbar {
+        width: 10px;
+      }
+      #code-editor::-webkit-scrollbar-thumb {
+        background-color: #4f46e5;
+        border-radius: 5px;
+      }
+      #code-editor::-webkit-scrollbar-track {
+        background: #1f2937;
+      }
+
+      /* Floating animation */
+      .floating {
+        transition: transform 0.3s ease;
+      }
+      .floating:hover {
+        transform: translateY(-10px) scale(1.02);
       }
     </style>
   </head>
-  <body class="bg-gray-100 min-h-screen flex flex-col">
+  <body class="bg-gray-50 h-screen flex flex-col">
     <!-- Navbar -->
-    <nav class="bg-white shadow">
+    <nav
+      class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow text-white"
+    >
       <div
         class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center"
       >
-        <a href="#" class="text-2xl font-bold text-blue-600"
+        <a href="#" class="text-2xl font-extrabold tracking-tight"
           >Tailwind Playground</a
         >
-        <div class="space-x-6">
-          <a href="index.html" class="text-gray-600 hover:text-blue-600">Home</a>
-          <a href="#" class="text-gray-600 hover:text-blue-600">Docs</a>
-          <a href="#" class="text-gray-600 hover:text-blue-600">Contact</a>
+        <div class="space-x-6 text-sm flex items-center">
+          <a href="#" class="hover:underline">Home</a>
+          <a href="#" class="hover:underline">Docs</a>
+          <a href="#" class="hover:underline">Contact</a>
         </div>
       </div>
     </nav>
 
     <!-- Playground -->
-    <main class="flex-1 p-6 flex flex-col">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+    <main class="flex-1 p-6 min-h-0">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full min-h-0">
         <!-- Code Editor -->
-        <div class="flex flex-col min-h-0">
-          <h2 class="text-lg font-bold mb-2">Edit Tailwind HTML</h2>
+        <div
+          class="flex flex-col bg-gray-800 shadow-2xl overflow-hidden min-h-0 border-2 border-indigo-500 relative floating"
+          style="clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%)"
+        >
+          <div
+            class="px-4 py-3 bg-indigo-900 border-b border-indigo-700 flex justify-between items-center rounded-tl-xl"
+          >
+            <h2 class="text-lg font-bold text-white">Edit Tailwind HTML</h2>
+            <select
+              id="level-select"
+              class="border rounded px-2 py-1 text-sm bg-indigo-800 text-white hover:bg-indigo-700"
+            >
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Expert">Expert</option>
+            </select>
+          </div>
           <textarea
             id="code-editor"
-            class="flex-1 w-full border border-gray-300 rounded p-4 resize-none overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="flex-1 h-full p-4 bg-gray-900 text-green-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 overflow-auto"
             placeholder="Type Tailwind HTML here..."
           ></textarea>
         </div>
 
         <!-- Live Preview -->
-        <div class="flex flex-col min-h-0">
-          <h2 class="text-lg font-bold mb-2">Live Preview</h2>
+        <div
+          class="flex flex-col relative floating shadow-2xl border-2 border-purple-500 overflow-hidden min-h-0"
+          style="
+            background: linear-gradient(135deg, #f0ebff, #d9b3ff);
+            border-radius: 2rem 0 2rem 0;
+          "
+        >
+          <div
+            class="px-4 py-3 bg-purple-200 border-b border-purple-300 flex items-center rounded-tr-3xl"
+          >
+            <h2 class="text-lg font-bold text-purple-800">Live Preview</h2>
+          </div>
           <iframe
             id="live-preview"
-            class="flex-1 w-full border border-gray-300 rounded bg-white overflow-auto"
+            class="flex-1 w-full h-full border-0 rounded-bl-3xl bg-gradient-to-b from-purple-50 to-purple-100"
           ></iframe>
         </div>
       </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white py-4 mt-auto shadow-inner">
+    <footer class="bg-gray-100 py-4 shadow-inner">
       <div
         class="max-w-7xl mx-auto px-4 flex justify-between text-sm text-gray-500"
       >
-        <span>© 2025 Your Website</span>
+        <span>© 2025 Tailwind Playground</span>
         <div class="space-x-4">
-          <a href="#" class="hover:text-blue-600">Privacy</a>
-          <a href="#" class="hover:text-blue-600">Terms</a>
+          <a href="#" class="hover:text-indigo-600">Privacy</a>
+          <a href="#" class="hover:text-indigo-600">Terms</a>
         </div>
       </div>
     </footer>
 
-    <!-- Playground Script -->
+    <!-- Welcome Modal -->
+    <div
+      id="welcome-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center"
+      >
+        <h2 class="text-2xl font-bold mb-3 text-gray-800">
+          Welcome to Tailwind Playground 🎉
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Start experimenting with Tailwind CSS instantly! Edit the HTML on the
+          left, and see the live preview on the right.
+        </p>
+        <button
+          id="welcome-close"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg"
+        >
+          Let's Go 🚀
+        </button>
+      </div>
+    </div>
+
     <script>
       const editor = document.getElementById("code-editor");
       const preview = document.getElementById("live-preview");
+      const levelSelect = document.getElementById("level-select");
 
-      const initialContent = `
-<div class="p-8 bg-white rounded-lg shadow text-center">
-  <div class="text-sm uppercase tracking-widest bg-gradient-to-r from-blue-600 to-pink-500 text-white inline-block px-4 py-2 mb-4">
-    Design · Development · Marketing
-  </div>
-  <div class="text-xl text-gray-500">I can help your business to</div>
-  <h1 class="text-5xl font-extrabold mb-5">
-    Get online and grow fast
-  </h1>
-  <div class="flex justify-center gap-4">
-    <a class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg" href="#">Resume</a>
-    <a class="border border-gray-700 text-gray-800 hover:bg-gray-100 px-6 py-3 rounded-lg" href="#">Projects</a>
-  </div>
-</div>
-`.trim();
-
-      editor.value = initialContent;
+      const presets = {
+        Beginner: `<div class="p-6 bg-white rounded-lg shadow text-center">
+        <h1 class="text-2xl font-bold mb-4">Hello Tailwind!</h1>
+        <p class="text-gray-600">This is a simple beginner layout.</p>
+        <button class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Click Me</button>
+      </div>`,
+        Intermediate: `<div class="max-w-md mx-auto p-8 bg-white rounded-lg shadow-lg">
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">Intermediate Layout</h2>
+        <p class="text-gray-600 mb-4">This one includes grid layout and spacing utilities.</p>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-blue-100 p-4 rounded-lg">1</div>
+          <div class="bg-blue-200 p-4 rounded-lg">2</div>
+          <div class="bg-blue-300 p-4 rounded-lg">3</div>
+        </div>
+      </div>`,
+        Expert: `<div class="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-8">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full">
+          <h1 class="text-3xl font-extrabold mb-4 text-gray-900">Expert Level UI</h1>
+          <p class="text-gray-600 mb-6">Fully responsive, layered shadows, gradients, and flex/grid combos.</p>
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-yellow-100 p-6 rounded-lg">Card 1</div>
+            <div class="bg-yellow-200 p-6 rounded-lg">Card 2</div>
+          </div>
+          <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90">
+            Launch 🚀
+          </button>
+        </div>
+      </div>`,
+      };
 
       function updatePreview() {
         const content = editor.value;
@@ -105,6 +183,7 @@
         <html>
           <head>
             <script src="https://cdn.tailwindcss.com"><\/script>
+            <style>body{font-family:'Plus Jakarta Sans', sans-serif;}</style>
           </head>
           <body class="p-4 bg-gray-50">${content}</body>
         </html>
@@ -112,8 +191,29 @@
         doc.close();
       }
 
+      // Load initial preset
+      editor.value = presets[levelSelect.value];
       updatePreview();
+
+      // Update preview on typing
       editor.addEventListener("input", updatePreview);
+
+      // Update editor when dropdown changes
+      levelSelect.addEventListener("change", () => {
+        editor.value = presets[levelSelect.value];
+        updatePreview();
+      });
+
+      // Welcome Modal with localStorage
+      const welcomeModal = document.getElementById("welcome-modal");
+      const welcomeClose = document.getElementById("welcome-close");
+      if (!localStorage.getItem("welcomeShown")) {
+        welcomeModal.classList.remove("hidden");
+        localStorage.setItem("welcomeShown", "true");
+      }
+      welcomeClose.addEventListener("click", () =>
+        welcomeModal.classList.add("hidden")
+      );
     </script>
   </body>
 </html>
