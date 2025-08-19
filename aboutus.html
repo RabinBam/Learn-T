@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TailSpark - About Us</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: "#06b6d4",
+                600: "#0284c7",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+      body {
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        background-color: #f0f9ff;
+        color: #333;
+        padding-top: 4rem;
+        overflow-x: hidden;
+      }
+
+      /* Navigation bar styles */
+      .nav-transition {
+        transition: all 0.3s ease-in-out;
+      }
+      .dropdown:hover .dropdown-menu {
+        display: block;
+      }
+      .mobile-menu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease-in-out;
+      }
+      .mobile-menu.open {
+        max-height: 500px;
+      }
+      .navbar-gradient {
+        background: linear-gradient(to right, #0284c7, #06b6d4 50%, #0284c7);
+      }
+
+      /* Header section */
+      .page-header {
+        background: linear-gradient(120deg, #0284c7, #06b6d4);
+        color: white;
+        text-align: center;
+        padding: 5rem 1rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .page-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle at 20% 30%,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 60%
+        );
+      }
+
+      .tagline {
+        font-style: italic;
+        opacity: 0.85;
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 1rem auto 0;
+      }
+
+      /* Main content */
+      .about-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3rem;
+        padding: 4rem 2rem;
+        background: white;
+        align-items: center;
+        justify-content: center;
+        max-width: 1200px;
+        margin: -3rem auto 0;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        position: relative;
+        z-index: 2;
+      }
+
+      .about-text {
+        flex: 1 1 300px;
+        max-width: 500px;
+      }
+
+      .about-text h2 {
+        color: #0284c7;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        display: inline-block;
+      }
+
+      .about-text h2::after {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 70px;
+        height: 4px;
+        background: linear-gradient(90deg, #06b6d4, #0284c7);
+        border-radius: 2px;
+      }
+
+      .about-text p {
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+        color: #444;
+      }
+
+      .about-text button {
+        background: linear-gradient(90deg, #06b6d4, #0284c7);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        margin-top: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+      }
+
+      .about-text button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(2, 132, 199, 0.4);
+      }
+
+      .about-image img {
+        width: 100%;
+        max-width: 500px;
+        border-radius: 12px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        transition: transform 0.5s ease;
+      }
+
+      .about-image:hover img {
+        transform: scale(1.03);
+      }
+
+      /* Team section */
+      .team-section {
+        position: relative;
+        min-height: 100vh;
+        background: #f0f9ff;
+        padding: 4rem 2rem 0;
+        overflow: hidden;
+      }
+
+      .section-title {
+        text-align: center;
+        color: #0284c7;
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
+        position: relative;
+      }
+
+      .section-title::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 5px;
+        background: linear-gradient(90deg, #06b6d4, #0284c7);
+        border-radius: 3px;
+      }
+
+      /* Mission section */
+      .mission {
+        padding: 6rem 2rem;
+        background: linear-gradient(135deg, #0284c7, #06b6d4);
+        color: white;
+        text-align: center;
+        position: relative;
+      }
+
+      .mission::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%230284c7' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.3;
+      }
+
+      .mission h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        display: inline-block;
+      }
+
+      .mission h2::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: white;
+        border-radius: 2px;
+      }
+
+      .mission p {
+        font-size: 1.3rem;
+        max-width: 700px;
+        margin: 2rem auto 0;
+        line-height: 1.8;
+        font-weight: 300;
+      }
+
+      footer {
+        background: #0c4a6e;
+        color: white;
+        text-align: center;
+        padding: 2rem;
+      }
+
+      /* Animation background for team section */
+      .team-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+            circle at 10% 20%,
+            rgba(2, 132, 199, 0.05) 0%,
+            transparent 20%
+          ),
+          radial-gradient(
+            circle at 90% 80%,
+            rgba(6, 182, 212, 0.05) 0%,
+            transparent 20%
+          );
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .about-container {
+          flex-direction: column;
+          text-align: center;
+          padding: 3rem 1.5rem;
+          margin-top: -2rem;
+        }
+
+        .about-text h2::after {
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        .about-text button {
+          width: 100%;
+        }
+
+        .page-header {
+          padding: 4rem 1rem;
+        }
+
+        .section-title {
+          font-size: 2rem;
+        }
+      }
+
+      /* Team reveal effect styles */
+      #team-start {
+        padding: 50px 0;
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+      }
+      .team-card {
+        width: 180px;
+        height: 180px;
+        background: linear-gradient(135deg, #06b6d4, #0284c7);
+        border-radius: 1.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 700;
+        font-size: 1.4rem;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.6);
+        user-select: none;
+        cursor: default;
+        color: white;
+        transition: transform 0.3s ease;
+      }
+      .team-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 30px rgba(99, 102, 241, 0.8);
+      }
+
+      /* Drop cards */
+      .drop-card {
+        position: absolute;
+        width: 520px;
+        min-height: 260px;
+        background: linear-gradient(135deg, #ffffff, #f0f9ff);
+        border-radius: 1.5rem;
+        box-shadow: 0 10px 30px rgba(2, 132, 199, 0.3);
+        color: #0c4a6e;
+        font-family: "Poppins", sans-serif;
+        opacity: 0;
+        transform-origin: center top;
+        transform: translateY(-160px) scale(0.6);
+        overflow: hidden;
+        cursor: pointer;
+        transition: box-shadow 0.3s ease;
+        /* Animate transform & opacity only */
+        will-change: transform, opacity;
+      }
+      .drop-card.show {
+        animation: waterDrop 1.1s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      }
+      .drop-card.expanded > .content {
+        opacity: 1;
+        transform: translateX(0);
+        transition: opacity 0.6s ease 0.15s, transform 0.6s ease 0.15s;
+      }
+
+      /* Content inside drop cards */
+      .drop-card > div.content {
+        padding: 1.5rem 2rem;
+        height: 100%;
+        box-sizing: border-box;
+        opacity: 0;
+        transform: translateX(40px);
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+      .drop-card .profile {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+      .drop-card img {
+        width: 104px;
+        height: 104px;
+        border-radius: 9999px;
+        flex-shrink: 0;
+        object-fit: cover;
+        box-shadow: 0 0 18px rgba(2, 132, 199, 0.3);
+        border: 3px solid #06b6d4;
+        background: white;
+      }
+      .drop-card h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+        color: #0c4a6e;
+      }
+      .drop-card p.role {
+        color: #0284c7;
+        margin: 0.3rem 0 1rem 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+        font-style: italic;
+      }
+      .drop-card p.bio {
+        color: #334155;
+        font-size: 1rem;
+        line-height: 1.4;
+        margin: 0;
+        max-width: 420px;
+      }
+      .drop-card:hover {
+        transform: scale(1.07);
+        transition: transform 0.3s ease;
+        z-index: 20;
+        box-shadow: 0 15px 40px rgba(2, 132, 199, 0.4);
+      }
+
+      /* Connection lines */
+      svg {
+        overflow: visible;
+        pointer-events: none;
+      }
+      .connection-line {
+        stroke: #06b6d4;
+        stroke-width: 3;
+        stroke-dasharray: 200;
+        stroke-dashoffset: 200; /* hide initially */
+        fill: none;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        filter: drop-shadow(0 0 3px rgba(2, 132, 199, 0.2));
+      }
+
+      /* Keyframes */
+      @keyframes waterDrop {
+        0% {
+          transform: translateY(-160px) scale(0.6);
+          opacity: 0;
+        }
+        60% {
+          transform: translateY(20px) scale(1.1);
+          opacity: 1;
+        }
+        80% {
+          transform: translateY(-10px) scale(0.95);
+        }
+        100% {
+          transform: translateY(0) scale(1);
+          opacity: 1;
+        }
+      }
+
+      /* Responsive tweaks */
+      @media (max-width: 650px) {
+        .drop-card {
+          width: 90vw !important;
+          min-height: auto !important;
+          left: 5% !important; /* Override to center in mobile */
+          right: auto !important;
+        }
+        .drop-card > div.content {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        .drop-card .profile {
+          justify-content: center;
+        }
+        .drop-card img {
+          width: 80px;
+          height: 80px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar-gradient shadow-md fixed top-0 w-full z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-center items-center h-16 space-x-6">
+          <div class="flex-shrink-0 flex items-center">
+            <div
+              class="rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden bg-primary"
+            >
+              <div class="text-white font-bold text-lg">
+                <img src="LOGO.jpeg" />
+              </div>
+            </div>
+            <span class="ml-3 text-xl font-bold text-white">TailSpark</span>
+          </div>
+
+          <div class="hidden md:flex items-center space-x-4">
+            <a
+              href="#"
+              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >Home</a
+            >
+            <a
+              href="#"
+              class="bg-white text-primary px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >About</a
+            >
+            <div class="relative dropdown">
+              <button
+                class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium flex items-center nav-transition"
+              >
+                Learning Page
+                <span class="ml-1">▼</span>
+              </button>
+              <div
+                class="dropdown-menu absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden"
+              >
+                <div class="py-1">
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white"
+                    >Beginner</a
+                  >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white"
+                    >Intermediate</a
+                  >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary hover:text-white"
+                    >Professional</a
+                  >
+                </div>
+              </div>
+            </div>
+            <a
+              href="#"
+              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >Portfolio</a
+            >
+            <a
+              href="#"
+              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
+              >Contact</a
+            >
+          </div>
+
+          <div class="md:hidden flex items-center">
+            <button
+              id="mobile-menu-button"
+              class="p-2 rounded-md text-white hover:bg-white hover:text-primary focus:outline-none"
+            >
+              ☰
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mobile-menu" class="mobile-menu md:hidden bg-white">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <a
+            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
+            href="#"
+            >Home</a
+          >
+          <a
+            class="block px-3 py-2 text-base font-medium text-white bg-primary rounded"
+            href="#"
+            >About</a
+          >
+          <div class="relative">
+            <button
+              id="mobile-dropdown-button"
+              class="w-full text-left px-3 py-2 text-base font-medium text-primary hover:bg-primary-50 flex justify-between items-center"
+            >
+              Learning Page
+              <span id="mobile-chevron">▼</span>
+            </button>
+            <div id="mobile-dropdown-menu" class="hidden pl-4">
+              <a
+                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
+                href="#"
+                >Beginner</a
+              >
+              <a
+                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
+                href="#"
+                >Intermediate</a
+              >
+              <a
+                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
+                href="#"
+                >Professional</a
+              >
+            </div>
+          </div>
+          <a
+            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
+            href="#"
+            >Portfolio</a
+          >
+          <a
+            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
+            href="#"
+            >Contact</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <h1 class="text-4xl md:text-5xl font-bold">Our Amazing Team</h1>
+      <p class="tagline">Dedicated to excellence and innovation</p>
+    </header>
+
+    <main>
+      <section class="about-container">
+        <div class="about-text">
+          <h2>About Us</h2>
+          <p>
+            TailSpark is a passionate team of five creators, united by a shared
+            vision: to make learning Tailwind CSS as smooth, engaging, and
+            accessible as possible. We’re not just teaching a framework — we’re
+            redefining how developers experience it.
+          </p>
+          <p>
+            Each member of our team brings a unique spark to the table — from
+            design and animation to testing, logic, and leadership. Together, we
+            blend creativity, precision, and a touch of fun to ensure that
+            Tailwind isn’t just learned — it’s enjoyed.
+          </p>
+          <p>
+            Whether you're just starting out or brushing up your skills,
+            TailSpark is here to guide you with clarity, challenge, and
+            community. It’s Tailwind, the TailSpark way — for everyone.
+          </p>
+          <button id="readMoreBtn" aria-label="Read more about the team">
+            Read More
+          </button>
+        </div>
+        <div class="about-image">
+          <img
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1470&auto=format&fit=crop"
+            alt="Our team working together"
+          />
+        </div>
+      </section>
+
+      <!-- Team reveal section -->
+      <section class="team-section" id="team-section">
+        <h2 class="section-title">Meet Our Team</h2>
+        <!-- Drop Zone -->
+        <section id="team" class="relative min-h-[1500px]">
+          <svg
+            id="connection-svg"
+            class="absolute top-0 left-0 w-full h-full pointer-events-none"
+          ></svg>
+        </section>
+      </section>
+
+      <section class="mission">
+        <h2>Our Mission</h2>
+        <p>
+          At TailSpark, our mission is to make learning Tailwind CSS simple,
+          accessible, and enjoyable for everyone — from beginners to seasoned
+          developers. We believe that clean, efficient design should be within
+          everyone's reach, and we’re here to spark that journey with clear
+          guidance, hands-on practice, and a community that grows together. It's
+          Tailwind, made smooth — for everyone.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2025 TailSpark. All rights reserved.</p>
+      <p class="mt-2 text-blue-100">Creating digital excellence since 2025</p>
+    </footer>
+
+    <script>
+      // Handle "Read More" button click
+      document
+        .getElementById("readMoreBtn")
+        .addEventListener("click", function () {
+          alert(
+            "More about our values and history will be added here soon! In the meantime, feel free to contact us for more information."
+          );
+        });
+
+      // Mobile menu functionality
+      document
+        .getElementById("mobile-menu-button")
+        .addEventListener("click", function () {
+          document.getElementById("mobile-menu").classList.toggle("open");
+        });
+
+      document
+        .getElementById("mobile-dropdown-button")
+        .addEventListener("click", function () {
+          const dropdown = document.getElementById("mobile-dropdown-menu");
+          dropdown.classList.toggle("hidden");
+
+          const chevron = document.getElementById("mobile-chevron");
+          if (chevron.textContent === "▼") {
+            chevron.textContent = "▲";
+          } else {
+            chevron.textContent = "▼";
+          }
+        });
+
+      // Team reveal effect script
+      const members = [
+        {
+          name: "Rabin Bam",
+          role: "Leader",
+          img: "./assets/img/Rabin.jpg",
+          bio: "There's only one way to live life, and that's without regrets. So I don't want regret not learning it.",
+        },
+        {
+          name: "Sachin",
+          role: "Lead Designer",
+          img: "./assets/img/Sachin.jpg",
+          bio: "Learning is boaring without a challenge. So I will change the way how you look at learning.",
+        },
+        {
+          name: "Roshit Lamichanne",
+          role: "Animation and Creative Director",
+          img: "./assets/img/Roshit.jpg",
+          bio: "It does not feel real when its not moving. So I will make it move.",
+        },
+        {
+          name: "Oscar",
+          role: "Tester and Developer",
+          img: "./assets/img/Oscar.jpg",
+          bio: "I hate bug and I will squash them all. So I will make sure everything works as expected.",
+        },
+        {
+          name: "Sanskar",
+          role: "Logic and Asset creator",
+          img: "./assets/img/Sanskar.jpg",
+          bio: "I prefer logic over design and Asset over woman. So I will make sure everything is logical and assets are ready.",
+        },
+      ];
+
+      const startRow = document.getElementById("team-start");
+      const dropZone = document.getElementById("team");
+      const svg = document.getElementById("connection-svg");
+
+      let started = false;
+      let dropIndex = 0;
+      const dropCards = [];
+      const connectionLines = [];
+
+      const cardWidth = 520;
+      const cardHeight = 260;
+      const verticalSpacing = 280;
+      const sideMargin = 80;
+
+      // Hide initial row and start drops on scroll
+      window.addEventListener("scroll", () => {
+        const triggerPoint = dropZone.offsetTop - window.innerHeight / 2;
+
+        if (!started && window.scrollY > triggerPoint) {
+          started = true;
+          startRow.style.display = "none";
+        }
+
+        if (started && dropIndex < members.length) {
+          const nextTrigger = triggerPoint + dropIndex * verticalSpacing * 0.7;
+          if (window.scrollY > nextTrigger) {
+            dropCard(members[dropIndex], dropIndex);
+            dropIndex++;
+          }
+        }
+
+        updateLineDrawing();
+      });
+
+      function dropCard(member, index) {
+        // Determine side (left/right)
+        const side = index % 2 === 0 ? "left" : "right";
+        // x position depends on side
+        const xPos =
+          side === "left"
+            ? sideMargin
+            : window.innerWidth - cardWidth - sideMargin;
+        // y position grows with index
+        const yPos = index * verticalSpacing + 50;
+
+        // Create card element
+        const card = document.createElement("div");
+        card.className = "drop-card";
+        card.style.left = `${xPos}px`;
+        card.style.top = `${yPos}px`;
+        card.dataset.index = index;
+
+        card.innerHTML = `
+          <div class="content">
+            <div class="profile">
+              <img src="${member.img}" alt="${member.name}" />
+              <div>
+                <h3>${member.name}</h3>
+                <p class="role">${member.role}</p>
+              </div>
+            </div>
+            <p class="bio">${member.bio}</p>
+          </div>
+        `;
+
+        dropZone.appendChild(card);
+        dropCards[index] = card;
+
+        // Animate drop with bounce
+        setTimeout(() => {
+          card.classList.add("show");
+          // Expand content after drop animation
+          setTimeout(() => {
+            card.classList.add("expanded");
+          }, 1100);
+        }, 50);
+
+        // Create connection line if not the first card
+        if (index > 0) {
+          const prevCard = dropCards[index - 1];
+          if (!prevCard) return;
+
+          // Use getBoundingClientRect for precise positioning relative to viewport + scroll offset
+          const prevRect = prevCard.getBoundingClientRect();
+          const currRect = card.getBoundingClientRect();
+
+          // Calculate line start (bottom center of previous card, relative to svg container)
+          const svgRect = svg.getBoundingClientRect();
+          const prevX = prevRect.left + prevRect.width / 2 - svgRect.left;
+          const prevY = prevRect.top + prevRect.height - svgRect.top;
+
+          // Calculate line end (top center of current card)
+          const currX = currRect.left + currRect.width / 2 - svgRect.left;
+          const currY = currRect.top - svgRect.top;
+
+          // Create cubic bezier path for smooth curve
+          const controlYOffset = 80;
+          const d = `M${prevX},${prevY} C${prevX},${
+            prevY + controlYOffset
+          } ${currX},${currY - controlYOffset} ${currX},${currY}`;
+
+          const path = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+          );
+          path.setAttribute("d", d);
+          path.classList.add("connection-line");
+          path.style.strokeDashoffset = path.getTotalLength(); // Hide initially
+
+          svg.appendChild(path);
+          connectionLines.push({
+            path,
+            length: path.getTotalLength(),
+            startY: prevY + svgRect.top,
+            endY: currY + svgRect.top,
+          });
+        }
+      }
+
+      function updateLineDrawing() {
+        if (!connectionLines.length) return;
+
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+
+        connectionLines.forEach(({ path, length, startY, endY }) => {
+          // Animate line drawing between startY-windowHeight and endY-100
+          const startScroll = startY - windowHeight + 100;
+          const endScroll = endY - 100;
+
+          let progress = (scrollY - startScroll) / (endScroll - startScroll);
+          progress = Math.min(Math.max(progress, 0), 1);
+
+          path.style.strokeDashoffset = length * (1 - progress);
+        });
+      }
+
+      // Initial check on load in case user reloads scrolled
+      window.addEventListener("load", () => {
+        if (window.scrollY > dropZone.offsetTop - window.innerHeight / 2) {
+          started = true;
+          startRow.style.display = "none";
+        }
+        updateLineDrawing();
+      });
+    </script>
+  </body>
+</html>
