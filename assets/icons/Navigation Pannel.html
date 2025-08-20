@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Navigation Pannel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f9ff",
+                100: "#e0f2fe",
+                200: "#bae6fd",
+                300: "#7dd3fc",
+                400: "#38bdf8",
+                500: "#0ea5e9",
+                600: "#0284c7",
+                700: "#0369a1",
+                800: "#075985",
+                900: "#0c4a6e",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .nav-transition {
+        transition: all 0.3s ease-in-out;
+      }
+      .dropdown:hover .dropdown-menu {
+        display: block;
+      }
+      .mobile-menu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease-in-out;
+      }
+      .mobile-menu.open {
+        max-height: 500px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <!-- Responsive Navigation Bar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <!-- Logo Section -->
+          <div class="flex items-center">
+            <div class="flex-shrink-0 flex items-center">
+              <div
+                class="bg-primary-600 text-white rounded-lg w-10 h-10 flex items-center justify-center font-bold text-xl"
+              >
+                L
+              </div>
+              <span class="ml-3 text-xl font-bold text-gray-800"
+                >TailSpark</span
+              >
+            </div>
+          </div>
+
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex items-center space-x-1">
+            <a
+              href="#"
+              class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 nav-transition"
+              >Home</a
+            >
+            <a
+              href="#"
+              class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 nav-transition"
+              >About</a
+            >
+
+            <!-- Dropdown Menu -->
+            <div class="relative dropdown">
+              <button
+                class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 flex items-center nav-transition"
+              >
+                Services
+                <img
+                  src="chevron-down-solid-full.svg"
+                  alt="Dropdown Icon"
+                  class="ml-1 w-3 h-3"
+                />
+              </button>
+              <div
+                class="dropdown-menu absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden"
+              >
+                <div class="py-1">
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                    >Web Development</a
+                  >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                    >Mobile Apps</a
+                  >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                    >UI/UX Design</a
+                  >
+                  <a
+                    href="#"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                    >Consulting</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="#"
+              class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 nav-transition"
+              >Portfolio</a
+            >
+            <a
+              href="#"
+              class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 nav-transition"
+              >Contact</a
+            >
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <div class="md:hidden flex items-center">
+            <button
+              id="mobile-menu-button"
+              class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
+            >
+              <img src="bars-solid-full.svg" alt="Menu" class="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="mobile-menu md:hidden bg-white border-t">
+        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          <a
+            href="#"
+            class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+            >Home</a
+          >
+          <a
+            href="#"
+            class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+            >About</a
+          >
+
+          <!-- Mobile Dropdown -->
+          <div class="relative">
+            <button
+              id="mobile-dropdown-button"
+              class="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700 flex justify-between items-center"
+            >
+              Services
+              <img
+                id="mobile-chevron"
+                src="chevron-down-solid-full.svg"
+                alt="Dropdown Icon"
+                class="w-3 h-3 ml-1"
+              />
+            </button>
+            <div id="mobile-dropdown-menu" class="hidden pl-4">
+              <a
+                href="#"
+                class="block px-3 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                >Web Development</a
+              >
+              <a
+                href="#"
+                class="block px-3 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                >Mobile Apps</a
+              >
+              <a
+                href="#"
+                class="block px-3 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                >UI/UX Design</a
+              >
+              <a
+                href="#"
+                class="block px-3 py-2 text-sm text-gray-700 hover:bg-primary-50"
+                >Consulting</a
+              >
+            </div>
+          </div>
+
+          <a
+            href="#"
+            class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+            >Portfolio</a
+          >
+          <a
+            href="#"
+            class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+            >Contact</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <script>
+      // Toggle mobile menu open/close
+      document
+        .getElementById("mobile-menu-button")
+        .addEventListener("click", function () {
+          const menu = document.getElementById("mobile-menu");
+          menu.classList.toggle("open");
+        });
+
+      // Toggle mobile dropdown open/close & swap chevron icons
+      document
+        .getElementById("mobile-dropdown-button")
+        .addEventListener("click", function () {
+          const dropdown = document.getElementById("mobile-dropdown-menu");
+          dropdown.classList.toggle("hidden");
+
+          const chevron = document.getElementById("mobile-chevron");
+          if (chevron.getAttribute("src") === "chevron-down-solid-full.svg") {
+            chevron.setAttribute("src", "chevron-up-solid-full.svg");
+          } else {
+            chevron.setAttribute("src", "chevron-down-solid-full.svg");
+          }
+        });
+    </script>
+  </body>
+</html>
