@@ -660,5 +660,113 @@
         });
       });
     </script>
+   <script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    const editor = document.getElementById("code-editor");
+    const preview = document.getElementById("live-preview");
+    const runButton = document.getElementById("run-button");
+    const errorPanel = document.getElementById("error-panel");
+    const errorList = document.getElementById("error-list");
+    const statusIndicator = document.getElementById("status-indicator");
+
+    // ✅ Load Tailwind class list from CDN (static JSON of all classes)
+    let validTailwindClasses = new Set();
+    async function loadTailwindClasses() {
+      try {
+        const res = await fetch("https://unpkg.com/tailwind-variants/dist/classes.json");
+        const data = await res.json();
+        validTailwindClasses = new Set(data);
+      } catch (e) {
+        console.error("Failed to load Tailwind class list", e);
+      }
+    }
+    await loadTailwindClasses();
+
+    // --- Error detection ---
+    function detectErrors(code) {
+      const errors = [];
+
+      // HTML tag check
+      const openTags = [];
+      const tagRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+      let match;
+      while ((match = tagRegex.exec(code)) !== null) {
+        const fullTag = match[0];
+        const tagName = match[1];
+        if (fullTag.startsWith("</")) {
+          if (openTags.length === 0 || openTags[openTags.length - 1] !== tagName) {
+            errors.push(`Mismatched closing tag: ${fullTag}`);
+          } else {
+            openTags.pop();
+          }
+        } else if (!fullTag.endsWith("/>")) {
+          openTags.push(tagName);
+        }
+      }
+      if (openTags.length > 0) {
+        errors.push(`Unclosed tags: ${openTags.join(", ")}`);
+      }
+
+      // Tailwind class check
+      const classRegex = /class="([^"]*)"/g;
+      let classMatch;
+      while ((classMatch = classRegex.exec(code)) !== null) {
+        const classes = classMatch[1].split(/\s+/);
+        classes.forEach(cls => {
+          if (cls && !validTailwindClasses.has(cls)) {
+            errors.push(`Invalid Tailwind class: ${cls}`);
+          }
+        });
+      }
+
+      return errors;
+    }
+
+    // --- Display errors ---
+    function displayErrors(errors) {
+      errorList.innerHTML = "";
+      if (errors.length === 0) {
+        errorPanel.classList.remove("open");
+        return;
+      }
+      errors.forEach(error => {
+        const li = document.createElement("li");
+        li.className = "mb-2 flex items-start";
+        li.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-2"></i> ${error}`;
+        errorList.appendChild(li);
+      });
+      errorPanel.classList.add("open");
+    }
+
+    // --- Update preview ---
+    function updatePreview() {
+      statusIndicator.textContent = "Updating...";
+      statusIndicator.className =
+        "ml-2 text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full status-indicator";
+
+      const content = editor.value;
+      const errors = detectErrors(content);
+      displayErrors(errors);
+
+      if (errors.length === 0) {
+        preview.innerHTML = content;
+      }
+
+      setTimeout(() => {
+        statusIndicator.textContent = "Updated";
+        statusIndicator.className =
+          "ml-2 text-xs bg-green-300 text-green-800 px-2 py-1 rounded-full status-indicator";
+        setTimeout(() => {
+          statusIndicator.textContent = "Ready";
+          statusIndicator.className =
+            "ml-2 text-xs bg-purple-300 text-purple-800 px-2 py-1 rounded-full status-indicator";
+        }, 2000);
+      }, 300);
+    }
+
+    runButton.addEventListener("click", updatePreview);
+  });
+</script>
+
   </body>
 </html>
