@@ -8,7 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700&display=swap" rel="stylesheet" />
 </head>
 <style>
-
     /* nav bar*/
     .nav-transition {
         transition: all 0.3s ease-in-out;
@@ -37,7 +36,46 @@
       .font-oxanium {
         font-family: "Oxanium", sans-serif;
       }
-  </style>
+
+      /* Progress Map Styles */
+      .hills { position: absolute; width: 200%; height: 200px; bottom: 0; left: -50%; background: radial-gradient(circle at center, #81b29a 0%, #519872 100%); border-radius: 50%; filter: blur(20px);}
+      @keyframes float {0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+      .cloud { position:absolute; border-radius:50%; background:rgba(255,255,255,0.8); filter: blur(8px); animation: float 8s ease-in-out infinite alternate;}
+      @keyframes cartoon-bounce {0%{transform:translateY(0) scale(1) rotate(0deg)}25%{transform:translateY(-8px) scale(1.1) rotate(-5deg)}50%{transform:translateY(0) scale(1.05) rotate(3deg)}75%{transform:translateY(-4px) scale(1.05) rotate(-2deg)}100%{transform:translateY(0) scale(1) rotate(0deg)}}
+      .bounce { animation: cartoon-bounce 0.6s ease-in-out; }
+      @keyframes pulse { 0%{transform:scale(1)}100%{transform:scale(1.15)} }
+      .pulse { animation: pulse 1s infinite alternate; }
+      @keyframes dash-move { from{ stroke-dashoffset:20; } to{ stroke-dashoffset:0; } }
+      .animated-path { stroke-dasharray:10 10; stroke-dashoffset:20; animation: dash-move 1s linear infinite; filter: drop-shadow(0 0 4px #fff); }
+      @keyframes twinkle {0%,100%{transform:scale(1) rotate(0deg);opacity:0.5}50%{transform:scale(1.5) rotate(20deg);opacity:1}}
+      .star { animation: twinkle 1.5s infinite alternate; position:absolute; z-index:20; }
+      @keyframes dust-float {0%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-6px) rotate(45deg)}100%{transform:translateY(0) rotate(0)} }
+      .dust { width:4px;height:4px;background:rgba(255,255,255,0.3);border-radius:50%;position:absolute;animation:dust-float 3s infinite alternate; z-index:0;}
+      .level-circle { width: 64px; height: 64px; border-radius: 50%; display:flex; justify-content:center; align-items:center; font-weight:bold; color:white; box-shadow:0 6px 15px rgba(0,0,0,0.3), inset 0 -4px 0 rgba(255,255,255,0.3); transition: transform 0.2s; cursor:pointer; z-index:10; position:absolute;}
+      .level-circle:hover { transform: translateY(-6px) scale(1.1); }
+      .level-label { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; font-weight: 500; color: #333; text-shadow:1px 1px 2px #fff;}
+      @keyframes star-burst { 0%{transform:translate(0,0) scale(0); opacity:1;} 80%{transform:translate(var(--x), var(--y)) scale(1.2); opacity:1;} 100%{transform:translate(var(--x), var(--y)) scale(0); opacity:0;} }
+      .star-burst { width:8px;height:8px;background:yellow;border-radius:50%;position:absolute; animation: star-burst 0.8s forwards; z-index:25;}
+      .lives-container { position:absolute; top:10px; left:50%; transform:translateX(-50%); font-size:1.2rem; font-weight:bold; color:#111; display:flex; gap:12px;}
+      .life { width:24px; height:24px; border-radius:50%; background:red;}
+      .buttons-container { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:16px;}
+      
+      /* Progress section transitions */
+      .progress-section {
+        transition: all 0.5s ease-in-out;
+        transform-origin: top;
+      }
+      .progress-hidden {
+        opacity: 0;
+        transform: scaleY(0);
+        max-height: 0;
+      }
+      .progress-visible {
+        opacity: 1;
+        transform: scaleY(1);
+        max-height: 600px;
+      }
+</style>
 <script>
       tailwind.config = {
         theme: {
@@ -51,7 +89,7 @@
           },
         },
       };
-    </script>
+</script>
 <body class="bg-gray-50 h-screen flex flex-col">
 
   <!-- Navbar -->
@@ -65,7 +103,7 @@
               class="rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden bg-primary"
             >
               <img
-                src="./assets/LOGO.jpeg"
+                src="./LOGO.jpeg"
                 alt="TailSpark Logo"
                 class="w-full h-full object-contain"
               />
@@ -133,6 +171,11 @@
               class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
               >Contact</a
             >
+            
+            <!-- Progress Toggle Button -->
+            <button id="progress-toggle" class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition bg-yellow-500 hover:bg-yellow-400">
+              🌟 Progress
+            </button>
           </div>
 
           <!-- Mobile Menu Button -->
@@ -204,9 +247,43 @@
             href="#"
             >Contact</a
           >
+          
+          <!-- Mobile Progress Toggle -->
+          <button id="mobile-progress-toggle" class="block w-full text-left px-3 py-2 text-base font-medium bg-yellow-500 text-white hover:bg-yellow-400">
+            🌟 Progress
+          </button>
         </div>
       </div>
     </nav>
+
+  <!-- Progress Map Section (Hidden by default) -->
+  <div id="progress-section" class="progress-section progress-hidden bg-gradient-to-b from-blue-100 to-white border-b-2 border-indigo-300">
+    <div class="relative p-6">
+      <div class="hills"></div>
+      
+      <div class="cloud w-40 h-20 top-10 left-20"></div>
+      <div class="cloud w-60 h-24 top-40 right-32"></div>
+      <div class="cloud w-32 h-16 top-1/2 left-1/4"></div>
+      <div class="cloud w-48 h-20 bottom-32 left-64"></div>
+
+      <div class="text-center mb-4">
+        <h2 class="text-3xl font-extrabold text-indigo-800 drop-shadow-lg">🌟 Your Learning Progress 🌟</h2>
+      </div>
+
+      <div class="relative w-full max-w-[1200px] h-[300px] mx-auto rounded-3xl shadow-2xl overflow-hidden flex items-center px-8 bg-gradient-to-b from-indigo-200 to-indigo-100">
+        <svg id="path-svg" class="absolute top-0 left-0 w-full h-full pointer-events-none"></svg>
+        <div id="levels-container" class="relative flex h-full w-full"></div>
+      </div>
+
+      <div class="text-center mt-4">
+        <div class="lives-container" id="lives-container" style="position:relative; display:inline-flex; gap:8px;"></div>
+        <div class="mt-4 space-x-4">
+          <button id="complete-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg font-bold shadow-lg hover:bg-green-500 transition">✓ Complete Level</button>
+          <button id="error-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg font-bold shadow-lg hover:bg-red-500 transition">✗ Try Again</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Playground -->
   <main class="flex-1 p-6 min-h-0">
@@ -217,11 +294,14 @@
            style="clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);">
         <div class="px-4 py-3 bg-indigo-900 border-b border-indigo-700 flex justify-between items-center rounded-tl-xl">
           <h2 class="text-lg font-bold text-white">Edit Tailwind HTML</h2>
-          <select id="level-select" class="border rounded px-2 py-1 text-sm bg-indigo-800 text-white hover:bg-indigo-700">
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Expert">Expert</option>
-          </select>
+          <div class="flex items-center space-x-3">
+            <select id="level-select" class="border rounded px-2 py-1 text-sm bg-indigo-800 text-white hover:bg-indigo-700">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Expert">Expert</option>
+            </select>
+            <button id="check-solution" class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-500">Check</button>
+          </div>
         </div>
         <textarea id="code-editor"
           class="flex-1 h-full p-4 bg-gray-900 text-green-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 overflow-auto"
@@ -258,6 +338,7 @@
       <p class="text-gray-600 mb-6">
         Start experimenting with Tailwind CSS instantly!  
         Edit the HTML on the left, and see the live preview on the right.
+        Track your progress with the Progress Map!
       </p>
       <button id="welcome-close" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg">
         Let's Go 🚀
@@ -266,57 +347,331 @@
   </div>
 
   <script>
-    //navbar
-      document
-        .getElementById("mobile-menu-button")
-        .addEventListener("click", function () {
-          document.getElementById("mobile-menu").classList.toggle("open");
-        });
-      document
-        .getElementById("mobile-dropdown-button")
-        .addEventListener("click", function () {
-          const dropdown = document.getElementById("mobile-dropdown-menu");
-          dropdown.classList.toggle("hidden");
+    // Navbar functionality
+    document.getElementById("mobile-menu-button").addEventListener("click", function () {
+      document.getElementById("mobile-menu").classList.toggle("open");
+    });
+    
+    document.getElementById("mobile-dropdown-button").addEventListener("click", function () {
+      const dropdown = document.getElementById("mobile-dropdown-menu");
+      dropdown.classList.toggle("hidden");
+      const chevron = document.getElementById("mobile-chevron");
+      chevron.src = chevron.src.includes("chevron-down")
+        ? "icons/chevron-up-solid-full.svg"
+        : "icons/chevron-down-solid-full.svg";
+    });
 
-          const chevron = document.getElementById("mobile-chevron");
-          chevron.src = chevron.src.includes("chevron-down")
-            ? "icons/chevron-up-solid-full.svg"
-            : "icons/chevron-down-solid-full.svg";
-        });
+    // Progress Map Variables
+    const totalLevels = 12;
+    let currentLevel = 1;
+    let lives = 3;
+    const completedLevels = new Set();
+    const levelsContainer = document.getElementById("levels-container");
+    const pathSVG = document.getElementById("path-svg");
+    const livesContainer = document.getElementById("lives-container");
+    const containerWidth = 1200;
+    const containerHeight = 300;
 
+    // Progress Toggle Functionality
+    const progressSection = document.getElementById("progress-section");
+    const progressToggle = document.getElementById("progress-toggle");
+    const mobileProgressToggle = document.getElementById("mobile-progress-toggle");
+    let progressVisible = false;
+
+    function toggleProgress() {
+      progressVisible = !progressVisible;
+      if (progressVisible) {
+        progressSection.classList.remove("progress-hidden");
+        progressSection.classList.add("progress-visible");
+        // Initialize progress map if not already done
+        if (!levelsContainer.hasChildNodes()) {
+          initializeProgressMap();
+        }
+      } else {
+        progressSection.classList.remove("progress-visible");
+        progressSection.classList.add("progress-hidden");
+      }
+    }
+
+    progressToggle.addEventListener("click", toggleProgress);
+    mobileProgressToggle.addEventListener("click", toggleProgress);
+
+    // Progress Map Initialization
+    function initializeProgressMap() {
+      // Level positions
+      const levelPositions = [];
+      for(let i = 0; i < totalLevels; i++){
+        const x = (i + 0.5) * (containerWidth / totalLevels);
+        const y = containerHeight / 2 + Math.sin(i * 1.2) * 50;
+        levelPositions.push({x, y});
+      }
+
+      // Create animated path
+      let pathD = "";
+      for(let i = 0; i < levelPositions.length; i++){
+        const p = levelPositions[i];
+        if(i === 0) {
+          pathD += `M ${p.x} ${p.y} `;
+        } else {
+          const prev = levelPositions[i-1];
+          const cx = (prev.x + p.x) / 2;
+          const cy = (prev.y + p.y) / 2;
+          pathD += `Q ${prev.x} ${prev.y} ${cx} ${cy} `;
+        }
+      }
+      // After creating level circles
+addLevelClickEvents();
+      // Make level circles clickable to open problem popup
+function addLevelClickEvents() {
+  for (let i = 1; i <= totalLevels; i++) {
+    const circle = document.querySelector(`#level${i}`);
+    if (!circle) continue;
+
+    circle.addEventListener("click", () => {
+      openLevelPopup(i);
+      // Ensure progress section is visible
+      if (!progressVisible) toggleProgress();
+    });
+  }
+}
+      
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", pathD);
+      path.setAttribute("stroke", "url(#grad)");
+      path.setAttribute("stroke-width", "6");
+      path.setAttribute("fill", "transparent");
+      path.classList.add("animated-path");
+      
+      const grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+      grad.setAttribute("id", "grad");
+      grad.setAttribute("x1", "0%");
+      grad.setAttribute("y1", "0%");
+      grad.setAttribute("x2", "100%");
+      grad.setAttribute("y2", "0%");
+      
+      ["#fcd34d", "#fb923c", "#f87171", "#c084fc", "#60a5fa"].forEach((color, idx) => {
+        const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop.setAttribute("offset", `${(idx/4)*100}%`);
+        stop.setAttribute("stop-color", color);
+        grad.appendChild(stop);
+      });
+      
+      pathSVG.appendChild(grad);
+      pathSVG.appendChild(path);
+
+      // Create dust particles
+      for(let i = 0; i < 30; i++){
+        const dust = document.createElement("div");
+        dust.className = "dust";
+        const posIndex = Math.floor(Math.random() * levelPositions.length);
+        const offsetX = Math.random() * 60 - 30;
+        const offsetY = Math.random() * 60 - 30;
+        const pos = levelPositions[posIndex];
+        dust.style.left = `${pos.x + offsetX}px`;
+        dust.style.top = `${pos.y + offsetY}px`;
+        dust.style.animationDuration = `${2 + Math.random() * 2}s`;
+        levelsContainer.appendChild(dust);
+      }
+
+      // Create level circles
+      levelPositions.forEach((pos, idx) => {
+        const circle = document.createElement("div");
+        circle.id = `level${idx + 1}`;
+        circle.textContent = idx + 1;
+        circle.className = `level-circle ${idx === 0 ? "bg-yellow-400 pulse" : "bg-indigo-500"}`;
+        circle.style.left = `${pos.x - 32}px`;
+        circle.style.top = `${pos.y - 32}px`;
+
+        const label = document.createElement("div");
+        label.textContent = `Lesson ${idx + 1}`;
+        label.className = "level-label";
+        circle.appendChild(label);
+
+        levelsContainer.appendChild(circle);
+      });
+
+      updateLives();
+    }
+
+    // Lives update
+    function updateLives(){
+      livesContainer.innerHTML = "";
+      for(let i = 0; i < lives; i++){
+        const life = document.createElement("div");
+        life.className = "life";
+        livesContainer.appendChild(life);
+      }
+    }
+
+    // Star burst effect
+    function starBurst(x, y){
+      for(let i = 0; i < 12; i++){
+        const star = document.createElement("div");
+        star.className = "star-burst";
+        const angle = Math.random() * 2 * Math.PI;
+        const dist = 30 + Math.random() * 20;
+        star.style.setProperty("--x", `${Math.cos(angle) * dist}px`);
+        star.style.setProperty("--y", `${Math.sin(angle) * dist}px`);
+        star.style.left = `${x}px`;
+        star.style.top = `${y}px`;
+        levelsContainer.appendChild(star);
+        setTimeout(() => star.remove(), 800);
+      }
+    }
+
+    // Get current position helper
+    function currentPositions(el){
+      const rect = el.getBoundingClientRect();
+      const parentRect = levelsContainer.getBoundingClientRect();
+      return {x: rect.left - parentRect.left + 32, y: rect.top - parentRect.top + 32};
+    }
+
+    // Reset levels visual state
+    function resetLevels(){
+      for(let i = 1; i <= totalLevels; i++){
+        const circle = document.querySelector(`#level${i}`);
+        if (!circle) continue;
+        
+        if(i === currentLevel){
+          circle.className = "level-circle bg-yellow-400 pulse";
+        } else if(completedLevels.has(i)){
+          circle.className = "level-circle bg-green-500";
+        } else {
+          circle.className = "level-circle bg-indigo-500";
+        }
+      }
+    }
+
+    // Complete level button
+    document.getElementById("complete-btn").addEventListener("click", () => {
+      if(currentLevel > totalLevels){
+        if(confirm("Congratulations! You've completed all levels! Restart from level 1?")){
+          currentLevel = 1;
+          lives = 3;
+          completedLevels.clear();
+          updateLives();
+          resetLevels();
+        }
+        return;
+      }
+
+      const current = document.querySelector(`#level${currentLevel}`);
+      if (current) {
+        current.className = "level-circle bg-green-500 bounce";
+        completedLevels.add(currentLevel);
+        starBurst(currentPositions(current).x, currentPositions(current).y);
+        setTimeout(() => current.classList.remove("bounce"), 600);
+      }
+
+      currentLevel++;
+      const next = document.querySelector(`#level${currentLevel}`);
+      if(next){
+        next.className = "level-circle bg-yellow-400 pulse bounce";
+        setTimeout(() => next.classList.remove("bounce"), 600);
+      }
+      
+      // Show progress automatically when level is completed
+      if (!progressVisible) {
+        toggleProgress();
+      }
+    });
+
+    // Error button
+    document.getElementById("error-btn").addEventListener("click", () => {
+      lives--;
+
+      if(lives > 0){
+        updateLives();
+        return;
+      }
+
+      lives = 3;
+      currentLevel = Math.max(1, currentLevel - 1);
+      completedLevels.delete(currentLevel);
+
+      updateLives();
+      resetLevels();
+    });
+
+    // Playground functionality
     const editor = document.getElementById("code-editor");
     const preview = document.getElementById("live-preview");
     const levelSelect = document.getElementById("level-select");
+    const checkSolution = document.getElementById("check-solution");
 
-    const presets = {
-      Beginner: `<div class="p-6 bg-white rounded-lg shadow text-center">
-        <h1 class="text-2xl font-bold mb-4">Hello Tailwind!</h1>
-        <p class="text-gray-600">This is a simple beginner layout.</p>
-        <button class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Click Me</button>
-      </div>`,
-      Intermediate: `<div class="max-w-md mx-auto p-8 bg-white rounded-lg shadow-lg">
-        <h2 class="text-xl font-semibold text-gray-800 mb-2">Intermediate Layout</h2>
-        <p class="text-gray-600 mb-4">This one includes grid layout and spacing utilities.</p>
-        <div class="grid grid-cols-3 gap-4">
-          <div class="bg-blue-100 p-4 rounded-lg">1</div>
-          <div class="bg-blue-200 p-4 rounded-lg">2</div>
-          <div class="bg-blue-300 p-4 rounded-lg">3</div>
-        </div>
-      </div>`,
-      Expert: `<div class="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-8">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full">
-          <h1 class="text-3xl font-extrabold mb-4 text-gray-900">Expert Level UI</h1>
-          <p class="text-gray-600 mb-6">Fully responsive, layered shadows, gradients, and flex/grid combos.</p>
-          <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-yellow-100 p-6 rounded-lg">Card 1</div>
-            <div class="bg-yellow-200 p-6 rounded-lg">Card 2</div>
-          </div>
-          <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90">
-            Launch 🚀
-          </button>
-        </div>
-      </div>`
-    };
+   // Load problems from JSON
+let problems = {};
+let currentDifficulty = 'Beginner';
+
+fetch('problems.json')
+  .then(res => res.json())
+  .then(data => {
+    problems = data;
+    // Set first problem in editor
+    editor.value = problems[currentDifficulty][0].starter;
+    updatePreview();
+  });
+
+// Open level popup
+function openLevelPopup(levelNum){
+  currentLevel = levelNum;
+  const problem = problems[currentDifficulty][levelNum - 1];
+  if (!problem) return;
+
+  editor.value = problem.starter;
+  updatePreview();
+
+  resetLevels();
+  const circle = document.querySelector(`#level${levelNum}`);
+  if(circle) circle.className = "level-circle bg-yellow-400 pulse bounce";
+  setTimeout(() => circle.classList.remove("bounce"), 600);
+}
+
+// Reset levels' visual
+function resetLevels(){
+  for(let i=1;i<=totalLevels;i++){
+    const circle = document.querySelector(`#level${i}`);
+    if(!circle) continue;
+    if(i===currentLevel) circle.className="level-circle bg-yellow-400 pulse";
+    else circle.className="level-circle bg-indigo-500";
+  }
+}
+
+// When user changes difficulty
+levelSelect.addEventListener("change", () => {
+  currentDifficulty = levelSelect.value;
+  currentLevel = 1;
+  editor.value = problems[currentDifficulty][0].starter;
+  updatePreview();
+  resetLevels();
+});
+
+// Check solution
+checkSolution.addEventListener("click", () => {
+  const problem = problems[currentDifficulty][currentLevel - 1];
+  if(!problem) return;
+
+  try {
+    const isCorrect = new Function('code', `return ${problem.check}`)(editor.value);
+    if(isCorrect){
+      completedLevels.add(currentLevel);
+      alert(`✅ Level ${currentLevel} completed!`);
+      const circle = document.querySelector(`#level${currentLevel}`);
+      if(circle) circle.className="level-circle bg-green-500 bounce";
+    } else {
+      lives--;
+      updateLives();
+      alert(`❌ Try again! Lives left: ${lives}`);
+      if(lives<=0){
+        lives=3;
+        resetLevels();
+        updateLives();
+      }
+    }
+  } catch(e){
+    console.error(e);
+  }
+});
 
     function updatePreview() {
       const content = editor.value;
@@ -343,25 +698,56 @@
 
     // Update editor when dropdown changes
     levelSelect.addEventListener("change", () => {
-      // Load initial preset
       editor.value = presets[levelSelect.value];
       updatePreview();
-
-      // Update editor when dropdown changes
-      levelSelect.addEventListener("change", () => {
-        editor.value = presets[levelSelect.value];
-        updatePreview();
-      });
     });
 
-    // Welcome Modal with localStorage
+    // Check solution button - simulates completing a level
+    checkSolution.addEventListener("click", () => {
+      // Simple validation - check if code contains certain Tailwind classes
+      const code = editor.value.toLowerCase();
+      const hasBasicClasses = code.includes('bg-') || code.includes('text-') || code.includes('p-') || code.includes('m-');
+      
+      if (hasBasicClasses) {
+        // Trigger level completion
+        document.getElementById("complete-btn").click();
+        
+        // Show success message
+        const successMsg = document.createElement("div");
+        successMsg.className = "fixed top-20 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50";
+        successMsg.textContent = "Great job! Level completed! 🎉";
+        document.body.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
+      } else {
+        // Trigger error
+        document.getElementById("error-btn").click();
+        
+        // Show error message
+        const errorMsg = document.createElement("div");
+        errorMsg.className = "fixed top-20 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50";
+        errorMsg.textContent = "Try adding some Tailwind classes! 💪";
+        document.body.appendChild(errorMsg);
+        setTimeout(() => errorMsg.remove(), 3000);
+      }
+    });
+
+    // Welcome Modal
     const welcomeModal = document.getElementById("welcome-modal");
     const welcomeClose = document.getElementById("welcome-close");
-    if (!localStorage.getItem("welcomeShown")) {
+    
+    // Show welcome modal on first visit (using a simple flag)
+    let welcomeShown = false;
+    if (!welcomeShown) {
       welcomeModal.classList.remove("hidden");
-      localStorage.setItem("welcomeShown", "true");
+      welcomeShown = true;
     }
-    welcomeClose.addEventListener("click", () => welcomeModal.classList.add("hidden"));
+    
+    welcomeClose.addEventListener("click", () => {
+      welcomeModal.classList.add("hidden");
+    });
+
+    // Auto-show progress when first level is completed
+    let firstLevelCompleted = false;
   </script>
 </body>
 </html>
