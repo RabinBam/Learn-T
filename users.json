@@ -1,0 +1,33 @@
+{
+  "player1": {
+    "username": "player1",
+    "type": "Beginner",
+    "level": 4,
+    "levels": {
+      "1": {
+        "started_at": "2025-08-21T03:03:15.132Z",
+        "attempts": 1,
+        "errors": 1,
+        "time_taken": 7
+      },
+      "2": {
+        "started_at": "2025-08-21T03:03:17.177Z",
+        "attempts": 1,
+        "errors": 0,
+        "time_taken": 0
+      },
+      "3": {
+        "started_at": "2025-08-21T03:03:18.344Z",
+        "attempts": 1,
+        "errors": 0,
+        "time_taken": 0
+      }
+    },
+    "hardest_levels": {
+      "1": 1,
+      "2": 0,
+      "3": 0
+    },
+    "level_back_count": 0
+  }
+}

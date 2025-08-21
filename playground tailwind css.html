@@ -1,817 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tailwind Playground</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: {
-                DEFAULT: "#06b6d4",
-                600: "#0284c7",
-              },
-            },
-          },
-        },
-      };
-    </script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        font-family: "Plus Jakarta Sans", sans-serif;
-        background: linear-gradient(135deg, #f0f4ff 0%, #e6e6ff 100%);
-        color: #334155;
-        min-height: 100vh;
-      }
-      .header-gradient {
-        background: linear-gradient(
-          135deg,
-          #6366f1 0%,
-          #8b5cf6 50%,
-          #ec4899 100%
-        );
-      }
-      .editor-container {
-        clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);
-        transition: all 0.3s ease;
-      }
-      .editor-container:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.25);
-      }
-      .preview-container {
-        border-radius: 2rem 0 2rem 0;
-        background: linear-gradient(135deg, #f0ebff 0%, #d9b3ff 100%);
-        transition: all 0.3s ease;
-      }
-      .preview-container:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 50px -12px rgba(168, 85, 247, 0.25);
-      }
-      .code-editor {
-        scrollbar-width: thin;
-        scrollbar-color: #6366f1 #1f2937;
-      }
-      .code-editor::-webkit-scrollbar {
-        width: 10px;
-      }
-      .code-editor::-webkit-scrollbar-thumb {
-        background-color: #6366f1;
-        border-radius: 5px;
-      }
-      .code-editor::-webkit-scrollbar-track {
-        background: #1f2937;
-      }
-      .status-indicator {
-        transition: all 0.3s ease;
-      }
-      .floating-btn {
-        transition: all 0.3s ease;
-        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
-      }
-      .floating-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.5);
-      }
-      .feature-card {
-        transition: all 0.3s ease;
-      }
-      .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.15);
-      }
-      .modal-overlay {
-        backdrop-filter: blur(5px);
-      }
-      .powered-by {
-        background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 700;
-      }
-      .keyboard-shortcut {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
-        padding: 2px 6px;
-        font-size: 0.8rem;
-      }
-      .error-panel {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-out;
-      }
-      .error-panel.open {
-        max-height: 150px;
-      }
-      .save-item {
-        transition: all 0.2s ease;
-      }
-      .save-item:hover {
-        background-color: #f3f4f6;
-      }
-      .nav-transition {
-        transition: all 0.3s ease-in-out;
-      }
-      .dropdown:hover .dropdown-menu {
-        display: block;
-      }
-      .mobile-menu {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.5s ease-in-out;
-      }
-      .mobile-menu.open {
-        max-height: 500px;
-      }
-      .navbar-gradient {
-        background: linear-gradient(to right, #0284c7, #06b6d4 50%, #0284c7);
-      }
-      @font-face {
-        font-family: "Oxanium";
-        src: url("./fonts/Oxanium-Regular.ttf") format("truetype");
-        font-weight: normal;
-        font-style: normal;
-      }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tailwind Playground</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: "Plus Jakarta Sans", sans-serif; background: linear-gradient(135deg,#f0f4ff 0%,#e6e6ff 100%); color:#334155; min-height:100vh; }
+  .header-gradient { background: linear-gradient(135deg,#6366f1 0%,#8b5cf6 50%,#ec4899 100%); }
+  .editor-container { clip-path: polygon(0 0,100% 0,100% 90%,90% 100%,0 100%); transition:all 0.3s ease; }
+  .preview-container { border-radius: 2rem 0 2rem 0; background:linear-gradient(135deg,#f0ebff 0%,#d9b3ff 100%); transition:all 0.3s ease; }
+  .code-editor { scrollbar-width:thin; scrollbar-color:#6366f1 #1f2937; }
+  .status-indicator { transition:all 0.3s ease; }
+  .floating-btn { transition: all 0.3s ease; }
+  .error-panel { max-height:0; overflow:hidden; transition:max-height 0.3s ease-out; }
+  .error-panel.open { max-height:150px; }
+  .game-btn { transition: all 0.2s ease; }
+  #welcome-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.7); display: flex;
+    align-items: center; justify-content: center; z-index: 1000;
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
 
-      .font-oxanium {
-        font-family: "Oxanium", sans-serif;
-      }
-    </style>
-  </head>
-  <body class="min-h-screen flex flex-col">
-    <!-- Header -->
-    <nav class="navbar-gradient shadow-md sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Center-aligned container -->
-        <div class="flex justify-center items-center h-16 space-x-6">
-          <!-- Logo -->
-          <div class="flex-shrink-0 flex items-center">
-            <div
-              class="rounded-lg w-12 h-12 flex items-center justify-center overflow-hidden bg-primary"
-            >
-              <img
-                src="assets/img/LOGO.jpeg"
-                alt="TailSpark Logo"
-                class="w-full h-full object-contain"
-              />
-            </div>
-            <span class="ml-3 text-xl font-bold text-white font-oxanium"
-              >TailSpark</span
-            >
-          </div>
+<!-- Header -->
+<header class="header-gradient shadow-lg">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-white">Tailwind Playground</h1>
+    <div id="user-info" class="text-white text-sm bg-white/20 px-3 py-1 rounded-full">
+      <i class="fas fa-user mr-1"></i>
+      <span id="username-display">Not logged in</span>
+      <span class="ml-2 px-2 py-1 bg-purple-500 rounded-full text-xs" id="user-level">Level 1</span>
+    </div>
+  </div>
+</header>
 
-          <!-- Desktop Menu -->
-          <div class="hidden md:flex items-center space-x-4">
-            <a
-              href="#"
-              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
-              >Home</a
-            >
-            <a
-              href="#"
-              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
-              >About</a
-            >
-
-            <!-- Dropdown -->
-            <div class="relative dropdown">
-              <button
-                class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium flex items-center nav-transition"
-              >
-                Learning Page
-                <img
-                  src="assets/icons/chevron-down-solid-full.svg"
-                  alt="Dropdown Icon"
-                  class="ml-1 w-3 h-3"
-                />
-              </button>
-              <div
-                class="dropdown-menu absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden"
-              >
-                <div class="py-1">
-                  <a
-                    href="#"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary"
-                    >Beginner</a
-                  >
-                  <a
-                    href="#"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary"
-                    >Intermediate</a
-                  >
-                  <a
-                    href="#"
-                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-primary"
-                    >Professional</a
-                  >
-                </div>
-              </div>
-            </div>
-
-            <a
-              href="#"
-              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
-              >Portfolio</a
-            >
-            <a
-              href="#"
-              class="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium nav-transition"
-              >Contact</a
-            >
-          </div>
-
-          <!-- Mobile Menu Button -->
-          <div class="md:hidden flex items-center">
-            <button
-              id="mobile-menu-button"
-              class="p-2 rounded-md text-white hover:bg-white hover:text-primary focus:outline-none"
-            >
-              <img src="assets/icons/bars-solid-full.svg" alt="Menu" class="w-6 h-6" />
-            </button>
+<main class="flex-1 p-6">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Left side: editor + game buttons + error panel -->
+    <div class="flex flex-col h-full">
+      <div class="bg-gray-800 shadow-xl rounded-t-xl overflow-hidden editor-container border-2 border-indigo-500">
+        <div class="px-4 py-3 bg-indigo-900 border-b border-indigo-700 flex justify-between items-center">
+          <h2 class="text-lg font-bold text-white"><i class="fas fa-code mr-2"></i>Editor</h2>
+          <div class="flex items-center space-x-3">
+            <select id="level-select" class="border rounded px-3 py-1 text-sm bg-indigo-800 text-white">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Expert">Expert</option>
+            </select>
+            <button id="run-button" class="floating-btn px-4 py-2 bg-green-600 text-white rounded-lg text-sm flex items-center font-medium"><i class="fas fa-play-circle mr-2"></i>Run</button>
+            <button id="save-button" class="floating-btn px-3 py-2 bg-blue-600 text-white rounded-lg text-sm flex items-center font-medium"><i class="fas fa-save mr-1"></i></button>
           </div>
         </div>
+        <textarea id="code-editor" class="code-editor w-full h-96 p-4 bg-gray-900 text-green-300 resize-none font-mono text-sm"></textarea>
       </div>
 
-      <!-- Mobile Menu -->
-      <div id="mobile-menu" class="mobile-menu md:hidden bg-white">
-        <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <a
-            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
-            href="#"
-            >Home</a
-          >
-          <a
-            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
-            href="#"
-            >About</a
-          >
-
-          <!-- Mobile Dropdown -->
-          <div class="relative">
-            <button
-              id="mobile-dropdown-button"
-              class="w-full text-left px-3 py-2 text-base font-medium text-primary hover:bg-primary-50 flex justify-between items-center"
-            >
-              Learning Page
-              <img
-                id="mobile-chevron"
-                src="assets/icons/chevron-down-solid-full.svg"
-                alt="Dropdown Icon"
-                class="w-3 h-3"
-              />
-            </button>
-            <div id="mobile-dropdown-menu" class="hidden pl-4">
-              <a
-                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
-                href="#"
-                >Beginner</a
-              >
-              <a
-                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
-                href="#"
-                >Intermediate</a
-              >
-              <a
-                class="block px-3 py-2 text-sm text-primary hover:bg-primary-50"
-                href="#"
-                >Professional</a
-              >
-            </div>
-          </div>
-
-          <a
-            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
-            href="#"
-            >Portfolio</a
-          >
-          <a
-            class="block px-3 py-2 text-base font-medium text-primary hover:bg-primary-50"
-            href="#"
-            >Contact</a
-          >
+      <!-- Error Panel -->
+      <div id="error-panel" class="error-panel mt-4 bg-red-50 border border-red-200 rounded-lg overflow-hidden">
+        <div class="px-4 py-2 bg-red-100 border-b border-red-200 flex justify-between items-center">
+          <h3 class="font-semibold text-red-800"><i class="fas fa-exclamation-circle mr-2"></i>Errors</h3>
+          <button id="error-toggle" class="text-red-600"><i class="fas fa-chevron-up"></i></button>
         </div>
+        <div class="p-4"><ul id="error-list" class="text-red-700 text-sm"></ul></div>
       </div>
-    </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-6">
-      <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <!-- Editor Section -->
-          <div class="flex flex-col h-full">
-            <div
-              class="bg-gray-800 shadow-xl rounded-t-xl overflow-hidden editor-container border-2 border-indigo-500"
-            >
-              <div
-                class="px-4 py-3 bg-indigo-900 border-b border-indigo-700 flex justify-between items-center"
-              >
-                <h2 class="text-lg font-bold text-white flex items-center">
-                  <i class="fas fa-code mr-2"></i>Edit Tailwind HTML
-                </h2>
-                <div class="flex items-center space-x-3">
-                  <select
-                    id="level-select"
-                    class="border rounded px-3 py-1 text-sm bg-indigo-800 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Expert">Expert</option>
-                  </select>
-                  <button
-                    id="run-button"
-                    class="floating-btn px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm flex items-center font-medium"
-                  >
-                    <i class="fas fa-play-circle mr-2"></i>Run
-                    <span class="keyboard-shortcut ml-2">Ctrl+Enter</span>
-                  </button>
-                  <button
-                    id="save-button"
-                    class="floating-btn px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex items-center font-medium"
-                  >
-                    <i class="fas fa-save mr-1"></i>
-                  </button>
-                </div>
-              </div>
-              <textarea
-                id="code-editor"
-                class="code-editor w-full h-96 p-4 bg-gray-900 text-green-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
-                placeholder="<!-- Type your Tailwind HTML here -->"
-              ></textarea>
-            </div>
-
-            <!-- Error Panel -->
-            <div
-              id="error-panel"
-              class="error-panel mt-4 bg-red-50 border border-red-200 rounded-lg overflow-hidden"
-            >
-              <div
-                class="px-4 py-2 bg-red-100 border-b border-red-200 flex justify-between items-center"
-              >
-                <h3 class="font-semibold text-red-800 flex items-center">
-                  <i class="fas fa-exclamation-circle mr-2"></i>Errors
-                </h3>
-                <button id="error-toggle" class="text-red-600">
-                  <i class="fas fa-chevron-up"></i>
-                </button>
-              </div>
-              <div class="p-4">
-                <ul id="error-list" class="text-red-700 text-sm"></ul>
-              </div>
-            </div>
-          </div>
-
-          <!-- Preview Section -->
-          <div class="flex flex-col h-full">
-            <div
-              class="preview-container shadow-xl overflow-hidden border-2 border-purple-500 h-96"
-            >
-              <div
-                class="px-4 py-3 bg-purple-200 border-b border-purple-300 flex items-center"
-              >
-                <h2 class="text-lg font-bold text-purple-800 flex items-center">
-                  <i class="fas fa-eye mr-2"></i>Live Preview
-                </h2>
-                <span
-                  id="status-indicator"
-                  class="ml-2 text-xs bg-purple-300 text-purple-800 px-2 py-1 rounded-full status-indicator"
-                  >Ready</span
-                >
-              </div>
-              <div
-                id="live-preview"
-                class="h-full w-full bg-gradient-to-b from-purple-50 to-purple-100 overflow-auto p-4"
-              ></div>
-            </div>
-
-            <!-- Saved Items Panel -->
-            <div
-              class="mt-6 bg-white p-6 rounded-xl shadow-md border border-gray-200"
-            >
-              <h3
-                class="font-bold text-lg text-gray-800 mb-4 flex items-center justify-between"
-              >
-                <span
-                  ><i class="fas fa-database text-blue-500 mr-2"></i>Saved Code
-                  Snippets</span
-                >
-                <span
-                  id="saved-count"
-                  class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full"
-                  >0</span
-                >
-              </h3>
-              <div class="mb-4 flex space-x-2">
-                <input
-                  type="text"
-                  id="save-name"
-                  placeholder="Name your code"
-                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  id="save-new-button"
-                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save
-                </button>
-              </div>
-              <div
-                id="saved-items"
-                class="border border-gray-200 rounded-lg overflow-hidden"
-              >
-                <div class="bg-gray-50 px-4 py-2 text-sm text-gray-500">
-                  No saved code yet
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Welcome Modal -->
-    <div
-      id="welcome-modal"
-      class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal-overlay"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
-      >
-        <div class="header-gradient p-6 text-center">
-          <h2 class="text-2xl font-bold text-white">
-            Welcome to Tailwind Playground 🎉
-          </h2>
-        </div>
-        <div class="p-6">
-          <p class="text-gray-600 mb-6 text-center">
-            Start experimenting with Tailwind CSS instantly! Edit the HTML on
-            the left, and see the live preview on the right.
-          </p>
-          <div class="bg-blue-50 p-4 rounded-lg mb-6">
-            <h3 class="font-semibold text-blue-800 mb-2">New Features:</h3>
-            <ul class="text-sm text-blue-700 space-y-2">
-              <li class="flex items-start">
-                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                Error detection system
-              </li>
-              <li class="flex items-start">
-                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                Save and load your code snippets
-              </li>
-              <li class="flex items-start">
-                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                Improved live preview
-              </li>
-            </ul>
-          </div>
-          <button
-            id="welcome-close"
-            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors"
-          >
-            Get Started <i class="fas fa-arrow-right ml-2"></i>
-          </button>
-        </div>
+      <!-- Game Buttons -->
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button id="login-btn" class="game-btn bg-blue-600 text-white px-4 py-2 rounded-lg">Login</button>
+        <button id="start-level-btn" class="game-btn bg-blue-500 text-white px-4 py-2 rounded-lg">Start Level</button>
+        <button id="make-error-btn" class="game-btn bg-red-600 text-white px-4 py-2 rounded-lg">Make Error</button>
+        <button id="finish-level-btn" class="game-btn bg-green-600 text-white px-4 py-2 rounded-lg">Finish Level</button>
+        <button id="level-back-btn" class="game-btn bg-yellow-600 text-white px-4 py-2 rounded-lg">Level Back</button>
+        <button id="show-users-btn" class="game-btn bg-purple-600 text-white px-4 py-2 rounded-lg">Show Users</button>
+        <button id="exit-game-btn" class="game-btn bg-gray-600 text-white px-4 py-2 rounded-lg">Exit Game</button>
       </div>
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const editor = document.getElementById("code-editor");
-        const preview = document.getElementById("live-preview");
-        const levelSelect = document.getElementById("level-select");
-        const runButton = document.getElementById("run-button");
-        const saveButton = document.getElementById("save-button");
-        const saveNewButton = document.getElementById("save-new-button");
-        const saveName = document.getElementById("save-name");
-        const statusIndicator = document.getElementById("status-indicator");
-        const welcomeModal = document.getElementById("welcome-modal");
-        const welcomeClose = document.getElementById("welcome-close");
-        const errorPanel = document.getElementById("error-panel");
-        const errorList = document.getElementById("error-list");
-        const errorToggle = document.getElementById("error-toggle");
-        const savedItems = document.getElementById("saved-items");
-        const savedCount = document.getElementById("saved-count");
-
-        const presets = {
-          Beginner: `<div class="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
-    <h1 class="text-2xl font-bold text-gray-800">Hello Tailwind!</h1>
-    <p class="text-gray-600 mt-2">This is a simple beginner layout. Edit this code to see live changes.</p>
-    <button class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-        Click Me
-    </button>
-</div>`,
-          Intermediate: `<div class="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg">
-    <h2 class="text-xl font-semibold text-gray-800 mb-2">Intermediate Layout</h2>
-    <p class="text-gray-600 mb-4">This example includes grid layout and more advanced styling.</p>
-    <div class="grid grid-cols-3 gap-4 mb-4">
-        <div class="bg-blue-100 p-4 rounded-lg text-center">1</div>
-        <div class="bg-blue-200 p-4 rounded-lg text-center">2</div>
-        <div class="bg-blue-300 p-4 rounded-lg text-center">3</div>
-    </div>
-    <button class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 rounded-lg hover:opacity-90 transition-opacity">
-        Continue
-    </button>
-</div>`,
-          Expert: `<div class="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-8">
-    <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full">
-        <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">Expert Level UI</h1>
-        <p class="text-gray-600 mb-6">This example uses gradients, custom animations, and complex responsive layouts.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="bg-gradient-to-br from-yellow-100 to-yellow-200 p-6 rounded-xl transform hover:-translate-y-1 transition-transform">
-                <h3 class="font-semibold text-yellow-800">Feature One</h3>
-                <p class="text-yellow-600 text-sm mt-2">With hover effects</p>
-            </div>
-            <div class="bg-gradient-to-br from-green-100 to-green-200 p-6 rounded-xl transform hover:-translate-y-1 transition-transform">
-                <h3 class="font-semibold text-green-800">Feature Two</h3>
-                <p class="text-green-600 text-sm mt-2">And smooth transitions</p>
-            </div>
+    <!-- Right side: preview + saved snippets -->
+    <div class="flex flex-col h-full">
+      <div class="preview-container shadow-xl overflow-hidden border-2 border-purple-500 h-96">
+        <div class="px-4 py-3 bg-purple-200 border-b border-purple-300 flex items-center">
+          <h2 class="text-lg font-bold text-purple-800"><i class="fas fa-eye mr-2"></i>Live Preview</h2>
+          <span id="status-indicator" class="ml-2 text-xs bg-purple-300 text-purple-800 px-2 py-1 rounded-full">Ready</span>
         </div>
-        <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors">
-            Launch Project 🚀
-        </button>
+        <div id="live-preview" class="h-full w-full bg-gradient-to-b from-purple-50 to-purple-100 overflow-auto p-4"></div>
+      </div>
+
+      <!-- Saved snippets -->
+      <div class="mt-6 bg-white p-6 rounded-xl shadow-md border border-gray-200">
+        <h3 class="font-bold text-lg text-gray-800 mb-4 flex items-center justify-between">
+          <span><i class="fas fa-database text-blue-500 mr-2"></i>Saved Snippets</span>
+          <span id="saved-count" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">0</span>
+        </h3>
+        <div class="mb-4 flex space-x-2">
+          <input type="text" id="save-name" placeholder="Name your code"
+            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"/>
+          <button id="save-new-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>
+        </div>
+        <div id="saved-items" class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-4 py-2 text-sm text-gray-500">No saved code yet</div>
+        </div>
+      </div>
     </div>
-</div>`,
-        };
+  </div>
+</main>
 
-        // Error detection system
-        function detectErrors(code) {
-          const errors = [];
+<!-- Welcome Modal -->
+<div id="welcome-modal">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+    <div class="header-gradient p-6 text-center">
+      <h2 class="text-2xl font-bold text-white">Welcome 🎉</h2>
+    </div>
+    <div class="p-6">
+      <button id="welcome-close" class="w-full bg-indigo-600 text-white font-medium py-3 rounded-lg">Get Started</button>
+    </div>
+  </div>
+</div>
 
-          // Check for unclosed tags
-          const openTags = [];
-          const tagRegex = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
-          let match;
+<script>
+const API="http://localhost:3000";
+let currentUser=null,currentLevel=1,currentErrors=0,currentType=null;
+let savedItems=JSON.parse(localStorage.getItem('savedItems'))||[];
 
-          while ((match = tagRegex.exec(code)) !== null) {
-            const fullTag = match[0];
-            const tagName = match[1];
+// --- Game handlers ---
+async function handleStartLevel(){ if(!currentUser)return alert("Login first!");
+  const res=await fetch(`${API}/start-level`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:currentUser,type:currentType,level:currentLevel})});
+  const d=await res.json(); alert(`Level ${currentLevel} started. Attempts: ${d.attempts}, Errors: ${d.errors}`);}
+function handleMakeError(){ if(!currentUser)return alert("Login first!"); currentErrors++; alert(`Error count: ${currentErrors}`);}
+async function handleFinishLevel(){ if(!currentUser)return alert("Login first!");
+  const res=await fetch(`${API}/finish-level`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:currentUser,type:currentType,level:currentLevel,errors:currentErrors})});
+  const d=await res.json(); currentLevel=d.userLevel; localStorage.setItem("currentLevel",currentLevel); document.getElementById("user-level").textContent=`Level ${currentLevel}`; alert(`Finished! Level ${currentLevel}`);}
+async function handleLevelBack(){ if(!currentUser)return alert("Login first!");
+  const res=await fetch(`${API}/level-back`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:currentUser})});
+  const d=await res.json(); currentLevel=d.userLevel; localStorage.setItem("currentLevel",currentLevel); document.getElementById("user-level").textContent=`Level ${currentLevel}`; alert(`Moved back to ${currentLevel}`);}
+async function handleShowUsers(){ const res=await fetch(`${API}/users`); const users=await res.json(); alert("Users:\n"+JSON.stringify(users,null,2));}
+async function handleLogin(){ const username=prompt("Enter username:")||"player1"; const type=document.getElementById('level-select').value;
+  const res=await fetch(`${API}/login`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username,type})});
+  const d=await res.json(); if(d.error)return alert(d.error); currentUser=username; currentType=type; currentLevel=d.level; currentErrors=0;
+  localStorage.setItem("currentUser",username); localStorage.setItem("currentLevel",currentLevel); localStorage.setItem("currentType",currentType);
+  document.getElementById('username-display').textContent=username; document.getElementById('user-level').textContent=`Level ${currentLevel}`;
+  document.getElementById("welcome-modal").style.display="none"; alert(`Logged in as ${username}`);}
+function handleExitGame(){ currentUser=null;currentLevel=1;currentErrors=0;currentType=null;
+  document.getElementById('username-display').textContent="Not logged in"; document.getElementById('user-level').textContent="Level 1"; localStorage.clear(); alert("Exited game");}
 
-            if (fullTag.startsWith("</")) {
-              // Closing tag
-              if (
-                openTags.length === 0 ||
-                openTags[openTags.length - 1] !== tagName
-              ) {
-                errors.push(`Mismatched closing tag: ${fullTag}`);
-              } else {
-                openTags.pop();
-              }
-            } else if (!fullTag.endsWith("/>")) {
-              // Opening tag (not self-closing)
-              openTags.push(tagName);
-            }
-          }
+// --- Editor/preview ---
+function runCode(){const ed=document.getElementById("code-editor");const pv=document.getElementById("live-preview");const st=document.getElementById("status-indicator");
+  try{pv.innerHTML=ed.value; st.textContent="Success"; st.classList.remove("bg-red-300"); st.classList.add("bg-green-300");
+    document.getElementById('error-list').innerHTML=''; document.getElementById('error-panel').classList.remove('open');}
+  catch(e){st.textContent="Error"; st.classList.add("bg-red-300"); document.getElementById('error-list').innerHTML=`<li>${e.message}</li>`; document.getElementById('error-panel').classList.add('open');}}
 
-          if (openTags.length > 0) {
-            errors.push(`Unclosed tags: ${openTags.join(", ")}`);
-          }
+// --- Save/load ---
+function saveCode(){const nameInput=document.getElementById('save-name');const editor=document.getElementById('code-editor');const name=nameInput.value.trim()||`Snippet ${savedItems.length+1}`;
+  if(editor.value.trim()){savedItems.push({name,code:editor.value}); localStorage.setItem('savedItems',JSON.stringify(savedItems)); updateSavedItemsList(); nameInput.value='';}}
+function updateSavedItemsList(){const c=document.getElementById('saved-items');document.getElementById('saved-count').textContent=savedItems.length;
+  if(savedItems.length===0){c.innerHTML='<div class="bg-gray-50 px-4 py-2 text-sm text-gray-500">No saved code yet</div>';return;}
+  c.innerHTML=savedItems.map((it,i)=>`<div class="flex justify-between px-4 py-3 border-b"><div>${it.name}</div><div><button class="load-btn text-blue-600" data-i="${i}">Load</button><button class="delete-btn text-red-600 ml-2" data-i="${i}">Del</button></div></div>`).join('');
+  document.querySelectorAll('.load-btn').forEach(b=>b.onclick=e=>{const i=e.target.dataset.i;document.getElementById('code-editor').value=savedItems[i].code;runCode();});
+  document.querySelectorAll('.delete-btn').forEach(b=>b.onclick=e=>{const i=e.target.dataset.i;savedItems.splice(i,1);localStorage.setItem('savedItems',JSON.stringify(savedItems));updateSavedItemsList();});}
 
-          // Check for common Tailwind class issues
-          if (code.includes('class="') && !code.includes("class=")) {
-            errors.push("Potential malformed class attribute");
-          }
-
-          return errors;
-        }
-
-        // Update preview function
-        function updatePreview() {
-          statusIndicator.textContent = "Updating...";
-          statusIndicator.className =
-            "ml-2 text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full status-indicator";
-
-          const content = editor.value;
-
-          // Detect errors
-          const errors = detectErrors(content);
-          displayErrors(errors);
-
-          // Update preview
-          preview.innerHTML = content;
-
-          // Add Tailwind to the iframe
-          const tailwindScript = document.createElement("script");
-          tailwindScript.src = "https://cdn.tailwindcss.com";
-
-          // Clear previous content and add new
-          preview.innerHTML = "";
-          preview.appendChild(tailwindScript);
-          preview.innerHTML += content;
-
-          // Update status after a short delay
-          setTimeout(() => {
-            statusIndicator.textContent = "Updated";
-            statusIndicator.className =
-              "ml-2 text-xs bg-green-300 text-green-800 px-2 py-1 rounded-full status-indicator";
-
-            // Revert status after 2 seconds
-            setTimeout(() => {
-              statusIndicator.textContent = "Ready";
-              statusIndicator.className =
-                "ml-2 text-xs bg-purple-300 text-purple-800 px-2 py-1 rounded-full status-indicator";
-            }, 2000);
-          }, 300);
-        }
-
-        // Display errors
-        function displayErrors(errors) {
-          errorList.innerHTML = "";
-
-          if (errors.length === 0) {
-            errorPanel.classList.remove("open");
-            return;
-          }
-
-          errors.forEach((error) => {
-            const li = document.createElement("li");
-            li.className = "mb-2 flex items-start";
-            li.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-2"></i> ${error}`;
-            errorList.appendChild(li);
-          });
-
-          errorPanel.classList.add("open");
-        }
-
-        // Data storage functions
-        function saveCode(name, code) {
-          const saved = getSavedItems();
-          const timestamp = new Date().toISOString();
-          const id = Date.now().toString();
-
-          saved.push({ id, name, code, timestamp });
-          localStorage.setItem(
-            "tailwindPlaygroundSaves",
-            JSON.stringify(saved)
-          );
-
-          updateSavedList();
-        }
-
-        function getSavedItems() {
-          const savedJson = localStorage.getItem("tailwindPlaygroundSaves");
-          return savedJson ? JSON.parse(savedJson) : [];
-        }
-
-        function deleteSavedItem(id) {
-          const saved = getSavedItems();
-          const filtered = saved.filter((item) => item.id !== id);
-          localStorage.setItem(
-            "tailwindPlaygroundSaves",
-            JSON.stringify(filtered)
-          );
-
-          updateSavedList();
-        }
-
-        function loadSavedItem(code) {
-          editor.value = code;
-          updatePreview();
-        }
-
-        function updateSavedList() {
-          const saved = getSavedItems();
-          savedCount.textContent = saved.length;
-
-          if (saved.length === 0) {
-            savedItems.innerHTML =
-              '<div class="bg-gray-50 px-4 py-2 text-sm text-gray-500">No saved code yet</div>';
-            return;
-          }
-
-          savedItems.innerHTML = "";
-          saved.forEach((item) => {
-            const div = document.createElement("div");
-            div.className =
-              "save-item border-b border-gray-200 last:border-b-0 px-4 py-3 flex justify-between items-center";
-            div.innerHTML = `
-                        <div>
-                            <div class="font-medium">${item.name}</div>
-                            <div class="text-xs text-gray-500">${new Date(
-                              item.timestamp
-                            ).toLocaleString()}</div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button class="load-btn text-blue-600 hover:text-blue-800" data-id="${
-                              item.id
-                            }">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            <button class="delete-btn text-red-600 hover:text-red-800" data-id="${
-                              item.id
-                            }">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-            savedItems.appendChild(div);
-          });
-
-          // Add event listeners to buttons
-          document.querySelectorAll(".load-btn").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              const id = btn.getAttribute("data-id");
-              const item = saved.find((i) => i.id === id);
-              if (item) loadSavedItem(item.code);
-            });
-          });
-
-          document.querySelectorAll(".delete-btn").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              const id = btn.getAttribute("data-id");
-              deleteSavedItem(id);
-            });
-          });
-        }
-
-        // Load initial preset
-        editor.value = presets[levelSelect.value];
-        updatePreview();
-
-        // Initialize saved items list
-        updateSavedList();
-
-        // Event listeners
-        runButton.addEventListener("click", updatePreview);
-
-        levelSelect.addEventListener("change", () => {
-          editor.value = presets[levelSelect.value];
-          updatePreview();
-        });
-
-        // Save functionality
-        saveButton.addEventListener("click", () => {
-          saveName.value = `Code ${new Date().toLocaleTimeString()}`;
-          saveName.focus();
-        });
-
-        saveNewButton.addEventListener("click", () => {
-          const name = saveName.value.trim();
-          if (name) {
-            saveCode(name, editor.value);
-            saveName.value = "";
-          }
-        });
-
-        // Keyboard shortcut
-        document.addEventListener("keydown", (e) => {
-          if (e.ctrlKey && e.key === "Enter") {
-            updatePreview();
-          }
-        });
-
-        // Error panel toggle
-        errorToggle.addEventListener("click", () => {
-          errorPanel.classList.toggle("open");
-          errorToggle.innerHTML = errorPanel.classList.contains("open")
-            ? '<i class="fas fa-chevron-up"></i>'
-            : '<i class="fas fa-chevron-down"></i>';
-        });
-
-        // Welcome modal
-        if (!localStorage.getItem("welcomeShown")) {
-          welcomeModal.classList.remove("hidden");
-          document.body.classList.add("overflow-hidden");
-        }
-
-        welcomeClose.addEventListener("click", () => {
-          welcomeModal.classList.add("hidden");
-          document.body.classList.remove("overflow-hidden");
-          localStorage.setItem("welcomeShown", "true");
-        });
-      });
-    </script>
-    <script>
-      document
-        .getElementById("mobile-menu-button")
-        .addEventListener("click", function () {
-          document.getElementById("mobile-menu").classList.toggle("open");
-        });
-      document
-        .getElementById("mobile-dropdown-button")
-        .addEventListener("click", function () {
-          const dropdown = document.getElementById("mobile-dropdown-menu");
-          dropdown.classList.toggle("hidden");
-
-          const chevron = document.getElementById("mobile-chevron");
-          chevron.src = chevron.src.includes("chevron-down")
-            ? "assets/icons/chevron-up-solid-full.svg"
-            : "assets/icons/chevron-down-solid-full.svg";
-        });
-    </script>
-  </body>
+// --- Init ---
+document.addEventListener("DOMContentLoaded",()=>{
+  const welcomeModal=document.getElementById("welcome-modal"); const savedUser=localStorage.getItem("currentUser");
+  if(savedUser){currentUser=savedUser;currentLevel=parseInt(localStorage.getItem("currentLevel"))||1;currentType=localStorage.getItem("currentType")||null;
+    document.getElementById('username-display').textContent=currentUser;document.getElementById('user-level').textContent=`Level ${currentLevel}`;welcomeModal.style.display="none";}
+  document.getElementById("welcome-close").onclick=()=>welcomeModal.style.display="none";
+  document.getElementById("login-btn").onclick=handleLogin;
+  document.getElementById("exit-game-btn").onclick=handleExitGame;
+  document.getElementById("start-level-btn").onclick=handleStartLevel;
+  document.getElementById("make-error-btn").onclick=handleMakeError;
+  document.getElementById("finish-level-btn").onclick=handleFinishLevel;
+  document.getElementById("level-back-btn").onclick=handleLevelBack;
+  document.getElementById("show-users-btn").onclick=handleShowUsers;
+  document.getElementById("run-button").onclick=runCode;
+  document.getElementById("save-button").onclick=saveCode;
+  document.getElementById("save-new-button").onclick=saveCode;
+  document.getElementById("error-toggle").onclick=()=>{const p=document.getElementById("error-panel");p.classList.toggle("open");};
+  updateSavedItemsList();
+  document.getElementById("code-editor").value="<!-- Welcome! -->\n<div class='p-4 bg-white rounded shadow'>Hello Tailwind</div>";
+  runCode();
+});
+</script>
+</body>
 </html>
