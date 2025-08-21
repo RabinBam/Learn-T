@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Contact Us</title>
+<!-- Oxanium font -->
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* Reset */
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    background: linear-gradient(180deg, #2d1b69 0%, #3730a3 30%, #4338ca 50%, #7c3aed 70%, #a855f7 85%, #c084fc 100%);
+    color: #e5e7eb; 
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Oxanium', sans-serif;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 300'%3E%3Cpath d='M0,150 C300,75 600,225 1200,150 L1200,300 L0,300 Z' fill='%23312e81' opacity='0.4'/%3E%3Cpath d='M0,200 C400,125 800,275 1200,200 L1200,300 L0,300 Z' fill='%234338ca' opacity='0.3'/%3E%3C/svg%3E") no-repeat bottom center;
+    background-size: cover;
+    pointer-events: none;
+    z-index: 1;
+  } 
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* Navbar container */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(90deg, #1e293b, #334155, #1e293b);
+    border-bottom: 1px solid #374151;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+  }
+
+  /* Logo */
+  .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .logo-box {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.7);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+  }
+  
+  .logo-link:hover .logo-box {
+    transform: scale(1.05);
+  }
+  
+  .logo-box img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+  }
+  
+  .logo-text {
+    color: #22d3ee;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Desktop nav */
+  .nav-links {
+    display: none;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  /* Nav link styles */
+  .nav-links a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #d1d5db;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+  }
+  
+  .nav-links a img {
+    width: 18px;
+    height: 18px;
+    filter: brightness(0.75);
+    transition: filter 0.3s ease;
+  }
+  
+  .nav-links a:hover {
+    background-color: rgba(75, 85, 99, 0.3);
+    color: #22d3ee;
+    box-shadow: 0 4px 6px rgba(34, 211, 238, 0.4);
+  }
+  
+  .nav-links a:hover img {
+    filter: brightness(1);
+  }
+
+  /* Active nav link */
+  .nav-links a.active {
+    background-color: rgba(34, 211, 238, 0.125);
+    color: #22d3ee;
+    border-color: rgba(34, 211, 238, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+  }
+  
+  .nav-links a.active img {
+    filter: brightness(1.25);
+  }
+
+  /* Profile button */
+  .profile-container {
+    position: relative;
+  }
+  
+  .profile-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .profile-button img {
+    width: 28px;
+    height: 28px;
+    filter: brightness(0.75);
+    transition: filter 0.3s ease;
+  }
+  
+  .profile-button:hover {
+    background-color: rgba(75, 85, 99, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 211, 238, 0.4);
+  }
+  
+  .profile-button:hover img {
+    filter: brightness(1);
+  }
+
+  /* Profile dropdown */
+  .profile-dropdown {
+    position: absolute;
+    right: 0;
+    margin-top: 0.5rem;
+    width: 12rem;
+    background-color: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    padding: 0.5rem 0;
+    display: none;
+    z-index: 100;
+  }
+  
+  .profile-dropdown.show {
+    display: block;
+  }
+  
+  .profile-dropdown a,
+  .profile-dropdown button {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #d1d5db;
+    padding: 0.5rem 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .profile-dropdown a:hover,
+  .profile-dropdown button:hover {
+    background-color: #374151;
+    color: #22d3ee;
+  }
+
+  /* Mobile menu button */
+  .mobile-menu-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    color: #9ca3af;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .mobile-menu-button:hover {
+    background-color: #374151;
+    color: #22d3ee;
+  }
+  
+  .mobile-menu-button img {
+    width: 24px;
+    height: 24px;
+    filter: brightness(0.75);
+    transition: filter 0.3s ease;
+  }
+
+  /* Mobile menu */
+  .mobile-menu {
+    position: fixed;
+    top: 4rem;
+    left: 0;
+    width: 16rem;
+    height: 100vh;
+    background-color: #1f2937;
+    border-right: 1px solid #374151;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.7);
+    padding: 1.25rem;
+    transform: translateX(-100%);
+    transition: transform 0.5s ease;
+    backdrop-filter: blur(5px);
+    overflow-y: auto;
+    z-index: 40;
+  }
+  
+  .mobile-menu.show {
+    transform: translateX(0);
+  }
+
+  .mobile-menu a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #d1d5db;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .mobile-menu a img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0.75);
+    transition: filter 0.3s ease;
+  }
+  
+  .mobile-menu a:hover {
+    background-color: rgba(75, 85, 99, 0.3);
+    color: #22d3ee;
+  }
+  
+  .mobile-menu a.active {
+    background-color: rgba(34, 211, 238, 0.125);
+    color: #22d3ee;
+    border: 1px solid rgba(34, 211, 238, 0.3);
+    box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+  }
+  
+  .mobile-menu a.active img {
+    filter: brightness(1.25);
+  }
+
+  /* Main content */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  /* Contact Section */
+  .contact-section {
+    position: relative;
+    z-index: 20;
+    width: 100%;
+    padding: 2rem;
+    background: transparent;
+    border-radius: 1rem;
+  }
+
+  /* Contact container */
+  .contact-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: stretch;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .contact-message {
+    color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: transparent;
+  }
+
+  .contact-form-wrapper {
+    color: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .contact-title {
+    text-align: left;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #38bdf8;
+    margin-bottom: 1rem;
+  }
+
+  .contact-message h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .contact-message ul {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+
+  .contact-message ul li {
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+  }
+
+  /* Form styles */
+  .contact-form .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .contact-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #e2e8f0;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #334155;
+    background-color: #f9fafb;
+    color: #111;
+    font-size: 1rem;
+  }
+
+  .contact-form textarea {
+    resize: vertical;
+  }
+
+  /* Submit button */
+  .submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    color: white;
+    font-weight: 700;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59,130,246,0.5);
+  }
+
+  /* Responsive */
+  @media(min-width: 768px) {
+    .nav-links {
+      display: flex;
+    }
+    .mobile-menu-button {
+      display: none;
+    }
+    .mobile-menu {
+      display: none;
+    }
+  }
+
+  @media(max-width: 767px) {
+    .contact-container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <!-- Logo -->
+    <a href="/" class="logo-link" aria-label="TailSpark Home">
+      <div class="logo-box">
+        <img src="/icons/LOGO.jpeg" alt="TailSpark Logo" />
+      </div>
+      <span class="logo-text">TailSpark</span>
+    </a>
+
+    <!-- Desktop Nav -->
+    <div class="nav-links" id="desktopNavLinks">
+      <a href="/aboutus" class="nav-link" data-link="/aboutus">
+        <img src="/icons/info.svg" alt="" aria-hidden="true" />
+        About Us
+      </a>
+      <a href="/learning" class="nav-link" data-link="/learning">
+        <img src="/icons/book.svg" alt="" aria-hidden="true" />
+        Learning
+      </a>
+      <a href="/playground" class="nav-link" data-link="/playground">
+        <img src="/icons/gamepad.svg" alt="" aria-hidden="true" />
+        Playground
+      </a>
+      <a href="/contact" class="nav-link" data-link="/contact">
+        <img src="/icons/envelope.svg" alt="" aria-hidden="true" />
+        Contact Us
+      </a>
+
+      <!-- Profile dropdown -->
+      <div class="profile-container">
+        <button class="profile-button" id="profileBtn" aria-haspopup="true" aria-expanded="false" aria-label="Toggle profile menu">
+          <img src="/icons/user-circle.svg" alt="Profile" />
+        </button>
+        <div class="profile-dropdown" id="profileDropdown" role="menu" aria-hidden="true">
+          <a href="/profile" role="menuitem">My Profile</a>
+          <a href="/settings" role="menuitem">Settings</a>
+          <button role="menuitem" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile menu button -->
+    <button class="mobile-menu-button" id="mobileMenuBtn" aria-label="Toggle menu" aria-expanded="false">
+      <img src="/icons/bars-solid-full.svg" alt="menu icon" />
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <a href="/aboutus" class="mobile-link" data-link="/aboutus">
+      <img src="/icons/info.svg" alt="" aria-hidden="true" />
+      About Us
+    </a>
+    <a href="/learning" class="mobile-link" data-link="/learning">
+      <img src="/icons/book.svg" alt="" aria-hidden="true" />
+      Learning
+    </a>
+    <a href="/playground" class="mobile-link" data-link="/playground">
+      <img src="/icons/gamepad.svg" alt="" aria-hidden="true" />
+      Playground
+    </a>
+    <a href="/contact" class="mobile-link" data-link="/contact">
+      <img src="/icons/envelope.svg" alt="" aria-hidden="true" />
+      Contact Us
+    </a>
+  </div>
+</nav>
+
+<!-- Contact section -->
+<main>
+  <section class="contact-section">
+    <div class="contact-container">
+        
+      <!-- Left: Message -->
+      <div class="contact-message">
+        <h2 class="contact-title">Get in Touch with us:</h2>
+        <h3>Out-of-hours call answering for the property sector</h3>
+        <ul>
+          <li>✔ Real people answering your phones out-of-hours</li>
+          <li>✔ Specific services for property sector pain-points</li>
+          <li>✔ 24 hour emergency contractor call outs</li>
+        </ul>
+        <div>
+          <span class="phone">Phone: 📞 0161 510 5600</span><br>
+          <span class="phone">Email: example@example.com</span><br>
+          <span class="phone">Location: Kamal Pokhari, Kathmandu</span>
+        </div>
+      </div>
+
+      <!-- Right: Form -->
+      <div class="contact-form-wrapper">
+        <form class="contact-form" id="contactForm">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Enter your name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required />
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="4" placeholder="Write your message" required></textarea>
+          </div>
+          <button type="submit" class="submit-btn">Send Message</button>
+        </form>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<script>
+  // Elements
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const profileBtn = document.getElementById('profileBtn');
+  const profileDropdown = document.getElementById('profileDropdown');
+
+  // Toggle mobile menu
+  mobileMenuBtn.addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.toggle('show');
+    mobileMenuBtn.setAttribute('aria-expanded', isOpen);
+    mobileMenu.setAttribute('aria-hidden', !isOpen);
+    // Swap icon between bars and close
+    const img = mobileMenuBtn.querySelector('img');
+    if (isOpen) {
+      img.src = '/icons/close.svg';
+      img.alt = 'close menu icon';
+    } else {
+      img.src = '/icons/bars-solid-full.svg';
+      img.alt = 'menu icon';
+    }
+  });
+
+  // Toggle profile dropdown
+  profileBtn.addEventListener('click', () => {
+    const isOpen = profileDropdown.classList.toggle('show');
+    profileBtn.setAttribute('aria-expanded', isOpen);
+    profileDropdown.setAttribute('aria-hidden', !isOpen);
+  });
+
+  // Close dropdowns if click outside
+  document.addEventListener('click', (e) => {
+    if (!profileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+      profileDropdown.classList.remove('show');
+      profileBtn.setAttribute('aria-expanded', false);
+      profileDropdown.setAttribute('aria-hidden', true);
+    }
+    if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+      mobileMenu.classList.remove('show');
+      mobileMenuBtn.setAttribute('aria-expanded', false);
+      mobileMenu.setAttribute('aria-hidden', true);
+      // Reset icon
+      const img = mobileMenuBtn.querySelector('img');
+      img.src = '/icons/bars-solid-full.svg';
+      img.alt = 'menu icon';
+    }
+  });
+
+  // Close mobile menu on link click
+  document.querySelectorAll('.mobile-link').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu.classList.remove('show');
+      mobileMenuBtn.setAttribute('aria-expanded', false);
+      mobileMenu.setAttribute('aria-hidden', true);
+      const img = mobileMenuBtn.querySelector('img');
+      img.src = '/icons/bars-solid-full.svg';
+      img.alt = 'menu icon';
+    });
+  });
+
+  // Simulate active link by matching current path
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.nav-link, .mobile-link').forEach(link => {
+    if (link.dataset.link === currentPath) {
+      link.classList.add('active');
+    }
+  });
+
+  // Logout button action
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    alert('Logout clicked!');
+  });
+
+  // Handle form submission
+  document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('Thank you! Your message has been submitted.');
+    this.reset();
+  });
+</script>
+
+</body>
+</html>
