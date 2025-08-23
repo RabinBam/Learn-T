@@ -11,7 +11,7 @@ const oxanium = Oxanium({ subsets: ["latin"], weight: ["400", "600", "700"] });
 const NAV_LINKS = [
   { href: "/aboutus", label: "About Us", icon: "/icons/info.svg" },
   { href: "/learning", label: "Learning", icon: "/icons/book.svg" },
-  { href: "/playground", label: "Playground", icon: "/icons/gamepad.svg" },
+  { href: "/options", label: "Playground", icon: "/icons/gamepad.svg" },
   { href: "/contact", label: "Contact Us", icon: "/icons/envelope.svg" },
 ];
 
