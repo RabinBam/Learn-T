@@ -19,25 +19,47 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
+  Copy,
 } from "lucide-react";
 
 /**
  * TailwindPlaygroundNoNav.tsx
  *
- * Full, drop-in client component for Next.js (App Router).
- * - Navigation bar removed as requested.
- * - Local disk saving (download .html/.txt).
- * - Local persistence using localStorage.
- * - Firebase placeholders with clear comments showing where to add
- *   Firebase init and Firestore/Realtime DB calls later.
- * - SSR/hydration safe (isMounted gate + typeof window checks).
+ * - Navigation removed
+ * - Local saving / download (.html /.txt)
+ * - localStorage persistence of snippets
+ * - Improved error detection:
+ *    - reports line number, severity, and the exact offending word/snippet
+ *    - supports HTML tag issues and Tailwind-ish classname basic validation
+ * - Error list items can be clicked to jump/select the offending line in the editor
+ * - Firebase placeholders with explicit instructions where to add your code
  *
- * To use:
- * - Place in your project (e.g. app/components/TailwindPlaygroundNoNav.tsx)
- * - Import and render in any page or route
+ * Usage:
+ * - Place file in your app (e.g. app/components/)
+ * - Import and render in a page or layout
  *
- * NOTE: This file intentionally does NOT include actual Firebase code.
- * See the TODO markers below for exactly where to paste your Firebase logic.
+ * Firebase quick setup guide (copy into lib/firebase.ts):
+ * -----------------------------------------------------
+ * 1) npm install firebase
+ * 2) Create `lib/firebase.ts`:
+ *
+ * import { initializeApp } from "firebase/app";
+ * import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+ *
+ * const firebaseConfig = {
+ *   apiKey: "YOUR_API_KEY",
+ *   authDomain: "YOUR_AUTH_DOMAIN",
+ *   projectId: "YOUR_PROJECT_ID",
+ *   storageBucket: "YOUR_STORAGE_BUCKET",
+ *   messagingSenderId: "YOUR_MSG_SENDER_ID",
+ *   appId: "YOUR_APP_ID",
+ * };
+ *
+ * const app = initializeApp(firebaseConfig);
+ * export const db = getFirestore(app);
+ *
+ * 3) Replace the stubs saveSnippetToFirebase/loadSnippetsFromFirebase/deleteSnippetFromFirebase
+ *    inside this file with Firestore calls (examples are provided in comments where the stubs are).
  */
 
 /* ----------------------------- TypeScript types ---------------------------- */
@@ -47,6 +69,7 @@ interface ErrorItem {
   line: number;
   message: string;
   severity: "error" | "warning";
+  word?: string;
 }
 
 interface SavedItem {
@@ -57,19 +80,17 @@ interface SavedItem {
   level?: string;
 }
 
-type Level = "Beginner" | "Intermediate" | "Expert";
-
 /* --------------------------------- Component -------------------------------- */
 
 const TailwindPlaygroundNoNav: React.FC = () => {
-  // Hydration guard to avoid SSR/localStorage problems
+  // Hydration guard
   const [isMounted, setIsMounted] = useState(false);
 
-  // Editor state
+  // Editor & UI state
   const [code, setCode] = useState<string>("");
-  const [level, setLevel] = useState<Level>("Beginner");
-
-  // UI state
+  const [level, setLevel] = useState<"Beginner" | "Intermediate" | "Expert">(
+    "Beginner"
+  );
   const [errors, setErrors] = useState<ErrorItem[]>([]);
   const [showErrors, setShowErrors] = useState<boolean>(false);
   const [status, setStatus] = useState<"Ready" | "Updating..." | "Updated">(
@@ -84,7 +105,7 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
 
   /* ----------------------------- Preset templates ---------------------------- */
-  const presets: Record<Level, string> = useMemo(
+  const presets = useMemo(
     () => ({
       Beginner:
         '<div class="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">\n  <h1 class="text-2xl font-bold text-gray-800">Hello Tailwind!</h1>\n  <p class="text-gray-600 mt-2">This is a simple beginner layout. Edit this code to see live changes.</p>\n  <button class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Click Me</button>\n</div>',
@@ -103,16 +124,22 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
     const tagStack: Array<{ tag: string; line: number }> = [];
 
+    // Tailwind class validator (permissive, accepts responsive prefixes, pseudo prefixes, arbitrary values)
+    // This regex allows letters, numbers, -, _, :, /, [], %, ., #, (, ), @
+    const tailwindClassRegex = /^[a-z0-9@_\-:\/\[\]\.%()#]+$/i;
+
     lines.forEach((line, index) => {
       const lineNumber = index + 1;
 
-      // naive tag parsing (works for typical cases; not a full HTML parser)
-      const tagRegex = /<\/?([a-z][a-z0-9-]*)\b[^>]*>/gi;
+      // HTML tag parsing (simple, not full parser)
+      const tagRegex = /<\/?([a-z][a-z0-9-]*)\b([^>]*)>/gi;
       let match: RegExpExecArray | null;
       while ((match = tagRegex.exec(line)) !== null) {
         const full = match[0];
-        const tag = match[1];
+        const tag = match[1].toLowerCase();
+        const attrs = match[2] || "";
 
+        // closing tag
         if (full.startsWith("</")) {
           if (
             tagStack.length === 0 ||
@@ -123,57 +150,87 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               line: lineNumber,
               message: `Mismatched closing tag: ${full}`,
               severity: "error",
+              word: tag,
             });
           } else {
             tagStack.pop();
           }
-        } else if (
-          !full.endsWith("/>") &&
-          !["img", "br", "hr", "input", "meta", "link"].includes(tag)
-        ) {
-          tagStack.push({ tag, line: lineNumber });
+        } else {
+          // opening tag (skip void elements)
+          if (
+            !full.endsWith("/>") &&
+            !["img", "br", "hr", "input", "meta", "link"].includes(tag)
+          ) {
+            tagStack.push({ tag, line: lineNumber });
+          }
+        }
+
+        // check for malformed attributes in this tag substring (very basic)
+        if (attrs && /(\w+=[^\s"'>]+)/.test(attrs)) {
+          // attribute values should be quoted
+          found.push({
+            type: "HTML",
+            line: lineNumber,
+            message: `Attribute values should be quoted in ${full}`,
+            severity: "warning",
+            word: attrs.trim().split(/\s+/)[0],
+          });
         }
       }
 
-      // class attribute basic checks
-      if (line.includes("class=") && !line.match(/class="[^"]*"/)) {
+      // Malformed standalone class attribute (e.g., class=noquotes)
+      if (line.includes("class=") && !line.match(/class\s*=\s*"(.*?)"/)) {
+        // Find approximate token
+        const tokenMatch = line.match(/class\s*=\s*([^\s>]+)/);
         found.push({
           type: "HTML",
           line: lineNumber,
           message:
-            'Malformed class attribute - ensure double quotes: class="..."',
+            'Malformed class attribute — ensure class="..." (use double quotes).',
           severity: "warning",
+          word: tokenMatch ? tokenMatch[1] : "class=",
         });
       }
 
-      // check attributes without quotes
-      if (/\w+=[^"'\s>]+[\s>]/.test(line)) {
+      // Tailwind-like class checking: extract class="..."/className="..."
+      const classAttrRegex = /(?:class|className)\s*=\s*"([^"]*)"/g;
+      let classMatch: RegExpExecArray | null;
+      while ((classMatch = classAttrRegex.exec(line)) !== null) {
+        const classList = classMatch[1].trim();
+        if (!classList) continue;
+        const classes = classList.split(/\s+/);
+        classes.forEach((cls) => {
+          if (!tailwindClassRegex.test(cls)) {
+            found.push({
+              type: "Tailwind",
+              line: lineNumber,
+              message: `Possibly invalid Tailwind class: "${cls}"`,
+              severity: "warning",
+              word: cls,
+            });
+          } else {
+            // optional: flag suspicious patterns (typos like 'bg--blue' or stray colon at end)
+            if (/--/.test(cls) || /:$/.test(cls) || /^-/.test(cls)) {
+              found.push({
+                type: "Tailwind",
+                line: lineNumber,
+                message: `Suspicious Tailwind pattern: "${cls}"`,
+                severity: "warning",
+                word: cls,
+              });
+            }
+          }
+        });
+      }
+
+      // Basic check for missing closing angle bracket
+      if (line.includes("<") && !line.includes(">") && /\<\w+/.test(line)) {
         found.push({
           type: "HTML",
           line: lineNumber,
-          message: "Attribute value should be quoted",
-          severity: "warning",
-        });
-      }
-
-      // simple tailwind-ish classname validation
-      const classMatches = line.match(/class="([^"]*)"/g);
-      if (classMatches) {
-        classMatches.forEach((cm) => {
-          const content = cm.match(/class="([^"]*)"/);
-          if (content && content[1]) {
-            const classes = content[1].split(/\s+/);
-            classes.forEach((cls) => {
-              if (cls && !/^[a-z0-9-_:\/\[\]\.%]+$/i.test(cls)) {
-                found.push({
-                  type: "Tailwind",
-                  line: lineNumber,
-                  message: `Potential invalid classname: "${cls}"`,
-                  severity: "warning",
-                });
-              }
-            });
-          }
+          message: 'Possibly missing closing ">" in tag on this line.',
+          severity: "error",
+          word: line.trim(),
         });
       }
     });
@@ -184,8 +241,9 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         found.push({
           type: "HTML",
           line: t.line,
-          message: `Unclosed tag: <${t.tag}>`,
+          message: `Unclosed tag: <${t.tag}> (opened on line ${t.line})`,
           severity: "error",
+          word: t.tag,
         })
       );
     }
@@ -214,58 +272,39 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   }, []);
 
   /* ---------------------- Firebase placeholder helpers ---------------------- */
-  /**
-   * TODO (FIREBASE):
-   *
-   * 1) Create a file like `lib/firebase.ts` and initialize Firebase there:
-   *
-   * import { initializeApp } from "firebase/app";
-   * import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
-   *
-   * const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... };
-   * const app = initializeApp(firebaseConfig);
-   * export const db = getFirestore(app);
-   *
-   * 2) Here, replace the stub implementations below with real Firestore calls.
-   *
-   * Example usage:
-   * await addDoc(collection(db, 'snippets'), { name, code, timestamp: new Date().toISOString(), level });
-   *
-   */
+  // STUBS - replace with your Firestore calls after adding lib/firebase.ts
+  // Example:
+  // import { db } from '@/lib/firebase'
+  // import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
-  // Stub: replace with actual upload function
   const saveSnippetToFirebase = useCallback(async (item: SavedItem) => {
-    // STUB - replace with Firestore call
-    // Example:
+    // STUB - replace with Firestore call e.g.:
     // const docRef = await addDoc(collection(db, 'snippets'), item);
-    console.info("[Firebase Stub] saveSnippetToFirebase called", item);
-    // Optionally return a saved id if using Firestore return value
-    return { ...item, id: item.id };
+    // return { ...item, id: docRef.id };
+    console.info("[Firebase Stub] saveSnippetToFirebase", item);
+    return { ...item };
   }, []);
 
   const loadSnippetsFromFirebase = useCallback(async (): Promise<
     SavedItem[]
   > => {
-    // STUB - replace with Firestore fetching logic
-    // Example:
-    // const q = query(collection(db, 'snippets'), orderBy('timestamp', 'desc'));
-    // const snap = await getDocs(q);
+    // STUB - replace with Firestore fetching logic:
+    // const snap = await getDocs(collection(db, 'snippets'));
     // return snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
-    console.info("[Firebase Stub] loadSnippetsFromFirebase called");
+    console.info("[Firebase Stub] loadSnippetsFromFirebase");
     return [];
   }, []);
 
   const deleteSnippetFromFirebase = useCallback(async (id: string) => {
-    // STUB - replace with Firestore delete logic
-    // Example: await deleteDoc(doc(db, 'snippets', id));
-    console.info("[Firebase Stub] deleteSnippetFromFirebase called", id);
+    // STUB - replace with Firestore delete logic:
+    // await deleteDoc(doc(db, 'snippets', id));
+    console.info("[Firebase Stub] deleteSnippetFromFirebase", id);
   }, []);
 
   /* ------------------------------ Save / Load ------------------------------- */
 
   const saveLocally = useCallback(
     async (name: string, codeContent: string) => {
-      // Create SavedItem and write to localStorage
       const item: SavedItem = {
         id: Date.now().toString(),
         name,
@@ -286,22 +325,27 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     setSaveName(`Code ${new Date().toLocaleTimeString()}`);
   }, []);
 
-  const handleSaveSubmit = useCallback(async () => {
-    const nameToUse =
-      saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
+  const handleSaveSubmit = useCallback(
+    async (alsoSaveToFirebase = false) => {
+      const nameToUse =
+        saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
 
-    try {
-      const saved = await saveLocally(nameToUse, code);
+      try {
+        const saved = await saveLocally(nameToUse, code);
 
-      // Also optionally save to Firebase (commented for now; user will toggle later)
-      // await saveSnippetToFirebase(saved);
+        if (alsoSaveToFirebase) {
+          // Replace the stub with a Firestore implementation
+          await saveSnippetToFirebase(saved);
+          // Optionally replace the saved.id after firebase returns actual id
+        }
 
-      // small UI feedback
-      setSaveName("");
-    } catch (e) {
-      console.error("Failed to save snippet", e);
-    }
-  }, [code, saveLocally, saveName, saveSnippetToFirebase]);
+        setSaveName("");
+      } catch (e) {
+        console.error("Failed to save snippet", e);
+      }
+    },
+    [code, saveLocally, saveName, saveSnippetToFirebase]
+  );
 
   const handleLoadCode = useCallback((itemCode: string) => {
     setCode(itemCode);
@@ -315,14 +359,19 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         writeSavedSnippets(filtered);
         setSavedItems(filtered);
 
-        // Also delete from Firebase if you implement it later:
-        // await deleteSnippetFromFirebase(id);
+        // If you add Firebase deletion, call deleteSnippetFromFirebase(id) here.
       } catch (e) {
         console.error("Failed to delete snippet", e);
       }
     },
     [readSavedSnippets, writeSavedSnippets, deleteSnippetFromFirebase]
   );
+
+  const handleClearAllSaves = useCallback(() => {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem("tailwindPlaygroundSaves");
+    setSavedItems([]);
+  }, []);
 
   /* ------------------------------ Preview / Run ----------------------------- */
 
@@ -333,7 +382,6 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     setShowErrors(detected.length > 0);
 
     if (previewRef.current) {
-      // NOTE: injecting HTML for preview. Keep sandboxed in production if needed.
       previewRef.current.innerHTML = code;
     }
 
@@ -369,9 +417,43 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     [code, saveName]
   );
 
+  /* ------------------------- Editor helper: jump to line -------------------- */
+
+  const jumpToLine = useCallback((lineNumber: number) => {
+    const ta = editorRef.current;
+    if (!ta) return;
+    const lines = ta.value.split("\n");
+
+    // compute start index of line
+    let start = 0;
+    for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+      start += lines[i].length + 1; // +1 for newline
+    }
+    const lineText = lines[lineNumber - 1] ?? "";
+    const end = start + lineText.length;
+
+    // focus and select that line
+    ta.focus();
+    ta.selectionStart = start;
+    ta.selectionEnd = end;
+
+    // scroll to approx position - compute line height
+    try {
+      const style = window.getComputedStyle(ta);
+      const lineHeightStr = style.lineHeight;
+      const lineHeight =
+        lineHeightStr && lineHeightStr.includes("px")
+          ? parseFloat(lineHeightStr)
+          : 18;
+      ta.scrollTop = Math.max(0, (lineNumber - 1) * lineHeight - 40); // offset
+    } catch {
+      // fallback
+      ta.scrollTop = Math.max(0, (lineNumber - 1) * 18 - 40);
+    }
+  }, []);
+
   /* -------------------------- Component lifecycle --------------------------- */
 
-  // mount gate + initial load
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -379,28 +461,23 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   useEffect(() => {
     if (!isMounted) return;
 
-    // initial code preset
     setCode(presets[level]);
 
-    // load saved snippets from localStorage
+    // load saved snippets
     const local = readSavedSnippets();
     setSavedItems(local);
 
-    // Optionally load from Firebase (if you implement loadSnippetsFromFirebase)
-    // (Uncomment after implementing firebase)
-    // loadSnippetsFromFirebase().then(remote => {
-    //   setSavedItems(prev => [...remote, ...prev]);
-    // });
+    // If you implement Firebase load, call loadSnippetsFromFirebase here and merge results
+    // Example:
+    // loadSnippetsFromFirebase().then(remote => setSavedItems(prev => [...remote, ...prev]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMounted]);
 
-  // update preview whenever code changes (live preview)
   useEffect(() => {
     if (!isMounted) return;
     updatePreview();
   }, [code, updatePreview, isMounted]);
 
-  // keyboard shortcut ctrl+enter to run
   useEffect(() => {
     if (!isMounted) return;
     const onKey = (e: KeyboardEvent) => {
@@ -431,73 +508,153 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
   /* ------------------------------- Rendering -------------------------------- */
 
-  if (!isMounted) {
-    // avoid SSR mismatches
-    return null;
-  }
+  if (!isMounted) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
       <main className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Editor Column */}
-          <section className="flex flex-col">
-            <div className="bg-gray-800 rounded-t-xl border-2 border-indigo-500 overflow-hidden">
-              <div className="px-4 py-3 bg-indigo-900 border-b border-indigo-700 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-white flex items-center">
-                  <Code className="mr-2 w-5 h-5" />
-                  Edit Tailwind HTML
-                </h2>
-
-                <div className="flex items-center space-x-3">
+          <section className="flex flex-col space-y-4">
+            <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200">
+              {/* Header */}
+              <div className="flex items-center justify-between bg-gray-800 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <Code className="w-5 h-5 text-white" />
+                  <h2 className="text-white font-semibold">
+                    Edit Tailwind HTML
+                  </h2>
+                  <span className="text-sm text-gray-300 ml-2">Preset:</span>
                   <select
                     value={level}
                     onChange={(e) => {
-                      const v = e.target.value as Level;
+                      const v = e.target.value as
+                        | "Beginner"
+                        | "Intermediate"
+                        | "Expert";
                       setLevel(v);
                       setCode(presets[v]);
                     }}
-                    className="bg-indigo-800 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="ml-2 bg-indigo-700 text-white px-2 py-1 rounded text-sm"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
                     <option value="Expert">Expert</option>
                   </select>
+                </div>
 
+                <div className="flex items-center gap-2">
                   <button
                     onClick={updatePreview}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm flex items-center font-medium transition-colors shadow"
                     title="Run (Ctrl + Enter)"
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
                   >
-                    <Play className="mr-2 w-4 h-4" />
+                    <Play className="w-4 h-4" />
                     Run
                   </button>
 
                   <button
-                    onClick={() => {
-                      setSaveName(`Code ${new Date().toLocaleTimeString()}`);
-                    }}
-                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex items-center font-medium transition-colors shadow"
-                    title="Prepare save"
+                    onClick={() =>
+                      setSaveName(`Code ${new Date().toLocaleTimeString()}`)
+                    }
+                    title="Prepare save name"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
                   >
                     <Save className="w-4 h-4" />
+                    Save
                   </button>
                 </div>
               </div>
 
-              <textarea
-                ref={editorRef}
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="w-full h-96 p-4 bg-gray-900 text-green-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-gray-700"
-                placeholder="<!-- Type your Tailwind HTML here -->"
-              />
+              {/* Editor */}
+              <div className="bg-gray-900 p-4">
+                <textarea
+                  ref={editorRef}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  spellCheck={false}
+                  className="w-full h-96 resize-none bg-transparent text-green-300 font-mono text-sm leading-5 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Buttons row (compact, consistent sizes) */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleSaveSubmit(false)}
+                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center gap-2"
+                  title="Save locally"
+                >
+                  <Save className="w-4 h-4" /> Save (Local)
+                </button>
+
+                <button
+                  onClick={async () => {
+                    // Save locally first
+                    const nameToUse =
+                      saveName.trim() ||
+                      `Code ${new Date().toLocaleTimeString()}`;
+                    const saved = await saveLocally(nameToUse, code);
+                    // Then call Firebase stub (replace later)
+                    await saveSnippetToFirebase(saved);
+                    alert(
+                      "Saved locally and (stub) to Firebase. Replace stub with Firestore implementation to persist on cloud."
+                    );
+                  }}
+                  className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded flex items-center gap-2"
+                  title="Save to Firebase (stub)"
+                >
+                  <Database className="w-4 h-4" /> Save → Firebase
+                </button>
+
+                <button
+                  onClick={() => downloadToDisk("html")}
+                  className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" /> Download HTML
+                </button>
+
+                <button
+                  onClick={() => downloadToDisk("txt")}
+                  className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" /> Download TXT
+                </button>
+              </div>
+
+              <div className="flex gap-2 ml-auto">
+                <button
+                  onClick={() => {
+                    if (!editorRef.current) return;
+                    navigator.clipboard
+                      ?.writeText(editorRef.current.value)
+                      .then(() => {
+                        // feedback
+                      });
+                  }}
+                  className="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded flex items-center gap-2"
+                  title="Copy code to clipboard"
+                >
+                  <Copy className="w-4 h-4" /> Copy
+                </button>
+
+                <button
+                  onClick={() => {
+                    setCode(presets[level]);
+                  }}
+                  className="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded flex items-center gap-2"
+                  title="Reset to preset"
+                >
+                  Reset
+                </button>
+              </div>
             </div>
 
             {/* Error Panel */}
             {errors.length > 0 && (
               <div
-                className={`mt-4 bg-red-50 border border-red-200 rounded-lg overflow-hidden transition-all ${
+                className={`mt-1 bg-red-50 border border-red-200 rounded-lg overflow-hidden transition-all ${
                   showErrors ? "max-h-96" : "max-h-12"
                 }`}
               >
@@ -505,10 +662,12 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                   className="px-4 py-2 bg-red-100 border-b border-red-200 flex justify-between items-center cursor-pointer"
                   onClick={() => setShowErrors((s) => !s)}
                 >
-                  <h3 className="font-semibold text-red-800 flex items-center">
-                    <AlertCircle className="mr-2 w-4 h-4" />
-                    Errors ({errors.length})
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-700" />
+                    <h3 className="font-semibold text-red-800">
+                      Errors ({errors.length})
+                    </h3>
+                  </div>
                   <button className="text-red-600">
                     {showErrors ? (
                       <ChevronUp className="w-4 h-4" />
@@ -519,25 +678,27 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                 </div>
 
                 {showErrors && (
-                  <div className="p-4 max-h-64 overflow-y-auto">
-                    <ul className="space-y-2">
+                  <div className="p-3 max-h-64 overflow-y-auto">
+                    <ul className="space-y-2 text-sm">
                       {errors.map((err, idx) => (
                         <li
                           key={`${err.line}-${idx}`}
-                          className="flex items-start space-x-2 text-sm"
+                          className="flex items-start gap-3"
                         >
-                          {err.severity === "error" ? (
-                            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                          ) : (
-                            <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                          )}
+                          <div className="mt-0.5">
+                            {err.severity === "error" ? (
+                              <AlertCircle className="w-5 h-5 text-red-500" />
+                            ) : (
+                              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                            )}
+                          </div>
                           <div className="flex-1">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-medium text-red-800">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-red-800">
                                 Line {err.line}
                               </span>
                               <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${
+                                className={`px-2 py-0.5 rounded text-xs ${
                                   err.type === "HTML"
                                     ? "bg-blue-100 text-blue-800"
                                     : "bg-purple-100 text-purple-800"
@@ -546,7 +707,7 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                                 {err.type}
                               </span>
                               <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${
+                                className={`px-2 py-0.5 rounded text-xs ${
                                   err.severity === "error"
                                     ? "bg-red-100 text-red-800"
                                     : "bg-yellow-100 text-yellow-800"
@@ -554,8 +715,22 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                               >
                                 {err.severity}
                               </span>
+                              {err.word && (
+                                <span className="ml-auto text-xs text-gray-600 italic">
+                                  "{err.word}"
+                                </span>
+                              )}
                             </div>
-                            <p className="text-red-700 mt-1">{err.message}</p>
+                            <div className="mt-1 text-sm text-gray-700">
+                              {err.message}
+                              <button
+                                onClick={() => jumpToLine(err.line)}
+                                className="ml-3 text-indigo-600 text-xs"
+                                title={`Jump to line ${err.line}`}
+                              >
+                                Jump
+                              </button>
+                            </div>
                           </div>
                         </li>
                       ))}
@@ -565,149 +740,98 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               </div>
             )}
 
-            {/* Save Controls */}
-            <div className="mt-4 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="flex gap-2 items-center">
-                <input
-                  value={saveName}
-                  onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="Name your code snippet (optional)"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <button
-                  onClick={handleSaveSubmit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Save (Local)
-                </button>
-
-                {/* Save to Firebase button: calls the stub. Replace with real function later */}
-                <button
-                  onClick={async () => {
-                    if (!saveName.trim()) {
-                      alert(
-                        "Please enter a name before saving to Firebase (or save locally first)."
-                      );
-                      return;
-                    }
-                    const saved = await saveLocally(saveName.trim(), code);
-                    // Replace stub below with your firebase implementation:
-                    await saveSnippetToFirebase(saved);
-                    alert(
-                      "Saved locally and (stub) to Firebase. Replace stub with real Firebase code to persist online."
-                    );
-                  }}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  Save → Firebase (stub)
-                </button>
-
-                <div className="ml-2 flex items-center space-x-2">
-                  <button
-                    onClick={() => downloadToDisk("html")}
-                    className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" /> Download HTML
-                  </button>
-                  <button
-                    onClick={() => downloadToDisk("txt")}
-                    className="px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" /> Download TXT
-                  </button>
-                </div>
-              </div>
+            {/* Save snippets small controls */}
+            <div className="flex gap-2 items-center">
+              <input
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Snippet name (optional)"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded"
+              />
+              <button
+                onClick={() => handleSaveSubmit(false)}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+              >
+                Quick Save
+              </button>
+              <button
+                onClick={() => handleSaveSubmit(true)}
+                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+              >
+                Save + Firebase (stub)
+              </button>
+              <button
+                onClick={handleClearAllSaves}
+                className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded"
+              >
+                Clear All Saves
+              </button>
             </div>
           </section>
 
           {/* Preview & Saved Column */}
-          <aside className="flex flex-col">
-            <div className="bg-purple-200 border-2 border-purple-500 rounded-t-2xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-purple-300 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-purple-800 flex items-center">
-                  <Eye className="mr-2 w-5 h-5" /> Live Preview
-                </h2>
+          <aside className="flex flex-col space-y-4">
+            <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between px-4 py-3 bg-purple-200">
+                <div className="flex items-center gap-3">
+                  <Eye className="w-5 h-5 text-purple-800" />
+                  <h3 className="font-semibold text-purple-800">
+                    Live Preview
+                  </h3>
+                </div>
                 <StatusBadge status={status} />
               </div>
 
               <div
                 ref={previewRef}
-                className="h-96 w-full bg-gradient-to-b from-purple-50 to-purple-100 overflow-auto p-4 rounded-b-2xl"
+                className="h-96 overflow-auto bg-gradient-to-b from-purple-50 to-purple-100 p-4"
               />
             </div>
 
-            <div className="mt-6 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-              <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center justify-between">
-                <span className="flex items-center">
-                  <Database className="text-blue-500 mr-2 w-5 h-5" /> Saved Code
-                  Snippets
-                </span>
+            <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                  <Database className="w-5 h-5 text-blue-500" /> Saved Snippets
+                </h4>
                 <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                   {savedItems.length}
                 </span>
-              </h3>
-
-              <div className="mb-4 flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <input
-                    value={saveName}
-                    onChange={(e) => setSaveName(e.target.value)}
-                    placeholder="Quick save name..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded"
-                  />
-                  <button
-                    onClick={handleSaveSubmit}
-                    className="px-4 py-2 bg-blue-600 text-white rounded"
-                  >
-                    Save
-                  </button>
-                </div>
               </div>
 
-              <div className="border border-gray-200 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+              <div className="space-y-2 max-h-64 overflow-y-auto">
                 {savedItems.length === 0 ? (
-                  <div className="bg-gray-50 px-4 py-3 text-sm text-gray-500 text-center">
+                  <div className="text-sm text-gray-500 text-center py-6">
                     No saved code snippets yet
                   </div>
                 ) : (
-                  savedItems.map((item, i) => (
+                  savedItems.map((item) => (
                     <div
                       key={item.id}
-                      className={`px-4 py-3 flex justify-between items-center hover:bg-gray-50 transition-colors ${
-                        i !== savedItems.length - 1
-                          ? "border-b border-gray-200"
-                          : ""
-                      }`}
+                      className="flex items-center justify-between px-3 py-2 border rounded"
                     >
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">
                           {item.name}
                         </div>
-                        <div className="text-xs text-gray-500 flex items-center space-x-2">
-                          <span>
-                            {new Date(item.timestamp).toLocaleDateString()}
-                          </span>
-                          <span>•</span>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                            {item.level ?? "N/A"}
-                          </span>
+                        <div className="text-xs text-gray-500">
+                          {new Date(item.timestamp).toLocaleString()}
                         </div>
                       </div>
 
-                      <div className="flex space-x-2 ml-4">
+                      <div className="flex items-center gap-2 ml-4">
                         <button
+                          title="Load snippet"
                           onClick={() => handleLoadCode(item.code)}
-                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                          title="Load code"
+                          className="px-2 py-1 bg-white border rounded text-sm hover:bg-gray-50"
                         >
-                          <Download className="w-4 h-4" />
+                          Load
                         </button>
                         <button
+                          title="Delete snippet"
                           onClick={() => handleDeleteItem(item.id)}
-                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                          title="Delete"
+                          className="px-2 py-1 bg-red-50 rounded text-sm text-red-700 hover:bg-red-100"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -716,7 +840,7 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               </div>
             </div>
 
-            {/* Small welcome modal */}
+            {/* Welcome modal */}
             {showWelcome && (
               <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
                 <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
@@ -731,7 +855,8 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                       preview on the right. Save locally or later connect to
                       Firebase.
                     </p>
-                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
+
+                    <div className="bg-blue-50 p-4 rounded-lg mb-4">
                       <h3 className="font-semibold text-blue-800">
                         Quick tips
                       </h3>
@@ -742,18 +867,32 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                           <span className="font-semibold">Ctrl + Enter</span> to
                           run.
                         </li>
-                        <li>Save to local storage and download as HTML/TXT.</li>
+                        <li>
+                          Click an error's "Jump" to focus and select the
+                          offending line.
+                        </li>
                       </ul>
                     </div>
-                    <button
-                      onClick={() => {
-                        setShowWelcome(false);
-                        localStorage.setItem("welcomeShown", "true");
-                      }}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors"
-                    >
-                      Let’s go
-                    </button>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setShowWelcome(false);
+                          localStorage.setItem("welcomeShown", "true");
+                        }}
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+                      >
+                        Let's go
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowWelcome(false);
+                        }}
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
