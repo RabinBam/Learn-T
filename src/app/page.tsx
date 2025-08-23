@@ -21,6 +21,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     // TODO: Fetch user data from Firebase here and setUser with the result
@@ -70,11 +71,29 @@ export default function ProfilePage() {
     // TODO: Update avatar removal in Firebase here
   };
 
+  const handleEditToggle = () => {
+    setIsEditMode(!isEditMode);
+    // Reset editing states when exiting edit mode
+    if (isEditMode) {
+      setIsEditingName(false);
+      setIsEditingAvatar(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-950 text-gray-300 font-sans">
       <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row gap-12">
         {/* Sidebar */}
-        <aside className="w-full md:w-80 bg-gray-800 bg-opacity-80 rounded-2xl shadow-lg p-8 flex flex-col items-center backdrop-blur-sm border border-gray-700">
+        <aside className="w-full md:w-80 bg-gray-800 bg-opacity-80 rounded-2xl shadow-lg p-8 flex flex-col items-center backdrop-blur-sm border border-gray-700 relative">
+          {/* Edit button in top right corner */}
+          <button
+            onClick={handleEditToggle}
+            className="absolute top-4 right-4 text-indigo-400 hover:text-indigo-600 text-sm font-medium focus:outline-none transition-colors duration-200"
+            aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
+          >
+            {isEditMode ? "Done" : "Edit"}
+          </button>
+
           <div className="relative w-40 h-40 rounded-full border-2 border-gray-600 shadow-md overflow-hidden">
             <Image
               src={user.avatar}
@@ -85,7 +104,7 @@ export default function ProfilePage() {
             />
           </div>
           <div className="mt-4 w-full flex flex-col items-center gap-2">
-            {!isEditingAvatar ? (
+            {isEditMode && !isEditingAvatar ? (
               <button
                 onClick={() => setIsEditingAvatar(true)}
                 className="w-full text-sm font-semibold text-indigo-400 hover:text-indigo-600 focus:outline-none"
@@ -93,7 +112,7 @@ export default function ProfilePage() {
               >
                 Edit
               </button>
-            ) : (
+            ) : isEditMode && isEditingAvatar ? (
               <div className="flex flex-col w-full gap-2">
                 <label
                   htmlFor="avatar-upload"
@@ -121,19 +140,21 @@ export default function ProfilePage() {
                   Cancel
                 </button>
               </div>
-            )}
+            ) : null}
           </div>
           <div className="mt-6 w-full flex items-center justify-center gap-2">
             {!isEditingName ? (
               <>
                 <h1 className="text-3xl font-semibold text-white">{user.name}</h1>
-                <button
-                  onClick={() => setIsEditingName(true)}
-                  className="text-indigo-400 hover:text-indigo-600 text-sm font-medium focus:outline-none"
-                  aria-label="Edit name"
-                >
-                  Edit
-                </button>
+                {isEditMode && (
+                  <button
+                    onClick={() => setIsEditingName(true)}
+                    className="text-indigo-400 hover:text-indigo-600 text-sm font-medium focus:outline-none"
+                    aria-label="Edit name"
+                  >
+                    Edit
+                  </button>
+                )}
               </>
             ) : (
               <input
@@ -160,6 +181,8 @@ export default function ProfilePage() {
             placeholder="Enter bio"
             className="mt-4 w-full bg-gray-700 bg-opacity-50 rounded-md p-2 text-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
             rows={3}
+            disabled={!isEditMode}
+            style={{ opacity: isEditMode ? 1 : 0.7 }}
           />
 
           <div className="mt-8 w-full space-y-6 border-t border-gray-700 pt-6">
@@ -224,4 +247,4 @@ export default function ProfilePage() {
       </div>
     </div>
   );
-}  
+}
