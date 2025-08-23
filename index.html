@@ -15,6 +15,9 @@
       src="https://use.fontawesome.com/releases/v6.3.0/js/all.js"
       crossorigin="anonymous"
     ></script>
+    
+    <!-- Unicons CSS -->
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
 
     <!-- Google fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -29,6 +32,303 @@
 
     <!-- Core theme CSS (includes Bootstrap) -->
     <link href="css/styles.css" rel="stylesheet" />
+    
+    <style>
+    /* Form flip using :has() */
+.section:has(.checkbox:checked) .card-3d-wrap .card-3d-wrapper {
+  transform: rotateY(180deg);
+}
+
+/* Label highlighting using :has() – highlights "Log In" when unchecked, "Sign Up" when checked */
+.section:not(:has(.checkbox:checked)) h6 label:first-of-type,
+.section:has(.checkbox:checked) h6 label:nth-of-type(2) {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Optional: Enhance hover only on inactive labels */
+h6 label:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+.section:not(:has(.checkbox:checked)) h6 label:first-of-type:hover,
+.section:has(.checkbox:checked) h6 label:nth-of-type(2):hover {
+  color: #fff; /* Keep active label color on hover */
+}
+
+/* Rest of your existing styles (unchanged) */
+.section {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  margin-bottom: 50px;
+}
+
+.full-height {
+  min-height: 100vh;
+}
+
+.center-wrap {
+  padding: 20px;
+}
+
+.card-3d-wrap {
+  position: relative;
+  width: 440px;
+  max-width: 100%;
+  height: 400px;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  perspective: 800px;
+  margin-top: 5px;
+}
+
+.card-3d-wrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  transition: transform 0.7s ease-out;
+}
+
+.card-front, .card-back {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(40, 40, 60, 0.85);
+  background-image: linear-gradient(to bottom right, rgba(60, 60, 90, 0.9), rgba(35, 35, 55, 0.9));
+  position: absolute;
+  border-radius: 20px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  padding: 20px;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+.center-wrap {
+  position: absolute;
+  width: 100%;
+  padding: 0 5px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.form-group {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+.form-style {
+  padding: 12px 20px 12px 50px;
+  height: 48px;
+  width: 100%;
+  font-weight: 500;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 22px;
+  letter-spacing: 0.5px;
+  outline: none;
+  color: #fff;
+  background-color: rgba(100, 100, 130, 0.4);
+  border: none;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.form-style:focus, .form-style:active {
+  border: none;
+  outline: none;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4);
+  background-color: rgba(90, 90, 120, 0.6);
+}
+
+.input-icon {
+  position: absolute;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+  font-size: 24px;
+  color: #fff;
+}
+
+.form-group input:-ms-input-placeholder {
+  color: #ccc;
+  opacity: 0.7;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.form-group input::-moz-placeholder {
+  color: #ccc;
+  opacity: 0.7;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.form-group input:-moz-placeholder {
+  color: #ccc;
+  opacity: 0.7;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.form-group input::-webkit-input-placeholder {
+  color: #ccc;
+  opacity: 0.7;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.form-group input:focus:-ms-input-placeholder {
+  opacity: 0;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.form-group input:focus::-moz-placeholder {
+  opacity: 0;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.form-group input:focus:-moz-placeholder {
+  opacity: 0;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.form-group input:focus::-webkit-input-placeholder {
+  opacity: 0;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+}
+
+.btn {
+  border-radius: 10px;
+  height: 44px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  -webkit-transition: all 200ms linear;
+  transition: all 200ms linear;
+  padding: 0 30px;
+  letter-spacing: 1px;
+  display: -webkit-inline-flex;
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  -webkit-align-items: center;
+  -moz-align-items: center;
+  -ms-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  -moz-justify-content: center;
+  -ms-justify-content: center;
+  justify-content: center;
+  -ms-flex-pack: center;
+  text-align: center;
+  border: none;
+  background-color: #3f72ff;
+  color: #fff;
+  box-shadow: 0 8px 24px 0 rgba(20, 60, 220, 0.3);
+}
+
+.btn:active, .btn:focus {
+  background-color: #2c5af5;
+  color: #fff;
+  box-shadow: 0 8px 24px 0 rgba(20, 60, 220, 0.4);
+}
+
+.btn:hover {
+  background-color: #2c5af5;
+  color: #fff;
+  box-shadow: 0 8px 24px 0 rgba(20, 60, 220, 0.5);
+  transform: translateY(-2px);
+}
+
+.logo {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  display: block;
+  z-index: 100;
+  transition: all 250ms linear;
+}
+
+.logo img {
+  height: 36px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+  transition: all 250ms linear;
+}
+
+.checkbox {
+  display: none;
+}
+
+label.toggle-label {
+  display: inline-block;
+  position: relative;
+  width: 100px;
+  height: 40px;
+  margin: 15px 0;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 20px 0 rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 300ms ease;
+}
+
+label.toggle-label:after {
+  content: '';
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background: #3f72ff;
+  top: 5px;
+  left: 5px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  transition: all 300ms ease;
+}
+
+.checkbox:checked + label.toggle-label:after {
+  left: 65px;
+}
+
+.link {
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 200ms linear;
+}
+
+.link:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Adjustments for the masthead */
+.masthead-content {
+  width: 100%;
+  max-width: 500px;
+}
+
+.masthead-content h1 {
+  margin-bottom: 20px !important;
+}
+
+.masthead-content p {
+  margin-bottom: 30px !important;
+}
+    </style>
   </head>
   <body>
     <!-- Background Video -->
@@ -44,39 +344,91 @@
 
     <!-- Masthead -->
     <div
-      class="masthead d-flex align-items-center justify-content-center vh-100 position-relative"
-      style="z-index: 10; position: relative"
-    >
-      <div class="masthead-content text-white text-center px-4">
-        <h1 class="fst-italic lh-1 mb-4">Get Ready to Dive In</h1>
-        <p class="mb-5">
-          Our website is launching soon! Enter your desired username to be part
-          of our Tailwind CSS playground or game experience.
-        </p>
+     class="masthead d-flex align-items-center justify-content-center vh-100 position-relative"
+     style="z-index: 10; position: relative"
+>
+      <div class="masthead-content text-white text-center px-4" style="margin-top: 200px;">
+    <h1 class="fst-italic lh-1 mb-4" style="font-size: 42px;">Get Ready to Dive In</h1>
+    <p class="mb-5" style="font-size: 16px;">
+      Our website is launching soon! Log in or sign up to be part of our Tailwind CSS playground or game experience.
+    </p>
 
-        <form id="usernameForm">
-          <div class="row justify-content-center mb-3">
-            <div class="col-12 col-md-6">
-              <input
-                class="form-control"
-                id="username"
-                type="text"
-                placeholder="Choose a username..."
-                aria-label="Choose a username"
-                required
-              />
+ <div class="section" style="padding: 30px 0;">
+      <div class="container" style="max-width: 500px;">
+        <div class="row justify-content-center">
+          <div class="col-12 text-center align-self-center py-3">
+            <div class="section pb-2 pt-2 text-center" style="position: relative;">
+              <!-- Smaller, balanced tabs -->
+              <h6 class="mb-3 pb-2" style="font-size: 16px; position: absolute; left: -150px; top: 50%; transform: translateY(-50%);">
+                <label for="reg-log" class="active">Log In</label>
+                <label for="reg-log">Sign Up</label>
+              </h6>
+          
+            
+            <!-- Toggle switch -->
+            <div class="text-center mb-3" style="position: absolute; left: -150px; top: 50%; transform: translateY(-50%) translateY(50px);">
+              <input type="checkbox" id="reg-log" class="checkbox" />
+              <label for="reg-log" class="toggle-label"></label>
+            </div>
+            
+            <div class="card-3d-wrap mx-auto" style="margin-top: 70px;">
+              <div class="card-3d-wrapper">
+              <!-- Login Side -->
+              <div class="card-front">
+                    <div class="center-wrap" style="padding: 25px;">
+                      <div class="section text-center">
+                        <h4 class="mb-4 pb-2" style="font-size: 20px;">Log In</h4>
+                        <form id="loginForm">
+                          <div class="form-group">
+                            <input type="email" name="logemail" class="form-style" placeholder="Your Email" id="logemail" required style="font-size: 15px; padding: 10px 14px 10px 50px;">
+                            <i class="input-icon uil uil-at"></i>
+                          </div>
+                          <div class="form-group mt-3">
+                            <input type="password" name="logpass" class="form-style" placeholder="Your Password" id="logpass" required style="font-size: 15px; padding: 10px 14px 10px 50px;">
+                            <i class="input-icon uil uil-lock-alt"></i>
+                          </div>
+                          <button type="submit" class="btn mt-4" style="padding: 10px 20px; font-size: 15px;">Submit</button>
+                        </form>
+                        <p class="mb-0 mt-3 text-center">
+                          <a href="#0" class="link" style="font-size: 13px;">Forgot your password?</a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+              <!-- Signup Side -->
+              <div class="card-back">
+                    <div class="center-wrap" style="padding: 25px;">
+                      <div class="section text-center">
+                        <h4 class="mb-4 pb-2" style="font-size: 20px;">Sign Up</h4>
+                        <form id="signupForm">
+                          <div class="form-group">
+                            <input type="text" name="logname" class="form-style" placeholder="Enter username" id="logname" required style="font-size: 15px; padding: 10px 14px 10px 50px;">
+                            <i class="input-icon uil uil-user"></i>
+                          </div>
+                          <div class="form-group mt-3">
+                            <input type="email" name="logemail" class="form-style" placeholder="Your Email" id="signupemail" required style="font-size: 15px; padding: 10px 14px 10px 50px;">
+                            <i class="input-icon uil uil-at"></i>
+                          </div>
+                          <div class="form-group mt-3">
+                            <input type="password" name="logpass" class="form-style" placeholder="Your Password" id="signuppass" required style="font-size: 15px; padding: 10px 14px 10px 50px;">
+                            <i class="input-icon uil uil-lock-alt"></i>
+                          </div>
+                          <button type="submit" class="btn mt-4" style="padding: 10px 20px; font-size: 15px;">Submit</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+              <!-- End Signup -->
             </div>
           </div>
-          <div class="row justify-content-center">
-            <div class="col-auto">
-              <button class="btn btn-primary" id="submitButton" type="submit">
-                Let's Learn IT
-              </button>
-            </div>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
+  </div>
+</div>
+</div>
+</div>
 
     <!-- Iframe with the new page, initially hidden -->
     <iframe
@@ -114,34 +466,40 @@
     <script src="js/scripts.js"></script>
     <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
     <script>
-      document
-        .getElementById("usernameForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
+      // Handle form submissions
+      document.getElementById("loginForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        handleFormSubmission();
+      });
+      
+      document.getElementById("signupForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        handleFormSubmission();
+      });
+      
+      function handleFormSubmission() {
+        const masthead = document.querySelector(".masthead");
+        const content = document.querySelector(".masthead-content");
+        const video = document.querySelector(".bg-video");
 
-          const masthead = document.querySelector(".masthead");
-          const content = document.querySelector(".masthead-content");
-          const video = document.querySelector(".bg-video");
+        masthead.classList.add("animating");
+        content.classList.add("animating");
+        video.classList.add("animating");
 
-          // Optional: get username
-          const username = document.getElementById("username").value;
-          console.log("Username:", username);
+        const iframe = document.getElementById("newPageFrame");
+        iframe.style.pointerEvents = "auto";
+        iframe.style.opacity = "1"; // fade in
 
-          masthead.classList.add("animating");
-          content.classList.add("animating");
-          video.classList.add("animating");
-
-          const iframe = document.getElementById("newPageFrame");
-          iframe.style.pointerEvents = "auto";
-          iframe.style.opacity = "1"; // fade in
-
-          // hide masthead + video after iframe is fully visible
-          setTimeout(() => {
-            masthead.style.display = "none";
-            video.style.display = "none";
-            window.location.href = "./playground tailwind css.html";
-          }, 3000);
-        });
+        // hide masthead + video after iframe is fully visible
+        setTimeout(() => {
+          masthead.style.display = "none";
+          video.style.display = "none";
+          window.location.href = "./playground tailwind css.html";
+        }, 3000);
+      }
+      
+      // Fix 3 & 4: Removed JS that directly sets transform and uses labels instead
+      // The CSS now handles the flip through the checkbox
     </script>
   </body>
 </html>
