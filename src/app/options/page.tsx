@@ -70,7 +70,7 @@ const InteractiveLandingPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6 animate-pulse">
-            TailwindCode
+            TailSpark
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-4 opacity-90">
             Master Tailwind CSS Through Interactive Learning
