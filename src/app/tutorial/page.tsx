@@ -184,56 +184,77 @@ export default function TailwindTutorial() {
         <BookOpen size={16} /> Visit Official Tailwind Docs
       </a>
 
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg rounded-2xl p-8 w-full max-w-2xl relative z-10 border border-gray-700">
-        <div className="mb-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${level === 'beginner' ? 'bg-blue-500' : level === 'intermediate' ? 'bg-green-500' : 'bg-purple-500'}`}></div>
-            <span className="text-sm font-semibold uppercase tracking-wider bg-gray-700 px-3 py-1 rounded-full">
-              {level}
-            </span>
-          </div>
-          <select
-            value={level}
-            onChange={handleLevelChange}
-            className="bg-gray-700 text-gray-100 px-4 py-2 rounded-lg"
-          >
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="expert">Expert</option>
-          </select>
-        </div>
-
-        <div className={`bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 rounded-2xl shadow-md mb-6 transition-all duration-300 ${animateCard ? 'opacity-0 translate-x-10' : 'opacity-100 translate-x-0'} border border-gray-700`}>
-          <h2 className="text-2xl font-bold mb-4 text-white">{currentStep.title}</h2>
-          <pre className="bg-gray-800 text-green-400 p-4 rounded whitespace-pre-wrap border border-gray-700">{currentStep.content}</pre>
-        </div>
-
-        <div className="flex justify-between">
-          <button
-            className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 flex items-center gap-1 transition-all hover:scale-105"
-            onClick={handlePrev}
-            disabled={step === 0 && level === "beginner"}
-          >
-            <ArrowLeft size={16} /> Previous
-          </button>
-
-          {isExpertCompleted ? (
-            <a
-              href="/playground"
-              className="px-6 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg hover:from-yellow-400 hover:to-yellow-500 flex items-center gap-1 transition-all hover:scale-105"
-            >
-              <Play size={16} /> Go to Playground
-            </a>
-          ) : (
-            <button
-              className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-500 hover:to-green-600 flex items-center gap-1 transition-all hover:scale-105"
-              onClick={handleNext}
-            >
-              Next <ArrowRight size={16} />
-            </button>
-          )}
-        </div>
+     <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg rounded-2xl p-10 w-full max-w-4xl min-h-[600px] relative z-10 border border-gray-700 flex flex-col justify-between">
+  {/* Header */}
+  <div>
+    <div className="mb-6 flex justify-between items-center">
+      <div className="flex items-center gap-2">
+        <div
+          className={`w-3 h-3 rounded-full ${
+            level === "beginner"
+              ? "bg-blue-500"
+              : level === "intermediate"
+              ? "bg-green-500"
+              : "bg-purple-500"
+          }`}
+        ></div>
+        <span className="text-sm font-semibold uppercase tracking-wider bg-gray-700 px-3 py-1 rounded-full">
+          {level}
+        </span>
       </div>
+      <select
+        value={level}
+        onChange={handleLevelChange}
+        className="bg-gray-700 text-gray-100 px-4 py-2 rounded-lg"
+      >
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="expert">Expert</option>
+      </select>
+    </div>
+
+    {/* Step Content */}
+    <div
+      className={`bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8 rounded-2xl shadow-md mb-6 transition-all duration-300 ${
+        animateCard
+          ? "opacity-0 translate-x-10"
+          : "opacity-100 translate-x-0"
+      } border border-gray-700`}
+    >
+      <h2 className="text-3xl font-bold mb-6 text-white">{currentStep.title}</h2>
+      <pre className="bg-gray-800 text-green-400 p-6 rounded whitespace-pre-wrap border border-gray-700 text-base leading-relaxed">
+        {currentStep.content}
+      </pre>
+    </div>
+  </div>
+
+  {/* Footer Buttons pinned at bottom */}
+  <div className="flex justify-between mt-6">
+    <button
+      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 flex items-center gap-2 transition-all hover:scale-105"
+      onClick={handlePrev}
+      disabled={step === 0 && level === "beginner"}
+    >
+      <ArrowLeft size={18} /> Previous
+    </button>
+
+    {isExpertCompleted ? (
+      <a
+        href="/playground"
+        className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg hover:from-yellow-400 hover:to-yellow-500 flex items-center gap-2 transition-all hover:scale-105"
+      >
+        <Play size={18} /> Go to Playground
+      </a>
+    ) : (
+      <button
+        className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-500 hover:to-green-600 flex items-center gap-2 transition-all hover:scale-105"
+        onClick={handleNext}
+      >
+        Next <ArrowRight size={18} />
+      </button>
+    )}
+  </div>
+</div>
     </div>
   );
 }
