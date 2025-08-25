@@ -435,6 +435,12 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         return;
       }
     }
+    // Expert tutorial start: Show cat_eat_fish and custom message
+    if (level === "Expert" && tutorialStepExpert === 0 && !showWelcome) {
+      setCharacterMood("cat_eat_fish");
+      setCharacterMessage("All stage is yours, try new things out here");
+      return;
+    }
 
     if (showWelcome) {
       setCharacterMood("happy");
@@ -459,7 +465,7 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     }
     // Otherwise, don't override mood/message (handled in tutorial logic)
     // No timer here to keep tutorial message visible
-  }, [errors, code, showWelcome, tutorialStep, level, tutorialHints.length]);
+  }, [errors, code, showWelcome, tutorialStep, level, tutorialHints.length, tutorialStepExpert]);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -642,19 +648,42 @@ const TailwindPlaygroundNoNav: React.FC = () => {
             </div>
 
             {/* Tutorial Hint under editor */}
-            { (level === "Beginner" && tutorialStep < tutorialHints.length) ||
+            {(level === "Beginner" && tutorialStep < tutorialHints.length) ||
               (level === "Intermediate" && tutorialStepIntermediate < intermediateHints.length) ||
               (level === "Expert" && tutorialStepExpert < expertHints.length) ? (
               (() => {
-                /* ------------------------ Mood Images Fix ------------------------ */
-                const moodImages: Record<typeof characterMood, string> = {
+                // Mood images
+                const moodImages: Record<string, string> = {
                   happy: "/characters/happy_face.png",
                   error: "/characters/error_face.png",
                   motivating: "/characters/cat_motivating.png",
                   hello: "/characters/cat_hello.png",
                   idle: "/characters/idle_face.png",
                   correctcode: "/characters/correctcode_face.png",
+                  cat_eat_fish: "/characters/cat_eat_fish.png",
                 };
+                if (level === "Expert") {
+                  // Show cat_eat_fish image and fixed message for Expert
+                  return (
+                    <div className="mt-2 flex items-center gap-4 rounded-2xl bg-indigo-500/10 ring-2 ring-indigo-400/30 shadow-lg px-6 py-4 text-indigo-100 transition-all">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-indigo-700/20 flex items-center justify-center">
+                        <img
+                          src="/characters/cat_eat_fish.png"
+                          alt="Cat eating fish"
+                          className="w-12 h-12 rounded-full"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <span className="block text-sm text-indigo-300 uppercase tracking-wider font-medium">
+                          Expert Stage
+                        </span>
+                        <p className="text-indigo-100 font-semibold">
+                          Stage is yours, try new things out here
+                        </p>
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <div className="mt-2 flex items-center gap-4 rounded-2xl bg-indigo-500/10 ring-2 ring-indigo-400/30 shadow-lg px-6 py-4 text-indigo-100 transition-all">
                     <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-indigo-700/20 flex items-center justify-center">
@@ -666,20 +695,18 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <span className="block text-sm text-indigo-300 uppercase tracking-wider font-medium">
-                        Tutorial Step {level === "Beginner" ? tutorialStep + 1 : level === "Intermediate" ? tutorialStepIntermediate + 1 : tutorialStepExpert + 1}
+                        Tutorial Step {level === "Beginner" ? tutorialStep + 1 : tutorialStepIntermediate + 1}
                       </span>
                       <p className="text-indigo-100 font-semibold">
                         {level === "Beginner"
                           ? tutorialHints[tutorialStep].message
-                          : level === "Intermediate"
-                          ? intermediateHints[tutorialStepIntermediate].message
-                          : expertHints[tutorialStepExpert].message}
+                          : intermediateHints[tutorialStepIntermediate].message}
                       </p>
                     </div>
                   </div>
                 );
               })()
-            ) : null }
+            ) : null}
 
             {/* Action Row */}
             <div className="flex flex-wrap gap-3 items-center">
