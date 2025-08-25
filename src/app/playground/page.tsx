@@ -1,1099 +1,1437 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  Star,
-  Zap,
-  Heart,
-  Trophy,
-  Lightbulb,
-  Flame,
-  Target,
-  Award,
-  Sparkles,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Map,
-  Mountain,
-  Trees,
-  Waves,
-  Snowflake,
-  Skull,
-  BookOpen,
-  Code,
-} from "lucide-react";
-import { Map as MapIcon } from "lucide-react";
-
-type MapPoint = {
-  level: number;
-  x: number;
-  y: number;
-  region: string;
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-  completed: boolean;
-  current: boolean;
-  available: boolean;
-};
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Types
-type Particle = {
+type LevelType =
+  | "utilities"
+  | "layout"
+  | "flex"
+  | "grid"
+  | "spacing"
+  | "typography"
+  | "effects"
+  | "responsive"
+  | "colors"
+  | "borders";
+type ChallengeMode = "palette" | "typing" | "mixed";
+
+interface LevelDef {
   id: number;
-  x: number;
-  y: number;
-  color: string;
-};
-
-type Region = {
-  name: string;
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-};
-
-type LevelData = {
-  task: string;
-  solution: string;
-  hint: string;
-  tutorial?: string;
-  component: string;
-  baseClasses: string;
-  parentClasses?: string;
-  content: string;
+  type: LevelType;
+  required: string[];
+  palette: string[];
+  timeLimit: number;
+  difficulty: number;
+  mode: ChallengeMode;
   description: string;
-  level: number;
-  maxTime: number;
-  points: number;
-  region: Region;
-  tier: number;
+  targetElement: string;
+  challengeText?: string;
+}
+
+interface RunStats {
+  levelId: number;
+  startedAt: number;
+  endedAt?: number;
+  attempts: number;
+  success?: boolean;
+  errors: number;
+}
+
+interface SaveData {
+  currentLevel: number;
+  xp: number;
+  bestStreak: number;
+  achievements: string[];
+  longestLevelId?: number;
+  longestLevelMs?: number;
+  history: RunStats[];
+  totalErrors: number;
+}
+
+// Enhanced pools with more variety
+const POOLS: Record<LevelType, string[]> = {
+  utilities: [
+    "rounded-xl",
+    "rounded-2xl",
+    "shadow-lg",
+    "shadow-xl",
+    "border",
+    "border-2",
+    "ring-2",
+    "ring-purple-500",
+    "ring-offset-2",
+    "transition",
+    "duration-300",
+    "ease-out",
+    "transform",
+    "scale-105",
+  ],
+  layout: [
+    "w-64",
+    "h-40",
+    "w-80",
+    "h-48",
+    "aspect-video",
+    "overflow-hidden",
+    "relative",
+    "absolute",
+    "inset-0",
+    "z-10",
+    "container",
+    "mx-auto",
+  ],
+  flex: [
+    "flex",
+    "items-center",
+    "justify-center",
+    "gap-2",
+    "gap-4",
+    "flex-col",
+    "flex-row",
+    "justify-between",
+    "items-start",
+    "items-end",
+    "justify-around",
+    "flex-wrap",
+  ],
+  grid: [
+    "grid",
+    "grid-cols-2",
+    "grid-cols-3",
+    "grid-cols-4",
+    "gap-2",
+    "gap-4",
+    "gap-6",
+    "place-items-center",
+    "grid-rows-2",
+    "col-span-2",
+  ],
+  spacing: [
+    "p-4",
+    "p-6",
+    "p-8",
+    "px-6",
+    "py-4",
+    "m-4",
+    "mx-auto",
+    "my-8",
+    "space-y-2",
+    "space-x-3",
+    "ml-auto",
+    "mr-4",
+  ],
+  typography: [
+    "text-white",
+    "text-gray-100",
+    "text-xl",
+    "text-2xl",
+    "text-3xl",
+    "font-semibold",
+    "font-bold",
+    "tracking-wide",
+    "uppercase",
+    "lowercase",
+    "italic",
+    "text-center",
+  ],
+  effects: [
+    "bg-gradient-to-r",
+    "from-purple-500",
+    "to-cyan-500",
+    "backdrop-blur",
+    "backdrop-blur-xl",
+    "opacity-90",
+    "hover:scale-105",
+    "hover:opacity-80",
+    "animate-pulse",
+    "animate-bounce",
+  ],
+  responsive: [
+    "sm:w-full",
+    "md:w-1/2",
+    "lg:w-1/3",
+    "xl:w-1/4",
+    "sm:text-sm",
+    "md:text-base",
+    "lg:text-lg",
+    "hidden",
+    "sm:block",
+    "md:hidden",
+    "lg:flex",
+  ],
+  colors: [
+    "bg-red-500",
+    "bg-blue-500",
+    "bg-green-500",
+    "bg-yellow-500",
+    "bg-purple-500",
+    "bg-pink-500",
+    "bg-indigo-500",
+    "bg-cyan-500",
+    "text-red-400",
+    "text-blue-400",
+    "text-green-400",
+  ],
+  borders: [
+    "border-t",
+    "border-b",
+    "border-l",
+    "border-r",
+    "border-red-500",
+    "border-blue-500",
+    "rounded-t-lg",
+    "rounded-b-lg",
+    "border-dashed",
+    "border-dotted",
+  ],
 };
 
-const TailwindQuest = () => {
-  const [currentLevel, setCurrentLevel] = useState<number>(1);
-  const [score, setScore] = useState<number>(0);
-  const [lives, setLives] = useState<number>(3);
-  const [streak, setStreak] = useState<number>(0);
-  const [hints, setHints] = useState<number>(3);
-  const [experience, setExperience] = useState<number>(0);
-  const [playerCode, setPlayerCode] = useState<string>("");
-  const [showHint, setShowHint] = useState<boolean>(false);
-  const [gameStatus, setGameStatus] = useState<"playing" | "passed" | "failed">(
-    "playing"
-  );
-  const [wrongAttempts, setWrongAttempts] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState<number>(120);
-  const [achievements, setAchievements] = useState<string[]>([]);
-  const [combo, setCombo] = useState<number>(0);
-  const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [showMap, setShowMap] = useState<boolean>(true);
-  const [completedLevels, setCompletedLevels] = useState<Set<number>>(
-    new Set()
-  );
-  const [hoveredLevel, setHoveredLevel] = useState<number | null>(null);
+const CHALLENGES = [
+  { element: "button", text: "Create a stylish button" },
+  { element: "card", text: "Design a modern card component" },
+  { element: "navbar", text: "Build a responsive navigation bar" },
+  { element: "hero", text: "Craft an eye-catching hero section" },
+  { element: "form", text: "Style an elegant form" },
+  { element: "gallery", text: "Create an image gallery" },
+  { element: "sidebar", text: "Design a sleek sidebar" },
+  { element: "modal", text: "Build a modal dialog" },
+  { element: "dashboard", text: "Create a dashboard widget" },
+  { element: "profile", text: "Design a user profile card" },
+];
 
-  // Infinite level system with progressive difficulty
-  const getRegionForLevel = (level: number): Region => {
-    if (level <= 10)
-      return {
-        name: "Beginner Woods",
-        icon: Trees,
-        color: "from-green-600 to-green-800",
-        bgColor: "bg-green-900",
-      };
-    if (level <= 25)
-      return {
-        name: "Styling Plains",
-        icon: Mountain,
-        color: "from-yellow-600 to-orange-800",
-        bgColor: "bg-orange-900",
-      };
-    if (level <= 50)
-      return {
-        name: "Responsive Desert",
-        icon: Target,
-        color: "from-orange-600 to-red-800",
-        bgColor: "bg-red-900",
-      };
-    if (level <= 75)
-      return {
-        name: "Animation Valley",
-        icon: Zap,
-        color: "from-purple-600 to-purple-800",
-        bgColor: "bg-purple-900",
-      };
-    if (level <= 100)
-      return {
-        name: "Grid Mountains",
-        icon: Mountain,
-        color: "from-blue-600 to-blue-800",
-        bgColor: "bg-blue-900",
-      };
-    if (level <= 150)
-      return {
-        name: "Flexbox Ocean",
-        icon: Waves,
-        color: "from-cyan-600 to-blue-800",
-        bgColor: "bg-cyan-900",
-      };
-    if (level <= 200)
-      return {
-        name: "Transform Peaks",
-        icon: Snowflake,
-        color: "from-indigo-600 to-indigo-800",
-        bgColor: "bg-indigo-900",
-      };
-    return {
-      name: "Master Nightmare",
-      icon: Skull,
-      color: "from-gray-600 to-black",
-      bgColor: "bg-gray-900",
-    };
+const DISTRACTORS = [
+  "bg-orange-500",
+  "text-lime-500",
+  "italic",
+  "underline",
+  "line-through",
+  "ring-8",
+  "rounded-none",
+  "rotate-6",
+  "-rotate-6",
+  "skew-x-6",
+  "opacity-50",
+  "blur-sm",
+  "grayscale",
+  "sepia",
+  "contrast-150",
+];
+
+// Achievements
+const ACHIEVEMENTS = [
+  {
+    id: "first-blood",
+    name: "First Craft",
+    test: (s: SaveData) => s.history.some((h) => h.success),
+  },
+  {
+    id: "speedster",
+    name: "Speedster (sub-10s)",
+    test: (_: SaveData, r?: RunStats) =>
+      !!r?.success && r.endedAt! - r.startedAt < 10000,
+  },
+  {
+    id: "streak-5",
+    name: "Hot Streak ×5",
+    test: (s: SaveData) => currentStreak(s) >= 5,
+  },
+  {
+    id: "streak-10",
+    name: "Unstoppable ×10",
+    test: (s: SaveData) => currentStreak(s) >= 10,
+  },
+  {
+    id: "lvl-25",
+    name: "Explorer 25",
+    test: (s: SaveData) => s.currentLevel > 25,
+  },
+  {
+    id: "lvl-50",
+    name: "Veteran 50",
+    test: (s: SaveData) => s.currentLevel > 50,
+  },
+  {
+    id: "perfectionist",
+    name: "Perfectionist (0 errors)",
+    test: (_: SaveData, r?: RunStats) => !!r?.success && r.errors === 0,
+  },
+  {
+    id: "typing-master",
+    name: "Typing Master",
+    test: (_: SaveData, r?: RunStats, l?: LevelDef) =>
+      !!r?.success && l?.mode === "typing",
+  },
+];
+
+function currentStreak(save: SaveData) {
+  let streak = 0;
+  for (let i = save.history.length - 1; i >= 0; i--) {
+    if (save.history[i].success) streak++;
+    else break;
+  }
+  return streak;
+}
+
+// Utility functions
+const rand = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
+const sample = <T,>(arr: T[], n: number) =>
+  arr.sort(() => Math.random() - 0.5).slice(0, n);
+
+// Enhanced level generator with dynamic challenges
+function generateLevel(id: number): LevelDef {
+  const difficulty = 1 + Math.floor((id - 1) / 5);
+  const typeOrder: LevelType[] = [
+    "utilities",
+    "spacing",
+    "typography",
+    "layout",
+    "flex",
+    "grid",
+    "effects",
+    "responsive",
+    "colors",
+    "borders",
+  ];
+  const type = typeOrder[id % typeOrder.length];
+
+  // Determine challenge mode based on level
+  let mode: ChallengeMode = "palette";
+  if (id > 10 && id % 7 === 0) mode = "typing";
+  else if (id > 15 && id % 5 === 0) mode = "mixed";
+
+  const reqCount = Math.min(2 + difficulty, 8);
+  const basePool = POOLS[type];
+  const required = sample(basePool, Math.min(reqCount, basePool.length));
+
+  // Enhanced palette with cross-category mixing
+  const otherTypes = typeOrder.filter((t) => t !== type);
+  const crossPool = sample(otherTypes, 2).flatMap((t) => sample(POOLS[t], 2));
+  const palette = [
+    ...new Set([
+      ...required,
+      ...crossPool,
+      ...sample(DISTRACTORS, difficulty + 2),
+    ]),
+  ].slice(0, 20);
+
+  const timeLimit = Math.max(45 - difficulty * 3, 15);
+  const challenge = CHALLENGES[id % CHALLENGES.length];
+
+  return {
+    id,
+    type,
+    required,
+    palette,
+    timeLimit,
+    difficulty,
+    mode,
+    description: `${challenge.text} using ${type} utilities`,
+    targetElement: challenge.element,
+    challengeText:
+      mode === "typing"
+        ? `Create a ${challenge.element} with: ${required.join(", ")}`
+        : undefined,
   };
+}
 
-  // Generate infinite levels with increasing complexity
-  const generateLevel = useCallback((level: number): LevelData => {
-    const baseTemplates = [
-      {
-        task: "Make this text blue",
-        solution: "text-blue-500",
-        hint: "Use text-[color]-[intensity]. Try text-blue-500",
-        tutorial:
-          "In Tailwind CSS, you style text color with the pattern: text-[color]-[intensity]\n\n• text-blue-500 = Medium blue text\n• text-red-600 = Darker red text\n• text-gray-400 = Light gray text\n\nCommon colors: red, blue, green, yellow, purple, gray, black, white\nCommon intensities: 100 (lightest) to 900 (darkest)",
-        component: "text",
-        baseClasses: "text-2xl font-bold",
-        content: "Hello World",
-        description: "Change the text color to blue",
-      },
-      {
-        task: "Center this content with flexbox",
-        solution: "flex items-center justify-center",
-        hint: "Use flex items-center justify-center to center both ways",
-        tutorial:
-          "Flexbox is Tailwind's most powerful layout tool!\n\n• flex = Turn element into flexbox container\n• items-center = Center items vertically\n• justify-center = Center items horizontally\n\nOther options:\n• justify-start, justify-end, justify-between\n• items-start, items-end, items-stretch",
-        component: "div",
-        baseClasses: "h-32 bg-gray-100 border-2 border-dashed border-gray-400",
-        content: "I'm Centered!",
-        description: "Use flexbox to center content both ways",
-      },
-      {
-        task: "Create a card with shadow, rounded corners and padding",
-        solution: "p-6 rounded-xl shadow-lg",
-        hint: "Combine padding (p-), border radius (rounded-), and shadow utilities",
-        tutorial:
-          "Card styling combines multiple utilities:\n\n• p-6 = Padding of 1.5rem on all sides\n• rounded-xl = Extra large border radius\n• shadow-lg = Large drop shadow\n\nPadding scale: p-1, p-2, p-4, p-6, p-8, p-12\nRounded scale: rounded, rounded-md, rounded-lg, rounded-xl, rounded-full\nShadow scale: shadow-sm, shadow, shadow-md, shadow-lg, shadow-xl",
-        component: "div",
-        baseClasses: "bg-white max-w-sm",
-        content: "Beautiful Card Component",
-        description: "Style a card with modern design",
-      },
-      {
-        task: "Make responsive text: small on mobile, large on tablet, extra large on desktop",
-        solution: "text-sm md:text-lg xl:text-2xl",
-        hint: "Stack responsive prefixes: base, md:, xl:",
-        tutorial:
-          "Responsive design uses breakpoint prefixes:\n\n• No prefix = applies to all sizes (mobile first)\n• sm: = small screens (640px+)\n• md: = medium screens (768px+) \n• lg: = large screens (1024px+)\n• xl: = extra large (1280px+)\n• 2xl: = 2x large (1536px+)\n\nExample: text-sm md:text-lg xl:text-2xl\n• Mobile: small text\n• Tablet: large text  \n• Desktop: extra large text",
-        component: "p",
-        baseClasses: "font-bold",
-        content: "Responsive Typography",
-        description: "Master responsive text sizing",
-      },
-      {
-        task: "Create hover effect: scale up, rotate slightly, change colors with smooth transition",
-        solution:
-          "hover:scale-110 hover:rotate-3 hover:bg-purple-600 hover:text-white transition-all duration-300",
-        hint: "Combine hover:scale, hover:rotate, hover:bg, hover:text with transition-all",
-        tutorial:
-          "Advanced hover effects combine transforms and transitions:\n\n• hover:scale-110 = Scale to 110% on hover\n• hover:rotate-3 = Rotate 3 degrees\n• hover:bg-purple-600 = Change background color\n• hover:text-white = Change text color\n• transition-all = Animate all properties\n• duration-300 = Animation takes 300ms\n\nTransform utilities: scale-75 to scale-150, rotate-1 to rotate-180\nDuration options: duration-75, duration-100, duration-300, duration-500, duration-1000",
-        component: "div",
-        baseClasses:
-          "p-6 bg-blue-500 text-blue-100 cursor-pointer rounded-lg font-bold text-center",
-        content: "Hover Me!",
-        description: "Create complex hover animations",
-      },
-      {
-        task: "Create complex grid: 4 columns on desktop, 2 on tablet, 1 on mobile with different gaps",
-        solution:
-          "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 md:gap-4 xl:gap-6",
-        hint: "Combine grid-cols with breakpoints and responsive gaps",
-        tutorial:
-          "Advanced grid systems with responsive breakpoints:\n\n• grid = Enable CSS Grid\n• grid-cols-1 = 1 column (mobile)\n• md:grid-cols-2 = 2 columns on tablet\n• xl:grid-cols-4 = 4 columns on desktop\n• gap-2 = Small gap on mobile\n• md:gap-4 = Medium gap on tablet\n• xl:gap-6 = Large gap on desktop\n\nGrid options: grid-cols-1 through grid-cols-12\nGap options: gap-0, gap-1, gap-2, gap-4, gap-6, gap-8, gap-12",
-        component: "div",
-        baseClasses: "p-4",
-        content:
-          "<div class='bg-red-200 p-4 rounded'>1</div><div class='bg-blue-200 p-4 rounded'>2</div><div class='bg-green-200 p-4 rounded'>3</div><div class='bg-yellow-200 p-4 rounded'>4</div><div class='bg-purple-200 p-4 rounded'>5</div><div class='bg-pink-200 p-4 rounded'>6</div>",
-        description: "Master responsive grid systems",
-      },
-      {
-        task: "Create a glassmorphism card with backdrop blur, gradient border, and complex shadows",
-        solution:
-          "backdrop-blur-md bg-white/10 border border-white/20 shadow-xl shadow-purple-500/25 rounded-2xl",
-        hint: "Combine backdrop-blur, bg-white/opacity, border-white/opacity, and colored shadows",
-        tutorial:
-          "Glassmorphism combines modern effects:\n\n• backdrop-blur-md = Blur background behind element\n• bg-white/10 = White background at 10% opacity\n• border-white/20 = White border at 20% opacity\n• shadow-xl = Extra large shadow\n• shadow-purple-500/25 = Purple shadow at 25% opacity\n• rounded-2xl = Very rounded corners\n\nOpacity syntax: color/[0-100] (e.g., bg-blue-500/50 = 50% opacity)\nBlur options: backdrop-blur-none, backdrop-blur-sm, backdrop-blur, backdrop-blur-md, backdrop-blur-lg, backdrop-blur-xl",
-        component: "div",
-        baseClasses: "p-8 text-white font-bold",
-        parentClasses:
-          "bg-gradient-to-br from-purple-600 to-pink-600 p-8 rounded-xl",
-        content: "Glassmorphism Effect",
-        description: "Master advanced glassmorphism design",
-      },
-    ];
+// Local storage
+const DEFAULT_SAVE: SaveData = {
+  currentLevel: 1,
+  xp: 0,
+  bestStreak: 0,
+  achievements: [],
+  history: [],
+  totalErrors: 0,
+};
 
-    const cycleIndex = (level - 1) % baseTemplates.length;
-    const difficultyTier = Math.floor((level - 1) / baseTemplates.length);
-    const baseLevel = baseTemplates[cycleIndex];
+function loadSave(): SaveData {
+  if (typeof window === "undefined") return DEFAULT_SAVE;
+  const raw = localStorage.getItem("twq_save");
+  try {
+    return raw ? { ...DEFAULT_SAVE, ...JSON.parse(raw) } : DEFAULT_SAVE;
+  } catch {
+    return DEFAULT_SAVE;
+  }
+}
 
-    let solution = baseLevel.solution;
-    let task = baseLevel.task;
+function storeSave(s: SaveData) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("twq_save", JSON.stringify(s));
+}
 
-    if (difficultyTier > 0) {
-      const complexityModifiers = [
-        "hover:shadow-2xl",
-        "active:scale-95",
-        "focus:ring-4 focus:ring-purple-300",
-        "group-hover:opacity-75",
-        "motion-safe:animate-pulse",
-        "dark:bg-gray-800 dark:text-white",
-      ];
+// Main component
+export default function EnhancedTailwindQuest() {
+  const [save, setSave] = useState<SaveData>(DEFAULT_SAVE);
+  const [mode, setMode] = useState<"landing" | "map" | "play" | "events">(
+    "landing"
+  );
+  const [activeLevel, setActiveLevel] = useState<LevelDef | null>(null);
+  const [selection, setSelection] = useState<string[]>([]);
+  const [typedClasses, setTypedClasses] = useState("");
+  const [run, setRun] = useState<RunStats | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
 
-      const additionalModifiers = complexityModifiers.slice(
-        0,
-        Math.min(difficultyTier, 3)
+  useEffect(() => setSave(loadSave()), []);
+  useEffect(() => storeSave(save), [save]);
+
+  const nextLevel = useMemo(
+    () => generateLevel(save.currentLevel),
+    [save.currentLevel]
+  );
+
+  function startLevel(level: LevelDef) {
+    if (level.id > save.currentLevel) {
+      setToast("Complete previous levels first!");
+      return;
+    }
+    setActiveLevel(level);
+    setSelection([]);
+    setTypedClasses("");
+    setErrors([]);
+    setRun({
+      levelId: level.id,
+      startedAt: Date.now(),
+      attempts: 0,
+      errors: 0,
+    });
+    setMode("play");
+  }
+
+  function detectErrors(classes: string[]): string[] {
+    const errors: string[] = [];
+    const classStr = classes.join(" ");
+
+    // Common error patterns
+    if (classStr.includes("flex") && classStr.includes("grid")) {
+      errors.push("Cannot use both flex and grid on same element");
+    }
+    if (
+      classStr.includes("absolute") &&
+      !classStr.includes("relative") &&
+      !classStr.includes("inset")
+    ) {
+      errors.push(
+        "Absolute positioning needs relative parent or inset classes"
       );
-      solution = `${solution} ${additionalModifiers.join(" ")}`;
-      task = `${task} (Advanced: Tier ${difficultyTier + 1})`;
+    }
+    if (
+      classStr.match(/text-\w+-\d+/) &&
+      classStr.match(/bg-\w+-\d+/) &&
+      classStr.includes(classStr.match(/text-(\w+)-\d+/)?.[1] || "") ===
+        classStr.includes(classStr.match(/bg-(\w+)-\d+/)?.[1] || "")
+    ) {
+      errors.push("Consider contrast between text and background colors");
     }
 
-    return {
-      ...baseLevel,
-      solution,
-      task,
-      level,
-      maxTime: Math.max(45, 180 - level * 2),
-      points: 100 + difficultyTier * 150,
-      region: getRegionForLevel(level),
-      tier: difficultyTier + 1,
-    };
-  }, []);
+    return errors;
+  }
 
-  const [currentLevelData, setCurrentLevelData] = useState<LevelData>(() =>
-    generateLevel(1)
+  function finishLevel(success: boolean) {
+    if (!activeLevel || !run) return;
+    const ended = Date.now();
+    const ms = ended - run.startedAt;
+
+    const updatedRun: RunStats = {
+      ...run,
+      success,
+      endedAt: ended,
+      errors: errors.length,
+    };
+    const newHistory = [...save.history, updatedRun];
+
+    const streakNow = success
+      ? currentStreak({ ...save, history: newHistory })
+      : 0;
+    const baseXp = success ? 15 + activeLevel.difficulty * 8 : 5;
+    const speedBonus = success
+      ? Math.max(0, Math.floor((activeLevel.timeLimit * 1000 - ms) / 1500))
+      : 0;
+    const errorPenalty = errors.length * 2;
+    const gained = Math.max(0, baseXp + speedBonus - errorPenalty);
+
+    let nextSave: SaveData = {
+      ...save,
+      xp: save.xp + gained,
+      bestStreak: Math.max(save.bestStreak, streakNow),
+      history: newHistory,
+      totalErrors: save.totalErrors + errors.length,
+      currentLevel:
+        success && activeLevel.id === save.currentLevel
+          ? save.currentLevel + 1
+          : save.currentLevel,
+    };
+
+    // Check achievements
+    const newlyEarned = ACHIEVEMENTS.filter(
+      (a) =>
+        !nextSave.achievements.includes(a.id) &&
+        a.test(nextSave, updatedRun, activeLevel)
+    ).map((a) => a.id);
+
+    if (newlyEarned.length) {
+      nextSave.achievements = [...nextSave.achievements, ...newlyEarned];
+      setToast(
+        `Achievement unlocked: ${newlyEarned
+          .map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.name)
+          .join(", ")}`
+      );
+    }
+
+    setSave(nextSave);
+    setMode("map");
+    setActiveLevel(null);
+    setSelection([]);
+    setTypedClasses("");
+    setRun(null);
+    setErrors([]);
+  }
+
+  return (
+    <div className="min-h-screen relative bg-gradient-to-br from-indigo-950 via-slate-950 to-purple-950 text-white overflow-hidden">
+      <EnhancedBackground />
+
+      <div className="relative z-10 h-screen flex flex-col">
+        <Header save={save} onNav={(m) => setMode(m)} />
+
+        <div className="flex-1 overflow-hidden">
+          {mode === "landing" && (
+            <Landing
+              onStart={() => setMode("map")}
+              onEvents={() => setMode("events")}
+            />
+          )}
+          {mode === "events" && <Events onBack={() => setMode("landing")} />}
+          {mode === "map" && (
+            <LevelMap
+              current={save.currentLevel}
+              onPlay={(id) => startLevel(generateLevel(id))}
+            />
+          )}
+          {mode === "play" && activeLevel && (
+            <Game
+              level={activeLevel}
+              selection={selection}
+              setSelection={setSelection}
+              typedClasses={typedClasses}
+              setTypedClasses={setTypedClasses}
+              onGiveUp={() => finishLevel(false)}
+              onWin={() => finishLevel(true)}
+              run={run}
+              errors={errors}
+              setErrors={setErrors}
+              onError={detectErrors}
+            />
+          )}
+        </div>
+
+        <Footer save={save} next={nextLevel} />
+      </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.8 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-xl border border-white/20 px-6 py-3 rounded-2xl shadow-xl z-50"
+            onAnimationComplete={() => setTimeout(() => setToast(null), 3000)}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
+}
 
-  // Generate infinite map points with chain-like connections
-  const generateMapPoints = () => {
-    const points = [];
-    const visibleLevels = Math.min(currentLevel + 20, 200);
+function Header({
+  save,
+  onNav,
+}: {
+  save: SaveData;
+  onNav: (m: "landing" | "map" | "play" | "events") => void;
+}) {
+  const percent = Math.min(100, Math.floor(save.xp % 100));
+  const currentStreak =
+    save.history.length > 0
+      ? (() => {
+          let streak = 0;
+          for (let i = save.history.length - 1; i >= 0; i--) {
+            if (save.history[i].success) streak++;
+            else break;
+          }
+          return streak;
+        })()
+      : 0;
 
-    const spacingY = 12; // vertical spacing per level
-    const zigzagX = [30, 70]; // zigzag left-right positions
+  return (
+    <div className="flex items-center justify-between p-4 bg-black/20 backdrop-blur-xl border-b border-white/10">
+      <div className="flex items-center gap-3">
+        <motion.div
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-500 to-cyan-500 shadow-lg flex items-center justify-center"
+        >
+          <span className="text-xs font-bold">T</span>
+        </motion.div>
+        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+          TailSpark Quest
+        </h1>
+      </div>
 
-    for (let i = 1; i <= visibleLevels; i++) {
-      const x = zigzagX[i % 2]; // alternate left/right
-      const y = i * spacingY;
+      <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4 text-sm">
+          <div className="opacity-80">
+            Streak:{" "}
+            <span className="font-semibold text-cyan-400">{currentStreak}</span>
+          </div>
+          <div className="opacity-80">
+            Errors:{" "}
+            <span className="font-semibold text-red-400">
+              {save.totalErrors}
+            </span>
+          </div>
+        </div>
 
-      const region = getRegionForLevel(i);
+        <div className="w-40">
+          <div className="text-xs opacity-70 mb-1">XP {save.xp}</div>
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-400 to-purple-400"
+              initial={{ width: 0 }}
+              animate={{ width: `${percent}%` }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+        </div>
 
-      points.push({
-        level: i,
-        x,
-        y,
-        region: region.name,
-        icon: region.icon,
-        color: region.color,
-        bgColor: region.bgColor,
-        completed: completedLevels.has(i),
-        current: i === currentLevel,
-        available: i <= currentLevel,
-      });
-    }
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200"
+            onClick={() => onNav("map")}
+          >
+            Map
+          </button>
+          <button
+            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200"
+            onClick={() => onNav("events")}
+          >
+            Events
+          </button>
+          <button
+            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200"
+            onClick={() => onNav("landing")}
+          >
+            Home
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-    return points;
-  };
+function Footer({ save, next }: { save: SaveData; next: LevelDef }) {
+  return (
+    <div className="p-4 bg-black/20 backdrop-blur-xl border-t border-white/10">
+      <div className="flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div className="opacity-75">
+          Next: <span className="font-semibold text-cyan-400">#{next.id}</span>{" "}
+          •
+          <span className="uppercase font-semibold text-purple-400 ml-1">
+            {next.type}
+          </span>{" "}
+          •
+          <span className="font-semibold text-yellow-400 ml-1">
+            ★{next.difficulty}
+          </span>
+        </div>
 
-  // Timer and effects
-  useEffect(() => {
-    if (gameStatus === "playing" && timeLeft > 0 && !showMap) {
-      const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && gameStatus === "playing") {
-      handleFailure();
-    }
-  }, [timeLeft, gameStatus, showMap]);
-
-  useEffect(() => {
-    if (particles.length > 0) {
-      const timer = setTimeout(() => {
-        setParticles(particles.slice(1));
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [particles]);
-
-  const createParticles = (count = 15) => {
-    const newParticles = Array.from({ length: count }, (_, i) => ({
-      id: Date.now() + i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      color: [
-        "text-yellow-400",
-        "text-purple-400",
-        "text-pink-400",
-        "text-blue-400",
-        "text-green-400",
-      ][Math.floor(Math.random() * 5)],
-    }));
-    setParticles((prev) => [...prev, ...newParticles]);
-  };
-
-  const checkSolution = () => {
-    const normalizedPlayerCode = playerCode
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, " ");
-    const normalizedSolution = currentLevelData.solution
-      .toLowerCase()
-      .replace(/\s+/g, " ");
-
-    if (normalizedPlayerCode === normalizedSolution) {
-      handleSuccess();
-    } else {
-      handleWrongAnswer();
-    }
-  };
-
-  const handleSuccess = () => {
-    setIsAnimating(true);
-    createParticles(20);
-    setGameStatus("passed");
-    setScore((prev) => prev + currentLevelData.points + streak * 100);
-    setStreak((prev) => prev + 1);
-    setCombo((prev) => prev + 1);
-    setExperience((prev) => prev + 25 + currentLevelData.tier * 10);
-    setWrongAttempts(0);
-    setCompletedLevels((prev) => new Set([...prev, currentLevel]));
-
-    const newAchievements: string[] = [];
-    if (streak === 5) newAchievements.push("🔥 Fire Streak Master!");
-    if (currentLevel === 10) newAchievements.push("🌲 Woods Conqueror!");
-    if (currentLevel === 25) newAchievements.push("🏔️ Plains Champion!");
-    if (currentLevel === 50) newAchievements.push("🏜️ Desert Warrior!");
-    if (currentLevel === 100) newAchievements.push("👑 Century Club!");
-    if (combo >= 10) newAchievements.push("⚡ Combo God!");
-    if (timeLeft > currentLevelData.maxTime * 0.9)
-      newAchievements.push("⚡ Lightning Speed!");
-
-    setAchievements((prev) => [...prev, ...newAchievements]);
-
-    setTimeout(() => {
-      setIsAnimating(false);
-      nextLevel();
-    }, 2500);
-  };
-
-  const handleWrongAnswer = () => {
-    setWrongAttempts((prev) => prev + 1);
-    setStreak(0);
-    setCombo(0);
-
-    if (wrongAttempts >= 2) {
-      setLives((prev) => prev - 1);
-      if (lives <= 1) {
-        handleFailure();
-        return;
-      }
-    }
-
-    setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 500);
-  };
-
-  const handleFailure = () => {
-    setGameStatus("failed");
-    setStreak(0);
-    setCombo(0);
-  };
-
-  const nextLevel = () => {
-    setCurrentLevel((prev) => prev + 1);
-    const nextLevelData = generateLevel(currentLevel + 1);
-    setCurrentLevelData(nextLevelData);
-    setTimeLeft(nextLevelData.maxTime);
-    setPlayerCode("");
-    setGameStatus("playing");
-    setShowHint(false);
-    setShowMap(true);
-  };
-
-  const selectLevel = (levelNum: number) => {
-    if (levelNum <= currentLevel) {
-      setCurrentLevel(levelNum);
-      const levelData = generateLevel(levelNum);
-      setCurrentLevelData(levelData);
-      setTimeLeft(levelData.maxTime);
-      setPlayerCode("");
-      setGameStatus("playing");
-      setShowHint(false);
-      setShowMap(false);
-    }
-  };
-
-  const restartGame = () => {
-    setCurrentLevel(1);
-    setScore(0);
-    setLives(3);
-    setStreak(0);
-    setHints(3);
-    setExperience(0);
-    setPlayerCode("");
-    setShowHint(false);
-    setGameStatus("playing");
-    setWrongAttempts(0);
-    setCombo(0);
-    setAchievements([]);
-    setCompletedLevels(new Set());
-    const firstLevel = generateLevel(1);
-    setCurrentLevelData(firstLevel);
-    setTimeLeft(firstLevel.maxTime);
-    setShowMap(true);
-  };
-
-  const useHint = () => {
-    if (hints > 0) {
-      setHints((prev) => prev - 1);
-      setShowHint(true);
-    }
-  };
-
-  const renderPreview = () => {
-    const { component, baseClasses, content, parentClasses } = currentLevelData;
-    const classes = `${baseClasses} ${playerCode}`.trim();
-
-    const renderElement = () => {
-      // ✅ force safe preview colors
-      const safeClasses = "bg-gray-900 text-white";
-      const props: any = { className: `${classes} ${safeClasses}` };
-
-      if (content.includes("<")) {
-        props.dangerouslySetInnerHTML = { __html: content };
-      }
-
-      const textContent = !content.includes("<") ? content : undefined;
-
-      switch (component) {
-        case "div":
-          return <div {...props}>{textContent}</div>;
-        case "button":
-          return <button {...props}>{textContent}</button>;
-        case "h1":
-          return <h1 {...props}>{textContent}</h1>;
-        case "p":
-          return <p {...props}>{textContent}</p>;
-        case "header":
-          return <header {...props}>{textContent}</header>;
-        case "text":
-          return <span {...props}>{textContent}</span>;
-        default:
-          return <div {...props}>{textContent}</div>;
-      }
-    };
-
-    return (
-      <div className="bg-gray-900 rounded-lg p-6 min-h-40 border border-gray-700 overflow-hidden">
-        🎨 Live Preview:
-        <div className="bg-gray-800/70 backdrop-blur-md rounded-lg p-6 min-h-40 border border-gray-600 shadow-2xl">
-          {parentClasses ? (
-            <div className={`${parentClasses} bg-gray-900 text-white`}>
-              {renderElement()}
-            </div>
-          ) : (
-            <div className="bg-gray-900 text-white">{renderElement()}</div>
+        <div className="flex flex-wrap gap-2">
+          {save.achievements.slice(-3).map((a) => (
+            <span
+              key={a}
+              className="px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-white/15 text-xs"
+            >
+              {ACHIEVEMENTS.find((ach) => ach.id === a)?.name}
+            </span>
+          ))}
+          {save.achievements.length === 0 && (
+            <span className="text-white/60">No achievements yet</span>
           )}
         </div>
       </div>
-    );
-  };
-
-  const mapPoints: MapPoint[] = generateMapPoints();
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 text-white overflow-hidden relative">
-      {/* Enhanced particles */}
-      {particles.map((particle) => (
-        <div
-          key={particle.id}
-          className={`absolute ${particle.color} pointer-events-none z-50`}
-          style={{
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            animation: `float 1.5s ease-out forwards`,
-          }}
-        >
-          <Sparkles className="w-6 h-6" />
-        </div>
-      ))}
-
-      {/* Enhanced Header */}
-      <div className="p-4 bg-black/30 backdrop-blur-md border-b border-gray-700/50">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowMap(!showMap)}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6 py-3 rounded-xl font-bold transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg"
-            >
-              <MapIcon className="w-5 h-5" />
-              {showMap ? "🎮 Start Quest" : "🗺️ View Map"}
-            </button>
-            <div className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-              {currentLevelData.region.name}
-            </div>
-            {currentLevelData.tier > 1 && (
-              <div className="bg-red-500/20 border border-red-500 px-3 py-1 rounded-full text-sm font-bold text-red-400">
-                Tier {currentLevelData.tier}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-600/20 to-yellow-800/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-yellow-500/30">
-              <Trophy className="w-5 h-5 text-yellow-400" />
-              <span className="font-bold text-lg">Lv.{currentLevel}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-purple-800/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
-              <Star className="w-5 h-5 text-purple-400" />
-              <span className="font-bold">{score.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-red-600/20 to-red-800/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-red-500/30">
-              <Heart
-                className={`w-5 h-5 ${
-                  lives > 0 ? "text-red-400" : "text-gray-600"
-                }`}
-              />
-              <span className="font-bold">{lives}</span>
-            </div>
-            {streak > 0 && (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-orange-600/20 to-orange-800/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-orange-500/30 animate-pulse">
-                <Flame className="w-5 h-5 text-orange-400" />
-                <span className="font-bold">{streak}</span>
-              </div>
-            )}
-            {!showMap && (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-green-600/20 to-green-800/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-green-500/30">
-                <Clock
-                  className={`w-5 h-5 ${
-                    timeLeft <= 30
-                      ? "text-red-400 animate-pulse"
-                      : "text-green-400"
-                  }`}
-                />
-                <span className="font-bold">{timeLeft}s</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Enhanced Map View with Chain Animations */}
-        {showMap && (
-          <div className="relative">
-            <h1 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent animate-pulse">
-              🗺️ TailwindQuest: Infinite Adventure
-            </h1>
-
-            <div className="relative bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-2xl p-8 min-h-[500px] overflow-hidden border border-purple-500/30 shadow-2xl">
-              {/* Animated background elements */}
-              <div className="absolute inset-0 opacity-20">
-                <div
-                  className="absolute top-8 left-12 text-6xl animate-bounce"
-                  style={{ animationDelay: "0s" }}
-                >
-                  🌲
-                </div>
-                <div
-                  className="absolute top-20 right-16 text-6xl animate-bounce"
-                  style={{ animationDelay: "0.5s" }}
-                >
-                  ⛰️
-                </div>
-                <div
-                  className="absolute bottom-20 left-16 text-6xl animate-bounce"
-                  style={{ animationDelay: "1s" }}
-                >
-                  🏜️
-                </div>
-                <div
-                  className="absolute bottom-12 right-12 text-6xl animate-bounce"
-                  style={{ animationDelay: "1.5s" }}
-                >
-                  🌊
-                </div>
-                <div
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-8xl animate-spin"
-                  style={{ animationDuration: "20s" }}
-                >
-                  ✨
-                </div>
-              </div>
-
-              {/* Chain-like connections with animations */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                {mapPoints.slice(0, -1).map((point, index) => {
-                  const nextPoint = mapPoints[index + 1];
-                  const isCompleted = point.completed;
-                  return (
-                    <g key={index}>
-                      <line
-                        x1={`${point.x}%`}
-                        y1={`${point.y}%`}
-                        x2={`${nextPoint.x}%`}
-                        y2={`${nextPoint.y}%`}
-                        stroke={isCompleted ? "#10b981" : "#6b7280"}
-                        strokeWidth="4"
-                        strokeDasharray={isCompleted ? "0" : "8,4"}
-                        className={`transition-all duration-500 ${
-                          isCompleted ? "opacity-80" : "opacity-40"
-                        }`}
-                        style={{
-                          filter: isCompleted
-                            ? "drop-shadow(0 0 8px #10b981)"
-                            : "none",
-                        }}
-                      />
-                      {/* Chain links effect */}
-                      {[0.25, 0.5, 0.75].map((ratio, i) => {
-                        const linkX = point.x + (nextPoint.x - point.x) * ratio;
-                        const linkY = point.y + (nextPoint.y - point.y) * ratio;
-                        return (
-                          <circle
-                            key={i}
-                            cx={`${linkX}%`}
-                            cy={`${linkY}%`}
-                            r="2"
-                            fill={isCompleted ? "#10b981" : "#6b7280"}
-                            className={`${isCompleted ? "animate-pulse" : ""}`}
-                            style={{
-                              filter: isCompleted
-                                ? "drop-shadow(0 0 4px #10b981)"
-                                : "none",
-                            }}
-                          />
-                        );
-                      })}
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* Level points with enhanced animations */}
-              {mapPoints.map((point) => {
-                const Icon = point.icon;
-                const isHovered = hoveredLevel === point.level;
-                return (
-                  <div
-                    key={point.level}
-                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-300 ${
-                      point.current
-                        ? "animate-pulse scale-125 z-20"
-                        : isHovered
-                        ? "scale-150 z-10"
-                        : "hover:scale-125"
-                    } ${
-                      !point.available
-                        ? "cursor-not-allowed opacity-80 grayscale"
-                        : ""
-                    }`}
-                    style={{
-                      left: `${point.x}%`,
-                      top: `${point.y}%`,
-                    }}
-                    onClick={() => point.available && selectLevel(point.level)}
-                    onMouseEnter={() => setHoveredLevel(point.level)}
-                    onMouseLeave={() => setHoveredLevel(null)}
-                  >
-                    <div
-                      className={`relative ${
-                        point.completed
-                          ? "bg-gradient-to-r from-green-400 to-green-600 shadow-lg shadow-green-500/50"
-                          : point.current
-                          ? "bg-gradient-to-r from-yellow-400 to-orange-500 shadow-lg shadow-yellow-500/50"
-                          : point.available
-                          ? "bg-gradient-to-r from-blue-400 to-blue-600 shadow-lg shadow-blue-500/50"
-                          : "bg-gray-500"
-                      } rounded-full p-4 border-4 border-white transition-all duration-300 ${
-                        isHovered ? "animate-bounce" : ""
-                      }`}
-                    >
-                      <Icon className="w-8 h-8 text-white" />
-                      {point.completed && (
-                        <CheckCircle className="absolute -top-2 -right-2 w-6 h-6 text-green-600 bg-white rounded-full" />
-                      )}
-                    </div>
-                    <div className="absolute top-16 left-1/2 transform -translate-x-1/2 text-xs font-bold bg-black/80 px-3 py-1 rounded-full whitespace-nowrap border border-white/30">
-                      Level {point.level}
-                      {point.level > 100 && (
-                        <span className="text-red-400 ml-1">💀</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Region Legend with enhanced styling */}
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                {
-                  name: "Beginner Woods",
-                  icon: Trees,
-                  levels: "1-10",
-                  color: "from-green-600 to-green-800",
-                  description: "Learn the basics",
-                },
-                {
-                  name: "Styling Plains",
-                  icon: Mountain,
-                  levels: "11-25",
-                  color: "from-yellow-600 to-orange-800",
-                  description: "Master styling",
-                },
-                {
-                  name: "Responsive Desert",
-                  icon: Target,
-                  levels: "26-50",
-                  color: "from-orange-600 to-red-800",
-                  description: "Responsive design",
-                },
-                {
-                  name: "Master Nightmare",
-                  icon: Skull,
-                  levels: "51+",
-                  color: "from-gray-600 to-black",
-                  description: "Extreme challenges",
-                },
-              ].map((region, index) => {
-                const Icon = region.icon;
-                return (
-                  <div
-                    key={index}
-                    className={`bg-gradient-to-r ${region.color} rounded-xl p-6 transform hover:scale-105 transition-all duration-300 shadow-lg`}
-                  >
-                    <Icon className="w-8 h-8 mb-3" />
-                    <h3 className="font-bold text-lg mb-1">{region.name}</h3>
-                    <p className="text-sm opacity-90 mb-2">
-                      Levels {region.levels}
-                    </p>
-                    <p className="text-xs opacity-75">{region.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Game Play View with enhanced tutorial system */}
-        {!showMap && gameStatus === "playing" && (
-          <div
-            className={`transition-all duration-500 ${
-              isAnimating ? "animate-pulse scale-105" : ""
-            }`}
-          >
-            {/* Level Info */}
-            <div className="mb-8 text-center">
-              <div
-                className={`inline-block bg-gradient-to-r ${currentLevelData.region.color} rounded-full px-8 py-3 mb-4 shadow-lg`}
-              >
-                <span className="text-lg font-bold">
-                  Level {currentLevel} - {currentLevelData.region.name}
-                </span>
-              </div>
-              <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                {currentLevelData.task}
-              </h1>
-              <p className="text-xl text-gray-400">
-                {currentLevelData.description}
-              </p>
-            </div>
-
-            {/* Game Status Indicators */}
-            <div className="flex justify-center gap-6 mb-8">
-              {combo > 0 && (
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-6 py-3 rounded-full text-lg font-bold animate-bounce shadow-lg">
-                  🔥 {combo}x COMBO STREAK!
-                </div>
-              )}
-              {wrongAttempts > 0 && (
-                <div className="bg-red-500/20 border-2 border-red-500 text-red-400 px-6 py-3 rounded-full text-lg font-bold animate-pulse">
-                  ❌ Wrong attempts: {wrongAttempts}/3
-                </div>
-              )}
-            </div>
-
-            {/* Main Game Area */}
-            <div className="grid lg:grid-cols-2 gap-10">
-              {/* Code Input */}
-              <div className="space-y-6">
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-2xl">
-                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                    <Code className="w-7 h-7 text-green-400" />
-                    Your Tailwind Classes
-                  </h3>
-                  <input
-                    type="text"
-                    value={playerCode}
-                    onChange={(e) => setPlayerCode(e.target.value)}
-                    placeholder="Enter Tailwind classes here..."
-                    className="w-full bg-gray-700/50 border-2 border-gray-600 rounded-xl px-6 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:border-purple-500 text-lg"
-                    onKeyPress={(e) => e.key === "Enter" && checkSolution()}
-                  />
-                  <div className="mt-6 flex gap-3">
-                    <button
-                      onClick={checkSolution}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-3 rounded-xl font-bold transition-all transform hover:scale-105 flex items-center gap-3 text-lg shadow-lg"
-                    >
-                      <CheckCircle className="w-6 h-6" />
-                      Submit Solution
-                    </button>
-                    <button
-                      onClick={useHint}
-                      disabled={hints === 0}
-                      className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 disabled:from-gray-600 disabled:to-gray-700 px-6 py-3 rounded-xl font-bold transition-all transform hover:scale-105 flex items-center gap-3 text-lg shadow-lg"
-                    >
-                      <Lightbulb className="w-6 h-6" />
-                      Hint ({hints})
-                    </button>
-                  </div>
-
-                  {/* Enhanced hint system with tutorials for beginners */}
-                  {showHint && (
-                    <div className="mt-6 space-y-4">
-                      <div className="p-6 bg-gradient-to-r from-yellow-400/10 to-orange-400/10 border-2 border-yellow-400 rounded-xl">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Lightbulb className="w-6 h-6 text-yellow-400" />
-                          <h4 className="text-lg font-bold text-yellow-400">
-                            Quick Hint
-                          </h4>
-                        </div>
-                        <p className="text-yellow-100 text-lg">
-                          {currentLevelData.hint}
-                        </p>
-                      </div>
-
-                      {/* Tutorial for beginners (levels 1-10) */}
-                      {currentLevel <= 10 && currentLevelData.tutorial && (
-                        <div className="p-6 bg-gradient-to-r from-blue-400/10 to-purple-400/10 border-2 border-blue-400 rounded-xl">
-                          <div className="flex items-center gap-3 mb-3">
-                            <BookOpen className="w-6 h-6 text-blue-400" />
-                            <h4 className="text-lg font-bold text-blue-400">
-                              Tutorial Guide
-                            </h4>
-                          </div>
-                          <pre className="text-blue-100 whitespace-pre-line text-sm leading-relaxed font-mono">
-                            {currentLevelData.tutorial}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Preview and Stats */}
-              <div className="space-y-6">
-                {renderPreview()}
-
-                {/* Progress and Experience */}
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700/50 shadow-2xl">
-                  <div className="flex justify-between text-lg mb-3">
-                    <span className="font-bold">Experience Progress</span>
-                    <span className="text-purple-400 font-bold">
-                      {experience} XP
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-4 mb-4">
-                    <div
-                      className="bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 h-4 rounded-full transition-all duration-1000 shadow-lg"
-                      style={{ width: `${experience % 100}%` }}
-                    ></div>
-                  </div>
-
-                  {/* Level stats */}
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div className="bg-purple-500/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-purple-400">
-                        {currentLevel}
-                      </div>
-                      <div className="text-sm text-gray-400">Current Level</div>
-                    </div>
-                    <div className="bg-green-500/20 rounded-lg p-3">
-                      <div className="text-2xl font-bold text-green-400">
-                        {completedLevels.size}
-                      </div>
-                      <div className="text-sm text-gray-400">Completed</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Achievements */}
-                {achievements.length > 0 && (
-                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700/50 shadow-2xl">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-3">
-                      <Award className="w-6 h-6 text-yellow-400" />
-                      Recent Achievements
-                    </h3>
-                    <div className="space-y-2">
-                      {achievements.slice(-4).map((achievement, index) => (
-                        <div
-                          key={index}
-                          className="text-lg text-yellow-400 animate-pulse bg-yellow-400/10 rounded-lg p-3 border border-yellow-400/30"
-                        >
-                          {achievement}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Success Screen */}
-        {gameStatus === "passed" && (
-          <div className="text-center space-y-8">
-            <div className="animate-bounce">
-              <CheckCircle className="w-32 h-32 text-green-400 mx-auto" />
-            </div>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-              Level Complete! 🎉
-            </h1>
-            <div className="text-3xl text-yellow-400 font-bold">
-              +{currentLevelData.points + streak * 100} points!
-            </div>
-            <div className="flex justify-center">
-              <div className="bg-gray-800 rounded-2xl p-8 text-left border border-green-400/30 shadow-2xl">
-                <div className="text-lg text-gray-400 mb-3 font-bold">
-                  Perfect Solution:
-                </div>
-                <code className="text-2xl text-green-400 font-mono break-all">
-                  {currentLevelData.solution}
-                </code>
-              </div>
-            </div>
-            {streak > 0 && (
-              <div className="text-2xl font-bold text-orange-400 animate-pulse">
-                🔥 {streak} Level Streak! Keep going!
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Game Over Screen */}
-        {gameStatus === "failed" && (
-          <div className="text-center space-y-8">
-            <div className="animate-pulse">
-              <XCircle className="w-32 h-32 text-red-400 mx-auto" />
-            </div>
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
-              Game Over
-            </h1>
-            <div className="space-y-4">
-              <p className="text-3xl text-yellow-400">
-                You conquered <span className="font-bold">{currentLevel}</span>{" "}
-                levels!
-              </p>
-              <p className="text-2xl text-purple-400">
-                Final Score:{" "}
-                <span className="font-bold">{score.toLocaleString()}</span>
-              </p>
-              <p className="text-xl text-gray-400">
-                You mastered the{" "}
-                <span className="text-white font-bold">
-                  {currentLevelData.region.name}
-                </span>
-                !
-              </p>
-            </div>
-            <button
-              onClick={restartGame}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-12 py-4 rounded-2xl font-bold text-2xl transition-all transform hover:scale-105 shadow-2xl"
-            >
-              🎮 Play Again
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Enhanced animations and effects */}
-      <style jsx>{`
-        @keyframes float {
-          0% {
-            transform: translateY(0px) scale(1) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-150px) scale(0) rotate(360deg);
-            opacity: 0;
-          }
-        }
-
-        @keyframes floatSpin {
-          0% {
-            transform: translateY(0px) scale(1) rotate(0deg);
-            opacity: 1;
-          }
-          100% {
-            transform: translateY(-150px) scale(0) rotate(720deg);
-            opacity: 0;
-          }
-        }
-
-        @keyframes wobble {
-          0%,
-          100% {
-            transform: translateX(0%) rotate(0deg);
-          }
-          15% {
-            transform: translateX(-30px) rotate(-5deg);
-          }
-          30% {
-            transform: translateX(15px) rotate(3deg);
-          }
-          45% {
-            transform: translateX(-15px) rotate(-3deg);
-          }
-          60% {
-            transform: translateX(10px) rotate(2deg);
-          }
-          75% {
-            transform: translateX(-5px) rotate(-1deg);
-          }
-        }
-
-        @keyframes wiggle {
-          0%,
-          100% {
-            transform: rotate(-3deg);
-          }
-          50% {
-            transform: rotate(3deg);
-          }
-        }
-
-        @keyframes dashMove {
-          0% {
-            stroke-dashoffset: 0;
-          }
-          100% {
-            stroke-dashoffset: 24;
-          }
-        }
-      `}</style>
     </div>
   );
-};
+}
 
-export default TailwindQuest;
+function Landing({
+  onStart,
+  onEvents,
+}: {
+  onStart: () => void;
+  onEvents: () => void;
+}) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-4 relative">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1 }}
+        className="text-center mb-16"
+      >
+        <h2 className="text-6xl md:text-8xl font-extrabold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6">
+          Master Tailwind
+        </h2>
+        <p className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto mb-8">
+          Build, craft, and perfect your CSS skills through endless challenges
+        </p>
+      </motion.div>
+
+      <div className="grid md:grid-cols-3 gap-8 max-w-6xl w-full">
+        {/* Endless Quest */}
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-800/30 to-indigo-800/30 backdrop-blur-xl border border-purple-500/30 p-8 cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/30"
+          onClick={onStart}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/20 to-purple-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+          <div className="relative z-10">
+            <div className="w-16 h-16 mb-6 mx-auto bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4 text-center">
+              Endless Quest
+            </h3>
+            <p className="text-gray-300 text-center mb-6">
+              Infinite levels of increasing difficulty
+            </p>
+            <div className="text-center">
+              <span className="bg-purple-500 text-white px-6 py-2 rounded-full font-semibold">
+                Start Journey
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Events */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.8 }}
+          className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-800/30 to-blue-800/30 backdrop-blur-xl border border-cyan-500/30 p-8 cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/30"
+          onClick={onEvents}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/0 via-cyan-600/20 to-cyan-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+          <div className="relative z-10">
+            <div className="w-16 h-16 mb-6 mx-auto bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4 text-center">
+              Events
+            </h3>
+            <p className="text-gray-300 text-center mb-6">
+              Special challenges and competitions
+            </p>
+            <div className="text-center">
+              <span className="bg-cyan-500 text-white px-6 py-2 rounded-full font-semibold">
+                View Events
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Open Playground */}
+        <motion.div
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-800/30 to-teal-800/30 backdrop-blur-xl border border-emerald-500/30 p-8 cursor-pointer transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/30"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/0 via-emerald-600/20 to-emerald-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+          <div className="relative z-10">
+            <div className="w-16 h-16 mb-6 mx-auto bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4 text-center">
+              Free Playground
+            </h3>
+            <p className="text-gray-300 text-center mb-6">
+              Experiment with components and templates
+            </p>
+            <div className="text-center">
+              <span className="bg-emerald-500 text-white px-6 py-2 rounded-full font-semibold">
+                Create Freely
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
+
+function Events({ onBack }: { onBack: () => void }) {
+  const events = [
+    {
+      title: "Speed Coding Challenge",
+      description: "Complete 10 levels in under 5 minutes",
+      reward: "500 XP + Speed Demon badge",
+      timeLeft: "2 days",
+      difficulty: "Hard",
+    },
+    {
+      title: "Perfect Streak",
+      description: "Win 15 levels without any errors",
+      reward: "1000 XP + Perfectionist badge",
+      timeLeft: "5 days",
+      difficulty: "Expert",
+    },
+    {
+      title: "Typography Master",
+      description: "Complete all typography challenges",
+      reward: "300 XP + Typography Expert badge",
+      timeLeft: "1 week",
+      difficulty: "Medium",
+    },
+  ];
+
+  return (
+    <div className="h-full overflow-y-auto p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            Special Events
+          </h2>
+          <button
+            onClick={onBack}
+            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15"
+          >
+            ← Back
+          </button>
+        </div>
+
+        <div className="grid gap-6">
+          {events.map((event, i) => (
+            <motion.div
+              key={event.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all duration-300"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {event.title}
+                  </h3>
+                  <p className="text-gray-300">{event.description}</p>
+                </div>
+                <div className="text-right">
+                  <div
+                    className={`px-3 py-1 rounded-full text-xs font-semibold mb-2 ${
+                      event.difficulty === "Hard"
+                        ? "bg-red-500/20 text-red-300"
+                        : event.difficulty === "Expert"
+                        ? "bg-purple-500/20 text-purple-300"
+                        : "bg-yellow-500/20 text-yellow-300"
+                    }`}
+                  >
+                    {event.difficulty}
+                  </div>
+                  <div className="text-sm text-cyan-400 font-semibold">
+                    {event.timeLeft}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-green-400 font-semibold">
+                  {event.reward}
+                </div>
+                <button className="px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 transition-all duration-300">
+                  Join Event
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LevelMap({
+  current,
+  onPlay,
+}: {
+  current: number;
+  onPlay: (id: number) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [windowEnd, setWindowEnd] = useState(current + 30);
+
+  useEffect(() => {
+    const el = containerRef.current?.querySelector(`#node-${current}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [current]);
+
+  function onScroll(e: React.UIEvent<HTMLDivElement>) {
+    const t = e.currentTarget;
+    if (t.scrollTop + t.clientHeight >= t.scrollHeight - 200) {
+      setWindowEnd((w) => w + 20);
+    }
+  }
+
+  const nodes = Array.from({ length: windowEnd }, (_, i) => i + 1);
+
+  return (
+    <div
+      className="h-full rounded-3xl relative overflow-auto bg-white/5 border border-white/10 m-4"
+      onScroll={onScroll}
+      ref={containerRef}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(168,85,247,.08),transparent_40%),radial-gradient(circle_at_80%_60%,rgba(34,211,238,.08),transparent_38%)]" />
+
+      <div className="relative z-10 p-8">
+        <div className="grid grid-cols-1 gap-8">
+          {nodes.map((n) => {
+            const locked = n > current;
+            const level = generateLevel(n);
+            const xOffset =
+              n % 2 === 0 ? "md:translate-x-40" : "md:-translate-x-20";
+
+            return (
+              <motion.div
+                id={`node-${n}`}
+                key={n}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+                className={`relative mx-auto w-full md:w-2/3 ${xOffset}`}
+              >
+                <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/0 via-white/5 to-cyan-500/0 blur-2xl rounded-3xl" />
+                <div className="relative rounded-3xl p-6 bg-white/8 border border-white/15 backdrop-blur-xl shadow-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`w-14 h-14 rounded-2xl grid place-items-center font-bold text-lg ${
+                          locked
+                            ? "bg-white/5"
+                            : "bg-gradient-to-br from-purple-500 to-cyan-500"
+                        }`}
+                      >
+                        {n}
+                      </div>
+                      <div>
+                        <div className="text-xl font-semibold mb-1">
+                          Level {n} •{" "}
+                          <span className="text-sm opacity-70 uppercase">
+                            {level.type}
+                          </span>
+                        </div>
+                        <div className="text-sm opacity-70 mb-2">
+                          {level.description}
+                        </div>
+                        <div className="flex gap-2">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              level.mode === "palette"
+                                ? "bg-green-500/20 text-green-300"
+                                : level.mode === "typing"
+                                ? "bg-blue-500/20 text-blue-300"
+                                : "bg-purple-500/20 text-purple-300"
+                            }`}
+                          >
+                            {level.mode}
+                          </span>
+                          <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">
+                            ★{level.difficulty}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right text-sm opacity-70">
+                        <div>⏱ {level.timeLimit}s</div>
+                        <div>{level.required.length} classes</div>
+                      </div>
+                      <button
+                        onClick={() => onPlay(n)}
+                        disabled={locked && n !== current}
+                        className={`px-6 py-3 rounded-xl border font-semibold transition-all duration-200 ${
+                          locked && n !== current
+                            ? "opacity-40 cursor-not-allowed border-white/10"
+                            : "border-white/20 hover:bg-white/10 hover:scale-105"
+                        }`}
+                      >
+                        {n < current
+                          ? "Replay"
+                          : n === current
+                          ? "Play"
+                          : "Locked"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Animated path */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id="pathGrad" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="#22d3ee" />
+            <stop offset="50%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#ec4899" />
+          </linearGradient>
+        </defs>
+        {Array.from({ length: 20 }, (_, i) => (
+          <motion.path
+            key={i}
+            d={`M ${i % 2 ? 20 : 80} ${i * 80} Q 50 ${i * 80 + 40} ${
+              i % 2 ? 80 : 20
+            } ${i * 80 + 80}`}
+            stroke="url(#pathGrad)"
+            strokeOpacity="0.1"
+            strokeWidth="4"
+            fill="none"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 1.5, delay: i * 0.05 }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function Game({
+  level,
+  selection,
+  setSelection,
+  typedClasses,
+  setTypedClasses,
+  onGiveUp,
+  onWin,
+  run,
+  errors,
+  setErrors,
+  onError,
+}: {
+  level: LevelDef;
+  selection: string[];
+  setSelection: (v: string[]) => void;
+  typedClasses: string;
+  setTypedClasses: (v: string) => void;
+  onGiveUp: () => void;
+  onWin: () => void;
+  run: RunStats | null;
+  errors: string[];
+  setErrors: (v: string[]) => void;
+  onError: (classes: string[]) => string[];
+}) {
+  const [timeLeft, setTimeLeft] = useState(level.timeLimit);
+  const [hinted, setHinted] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    timerRef.current && clearInterval(timerRef.current as any);
+    setTimeLeft(level.timeLimit);
+    timerRef.current = setInterval(
+      () => setTimeLeft((t) => (t > 0 ? t - 1 : 0)),
+      1000
+    ) as any;
+    return () => timerRef.current && clearInterval(timerRef.current as any);
+  }, [level.id]);
+
+  useEffect(() => {
+    if (timeLeft === 0) onGiveUp();
+  }, [timeLeft]);
+
+  const currentClasses =
+    level.mode === "typing"
+      ? typedClasses.split(" ").filter(Boolean)
+      : selection;
+  const hasAll = level.required.every((r) => currentClasses.includes(r));
+  const newErrors = onError(currentClasses);
+
+  useEffect(() => {
+    setErrors(newErrors);
+  }, [currentClasses]);
+
+  useEffect(() => {
+    if (hasAll && newErrors.length === 0) onWin();
+  }, [hasAll, newErrors]);
+
+  function toggleChip(c: string) {
+    setSelection((sel) =>
+      sel.includes(c) ? sel.filter((x) => x !== c) : [...sel, c]
+    );
+  }
+
+  const previewClasses = currentClasses.join(" ") || "text-white p-4";
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Timer Bar */}
+      <div className="w-full h-2 bg-black/20">
+        <motion.div
+          className="h-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-400"
+          animate={{ width: `${(timeLeft / level.timeLimit) * 100}%` }}
+          transition={{ duration: 0.1 }}
+        />
+      </div>
+
+      <div className="flex-1 grid lg:grid-cols-2 gap-6 p-6 overflow-hidden">
+        {/* Left: Challenge & Preview */}
+        <div className="space-y-4 overflow-y-auto">
+          <div className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  Level {level.id}
+                </h3>
+                <p className="text-gray-300">{level.description}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-bold text-cyan-400">
+                  {timeLeft}
+                </div>
+                <div className="text-xs opacity-70">seconds</div>
+              </div>
+            </div>
+
+            {level.mode === "typing" && (
+              <div className="mb-4 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+                <div className="text-sm font-semibold text-blue-300 mb-2">
+                  Type Challenge
+                </div>
+                <p className="text-sm text-gray-300">{level.challengeText}</p>
+              </div>
+            )}
+
+            {/* Live Preview */}
+            <div className="space-y-4">
+              <div className="text-sm font-semibold text-white/80">
+                Live Preview
+              </div>
+              <div className="rounded-2xl bg-gradient-to-br from-purple-500/10 to-cyan-500/10 p-4 border border-white/10 min-h-[200px]">
+                <motion.div
+                  key={currentClasses.join(" ")}
+                  className={previewClasses}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {level.targetElement === "button" && (
+                    <button type="button">Click me!</button>
+                  )}
+                  {level.targetElement === "card" && (
+                    <div>
+                      <h4>Card Title</h4>
+                      <p>This is card content that showcases your styling.</p>
+                    </div>
+                  )}
+                  {level.targetElement === "navbar" && (
+                    <nav>
+                      <div>Logo</div>
+                      <div>Home | About | Contact</div>
+                    </nav>
+                  )}
+                  {level.targetElement === "hero" && (
+                    <section>
+                      <h1>Hero Title</h1>
+                      <p>Amazing hero description goes here</p>
+                    </section>
+                  )}
+                  {!["button", "card", "navbar", "hero"].includes(
+                    level.targetElement
+                  ) && (
+                    <div>
+                      <h4>Preview Element</h4>
+                      <p>Your {level.targetElement} styling applied here</p>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+
+              <div className="text-xs opacity-70 break-all bg-black/20 p-2 rounded-lg">
+                Current: {currentClasses.join(" ") || "none"}
+              </div>
+            </div>
+
+            {/* Error Display */}
+            {errors.length > 0 && (
+              <div className="mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20">
+                <div className="text-sm font-semibold text-red-300 mb-2">
+                  Errors Detected:
+                </div>
+                {errors.map((error, i) => (
+                  <div key={i} className="text-sm text-red-200">
+                    • {error}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Required Classes Indicator */}
+            <div className="mt-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="text-sm font-semibold text-white/80 mb-2">
+                Required Classes ({level.required.length})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {level.required.map((req) => (
+                  <span
+                    key={req}
+                    className={`px-2 py-1 rounded-lg text-xs border ${
+                      currentClasses.includes(req)
+                        ? "bg-green-500/20 border-green-500/30 text-green-300"
+                        : "bg-white/5 border-white/20 text-white/60"
+                    }`}
+                  >
+                    {req} {currentClasses.includes(req) ? "✓" : ""}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Input Method */}
+        <div className="space-y-4 overflow-y-auto">
+          {level.mode === "typing" || level.mode === "mixed" ? (
+            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+              <div className="text-sm font-semibold text-white/80 mb-4">
+                Type Classes
+              </div>
+              <textarea
+                value={typedClasses}
+                onChange={(e) => setTypedClasses(e.target.value)}
+                placeholder="Type Tailwind classes separated by spaces..."
+                className="w-full h-32 p-4 rounded-2xl bg-black/20 border border-white/20 text-white placeholder-white/50 resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              />
+              <div className="mt-2 text-xs opacity-70">
+                Tip: Separate classes with spaces, e.g., "flex items-center
+                gap-4"
+              </div>
+            </div>
+          ) : null}
+
+          {level.mode === "palette" || level.mode === "mixed" ? (
+            <div className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+              <div className="text-sm font-semibold text-white/80 mb-4">
+                Class Palette
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
+                {level.palette.map((c) => {
+                  const active = selection.includes(c);
+                  const isRequired = level.required.includes(c);
+                  return (
+                    <motion.button
+                      key={c}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => toggleChip(c)}
+                      className={`text-xs px-3 py-2 rounded-xl border transition-all duration-200 ${
+                        active
+                          ? "bg-gradient-to-r from-cyan-500/30 to-purple-500/30 border-white/30 shadow-lg"
+                          : "hover:bg-white/10 border-white/15 bg-white/5"
+                      } ${isRequired ? "ring-1 ring-green-500/30" : ""}`}
+                    >
+                      {active ? "✓ " : ""}
+                      {c}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Controls */}
+          <div className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl">
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={onGiveUp}
+                className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 transition-all duration-200"
+              >
+                Give Up
+              </button>
+              <button
+                onClick={() => setHinted(true)}
+                disabled={hinted}
+                className="px-4 py-2 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 disabled:opacity-50 transition-all duration-200"
+              >
+                Hint
+              </button>
+              <button
+                onClick={() => {
+                  setSelection([]);
+                  setTypedClasses("");
+                }}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200"
+              >
+                Clear
+              </button>
+            </div>
+
+            {hinted && (
+              <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                <div className="text-sm text-yellow-300">
+                  Hint: One required class is{" "}
+                  <code className="bg-black/20 px-1 rounded">
+                    {level.required[0]}
+                  </code>
+                </div>
+              </div>
+            )}
+
+            {/* Progress */}
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Progress</span>
+                <span>
+                  {
+                    currentClasses.filter((c) => level.required.includes(c))
+                      .length
+                  }
+                  /{level.required.length}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-cyan-400 to-purple-400"
+                  animate={{
+                    width: `${
+                      (currentClasses.filter((c) => level.required.includes(c))
+                        .length /
+                        level.required.length) *
+                      100
+                    }%`,
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EnhancedBackground() {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      {/* Mouse follower */}
+      <motion.div
+        className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-full blur-3xl"
+        animate={{
+          x: mousePos.x - 192,
+          y: mousePos.y - 192,
+        }}
+        transition={{ type: "spring", damping: 30, stiffness: 200 }}
+      />
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden">
+        {Array.from({ length: 100 }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white/30 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.2, 0.8, 0.2],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 4,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Geometric shapes */}
+      <motion.div
+        className="absolute top-1/4 left-1/4 w-32 h-32 border-2 border-purple-500/20 rounded-2xl"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      />
+      <motion.div
+        className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-full"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+        transition={{ duration: 6, repeat: Infinity }}
+      />
+
+      {/* Gradient blobs */}
+      <div className="absolute -top-24 -left-24 w-[40rem] h-[40rem] bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+      <div
+        className="absolute -bottom-24 -right-24 w-[40rem] h-[40rem] bg-cyan-500/20 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: "1s" }}
+      />
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[30rem] h-[30rem] bg-pink-500/10 rounded-full blur-3xl animate-pulse"
+        style={{ animationDelay: "2s" }}
+      />
+    </div>
+  );
+}
