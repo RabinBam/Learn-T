@@ -646,14 +646,14 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               (level === "Intermediate" && tutorialStepIntermediate < intermediateHints.length) ||
               (level === "Expert" && tutorialStepExpert < expertHints.length) ? (
               (() => {
-                // Mood-to-image mapping for avatar
-                const moodImages = {
+                /* ------------------------ Mood Images Fix ------------------------ */
+                const moodImages: Record<typeof characterMood, string> = {
                   happy: "/characters/happy_face.png",
                   error: "/characters/error_face.png",
                   motivating: "/characters/cat_motivating.png",
                   hello: "/characters/cat_hello.png",
                   idle: "/characters/idle_face.png",
-                  correct: "/characters/correctcode_face.png"
+                  correctcode: "/characters/correctcode_face.png",
                 };
                 return (
                   <div className="mt-2 flex items-center gap-4 rounded-2xl bg-indigo-500/10 ring-2 ring-indigo-400/30 shadow-lg px-6 py-4 text-indigo-100 transition-all">
@@ -947,5 +947,116 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   );
 };
 
-export default TailwindPlaygroundNoNav;
-     
+/* ------------------------ ChatWidget Component ------------------------ */
+const ChatWidget: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { role: "user" as "user", text: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
+      const data: { reply?: string; error?: string } = await res.json();
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot" as "bot", text: data.reply ?? "No reply from AI" },
+      ]);
+      setIsLoading(false);
+    } catch {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { role: "bot" as "bot", text: "Error fetching reply. Please try again." },
+        ]);
+        setIsLoading(false);
+      }, 500);
+    }
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50">
+      {isOpen ? (
+        <div className="w-80 h-96 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl flex flex-col">
+          {/* Header */}
+          <div className="flex justify-between items-center p-3 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white rounded-t-2xl">
+            <span className="font-semibold">AI Assistant</span>
+            <button onClick={() => setIsOpen(false)} className="text-sm">✕</button>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 text-sm text-indigo-100">
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`px-3 py-2 rounded-lg max-w-[75%] ${
+                  m.role === "user"
+                    ? "ml-auto bg-indigo-500 text-white"
+                    : "mr-auto bg-fuchsia-500/80 text-white"
+                }`}
+              >
+                {m.text}
+              </div>
+            ))}
+            {isLoading && (
+              <div className="mr-auto px-3 py-2 rounded-lg max-w-[75%] bg-fuchsia-500/60 text-white animate-pulse">
+                ...
+              </div>
+            )}
+          </div>
+
+          {/* Input */}
+          <div className="p-3 border-t border-white/20 flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              placeholder="Ask me about Tailwind..."
+              className="flex-1 px-3 py-2 rounded-lg bg-white/20 text-white placeholder-indigo-200 focus:outline-none focus:ring-2 focus:ring-fuchsia-400"
+              disabled={isLoading}
+            />
+            <button
+              onClick={handleSend}
+              className="px-3 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-white rounded-lg"
+              disabled={isLoading}
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-fuchsia-500 to-indigo-500 shadow-lg flex items-center justify-center text-white text-xl"
+        >
+          💬
+        </button>
+      )}
+    </div>
+  );
+};
+
+
+// Wrapper component for the page
+const PlaygroundPage: React.FC = () => {
+  return (
+    <>
+      <TailwindPlaygroundNoNav />
+      <ChatWidget />
+    </>
+  );
+};
+
+export default PlaygroundPage;
