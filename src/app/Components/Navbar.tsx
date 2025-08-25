@@ -12,7 +12,7 @@ const NAV_LINKS = [
   { href: "/aboutus", label: "About Us", icon: "/icons/info.svg" },
   { href: "/learning", label: "Learning", icon: "/icons/book.svg" },
   { href: "/options", label: "Playground", icon: "/icons/gamepad.svg" },
-  { href: "/contact", label: "Contact Us", icon: "/icons/envelope.svg" },
+  { href: "/contactus", label: "Contact Us", icon: "/icons/envelope.svg" },
 ];
 
 export default function Navbar() {

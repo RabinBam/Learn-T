@@ -83,7 +83,7 @@ const InteractiveLandingPage: React.FC = () => {
           {/* Endless TailwindQuest Option */}
           <div
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-800/20 to-indigo-800/20 backdrop-blur-xl border border-purple-500/30 p-8 cursor-pointer transform transition-all duration-700 hover:scale-110 hover:rotate-3 hover:shadow-2xl hover:shadow-purple-500/40 hover:-translate-y-4"
-            onClick={() => handleNavigation("/endless-tailwind-quest")}
+            onClick={() => handleNavigation("/playground")}
             style={{
               transformStyle: "preserve-3d",
             }}
@@ -186,7 +186,7 @@ const InteractiveLandingPage: React.FC = () => {
           {/* Open Playground Option */}
           <div
             className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-800/20 to-blue-800/20 backdrop-blur-xl border border-cyan-500/30 p-8 cursor-pointer transform transition-all duration-700 hover:scale-110 hover:-rotate-3 hover:shadow-2xl hover:shadow-cyan-500/40 hover:-translate-y-4"
-            onClick={() => handleNavigation("/open-playground")}
+            onClick={() => handleNavigation("/playgroundv")}
             style={{
               transformStyle: "preserve-3d",
             }}
