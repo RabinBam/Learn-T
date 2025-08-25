@@ -1374,6 +1374,18 @@ function EnhancedBackground() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+  // Memoize particle positions and animation params
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 100 }).map(() => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        duration: 4 + Math.random() * 4,
+        delay: Math.random() * 3,
+      })),
+    []
+  );
+
   return (
     <div className="pointer-events-none absolute inset-0">
       {/* Mouse follower */}
@@ -1388,23 +1400,20 @@ function EnhancedBackground() {
 
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden">
-        {Array.from({ length: 100 }).map((_, i) => (
+        {particles.map((p, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-white/30 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
+            style={{ left: p.left, top: p.top }}
             animate={{
               y: [0, -20, 0],
               opacity: [0.2, 0.8, 0.2],
               scale: [1, 1.5, 1],
             }}
             transition={{
-              duration: 4 + Math.random() * 4,
+              duration: p.duration,
               repeat: Infinity,
-              delay: Math.random() * 3,
+              delay: p.delay,
             }}
           />
         ))}
