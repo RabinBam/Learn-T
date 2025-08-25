@@ -1077,6 +1077,7 @@ function Game({
 }) {
   const [timeLeft, setTimeLeft] = useState(level.timeLimit);
   const [hinted, setHinted] = useState(false);
+  const [failedPopup, setFailedPopup] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -1109,12 +1110,76 @@ function Game({
   }, [hasAll, newErrors]);
 
   function toggleChip(c: string) {
-    setSelection((sel) =>
-      sel.includes(c) ? sel.filter((x) => x !== c) : [...sel, c]
-    );
+    const isCorrect = level.required.includes(c);
+    const alreadySelected = selection.includes(c);
+
+    if (alreadySelected) {
+      setSelection((sel) => sel.filter((x) => x !== c));
+      return;
+    }
+
+    if (!isCorrect) {
+      // Wrong selection → show failed popup modal
+      setFailedPopup(true);
+      return;
+    }
+
+    if (selection.length >= 3) return; // Max 3 selections allowed
+
+    const newSelection = [...selection, c];
+    setSelection(newSelection);
+
+    // If user has selected all 3 correct options, win immediately
+    if (
+      newSelection.length === 3 &&
+      level.required.every((r) => newSelection.includes(r))
+    ) {
+      onWin();
+    }
   }
 
   const previewClasses = currentClasses.join(" ") || "text-white p-4";
+
+  // Popup modal JSX
+  const failedModal = (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="rounded-3xl p-8 bg-gradient-to-br from-purple-800/90 via-indigo-900/90 to-cyan-800/90 border-2 border-white/10 shadow-2xl max-w-xs w-full text-center">
+        <div className="text-3xl font-extrabold text-white mb-3 bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+          Level Failed!
+        </div>
+        <div className="mb-4 text-white/90 text-lg">
+          <span className="block mb-2">Hint:</span>
+          <span>
+            One required class is{" "}
+            <code className="px-2 py-1 rounded-lg bg-black/30 text-cyan-300 font-mono">
+              {level.required[0]}
+            </code>
+          </span>
+        </div>
+        <div className="flex gap-4 mt-6 justify-center">
+          <button
+            className="px-5 py-2 rounded-xl font-semibold bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 transition-all duration-200 text-white shadow-md"
+            onClick={() => {
+              setSelection([]);
+              setTypedClasses("");
+              setFailedPopup(false);
+            }}
+          >
+            Try Again
+          </button>
+          <button
+            className="px-5 py-2 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-400 hover:to-red-400 transition-all duration-200 text-white shadow-md"
+            onClick={() => {
+              setFailedPopup(false);
+              onGiveUp();
+            }}
+          >
+            Go to Map
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-full flex flex-col">
@@ -1359,6 +1424,8 @@ function Game({
           </div>
         </div>
       </div>
+      {/* Failed popup modal */}
+      {failedPopup && failedModal}
     </div>
   );
 }
