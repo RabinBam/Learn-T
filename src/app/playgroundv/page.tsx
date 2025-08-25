@@ -1,5 +1,4 @@
 "use client";
-import Character from "../characters/page";
 import React, {
   useCallback,
   useEffect,
@@ -7,7 +6,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-
 import {
   Play,
   Save,
@@ -17,53 +15,19 @@ import {
   AlertCircle,
   AlertTriangle,
   Download,
-  Trash2,
   ChevronDown,
   ChevronUp,
   Copy,
 } from "lucide-react";
 
 /**
- * TailwindPlaygroundNoNav.tsx
+ * TailwindPlaygroundNoNav (TailSpark themed)
  *
- * - Navigation removed
- * - Local saving / download (.html /.txt)
- * - localStorage persistence of snippets
- * - Improved error detection:
- *    - reports line number, severity, and the exact offending word/snippet
- *    - supports HTML tag issues and Tailwind-ish classname basic validation
- * - Error list items can be clicked to jump/select the offending line in the editor
- * - Firebase placeholders with explicit instructions where to add your code
- *
- * Usage:
- * - Place file in your app (e.g. app/components/)
- * - Import and render in a page or layout
- *
- * Firebase quick setup guide (copy into lib/firebase.ts):
- * -----------------------------------------------------
- * 1) npm install firebase
- * 2) Create `lib/firebase.ts`:
- *
- * import { initializeApp } from "firebase/app";
- * import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
- *
- * const firebaseConfig = {
- *   apiKey: "YOUR_API_KEY",
- *   authDomain: "YOUR_AUTH_DOMAIN",
- *   projectId: "YOUR_PROJECT_ID",
- *   storageBucket: "YOUR_STORAGE_BUCKET",
- *   messagingSenderId: "YOUR_MSG_SENDER_ID",
- *   appId: "YOUR_APP_ID",
- * };
- *
- * const app = initializeApp(firebaseConfig);
- * export const db = getFirestore(app);
- *
- * 3) Replace the stubs saveSnippetToFirebase/loadSnippetsFromFirebase/deleteSnippetFromFirebase
- *    inside this file with Firestore calls (examples are provided in comments where the stubs are).
+ * — Same functionality as your original component
+ * — Visuals reworked to match the "TailSpark" screenshot theme:
+ *   dark indigo/purple nebula background, glassy cards, soft glows,
+ *   gradient accents, rounded-2xl corners, minimal borders.
  */
-
-/* ----------------------------- TypeScript types ---------------------------- */
 
 interface ErrorItem {
   type: "HTML" | "Tailwind";
@@ -80,8 +44,6 @@ interface SavedItem {
   timestamp: string;
   level?: string;
 }
-
-/* --------------------------------- Component -------------------------------- */
 
 const TailwindPlaygroundNoNav: React.FC = () => {
   // Hydration guard
@@ -105,9 +67,52 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
   // Character state
   const [characterMood, setCharacterMood] = useState<
-    "idle" | "happy" | "error" | "correctcode"
+    "idle" | "happy" | "error" | "correctcode" | "motivating" | "hello"
   >("idle");
   const [characterMessage, setCharacterMessage] = useState<string>("");
+
+  // Tutorial state for Beginner, Intermediate, and Expert levels
+  const [tutorialStep, setTutorialStep] = useState<number>(0);
+  const [tutorialStepIntermediate, setTutorialStepIntermediate] = useState<number>(0);
+  const [tutorialStepExpert, setTutorialStepExpert] = useState<number>(0);
+  // Reference to the playground coding/output section
+  const playgroundRef = useRef<HTMLDivElement>(null);
+
+  // Hints for beginner tutorial steps
+  // For smooth scroll and state reset on initial mount
+  useEffect(() => {
+    // Reset all states to initial/default
+    setCode(presets[level]);
+    setTutorialStep(0);
+    setTutorialStepIntermediate(0);
+    setTutorialStepExpert(0);
+    setCharacterMood("idle");
+
+    // Smooth scroll to Tailwind coding/output section
+    if (playgroundRef.current) {
+      setTimeout(() => {
+        playgroundRef.current!.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const tutorialHints: { step: number, message: string, expectedRegex: RegExp }[] = [
+    { step: 1, message: "Change bg-white to bg-blue-500 to see the magic!", expectedRegex: /bg-blue-\d{3}/ },
+    { step: 2, message: "Now try changing text-gray-900 to text-gray-700", expectedRegex: /text-gray-700/ },
+    { step: 3, message: "Great! Add hover:bg-indigo-700 to the button", expectedRegex: /hover:bg-indigo-700/ }
+  ];
+  // Intermediate tutorial hints
+  const intermediateHints: { step: number, message: string, expectedRegex: RegExp }[] = [
+    { step: 1, message: "Change grid-cols-3 to grid-cols-2 to see layout adapt!", expectedRegex: /grid-cols-2/ },
+    { step: 2, message: "Add md:grid-cols-4 for responsive grids", expectedRegex: /md:grid-cols-4/ },
+    { step: 3, message: "Change the gradient button colors (from-blue-500 to from-pink-500)", expectedRegex: /from-pink-500/ }
+  ];
+  // Expert tutorial hints
+  const expertHints: { step: number, message: string, expectedRegex: RegExp }[] = [
+    { step: 1, message: "Make the heading text a gradient using bg-clip-text and text-transparent", expectedRegex: /bg-clip-text/ },
+    { step: 2, message: "Add hover:-translate-y-1 to card divs for animation", expectedRegex: /hover:-translate-y-1/ },
+    { step: 3, message: "Update button hover gradient to hover:from-blue-700 hover:to-purple-700", expectedRegex: /hover:from-blue-700/ }
+  ];
   // Refs
   const previewRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
@@ -116,11 +121,11 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   const presets = useMemo(
     () => ({
       Beginner:
-        '<div class="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">\n  <h1 class="text-2xl font-bold text-gray-800">Hello Tailwind!</h1>\n  <p class="text-gray-600 mt-2">This is a simple beginner layout. Edit this code to see live changes.</p>\n  <button class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Click Me</button>\n</div>',
+        '<div class="p-6 bg-white/90 backdrop-blur rounded-xl shadow-lg max-w-md mx-auto">\n  <h1 class="text-2xl font-bold text-gray-900">Hello Tailwind!</h1>\n  <p class="text-gray-600 mt-2">This is a simple beginner layout. Edit this code to see live changes.</p>\n  <button class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Click Me</button>\n</div>',
       Intermediate:
-        '<div class="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg">\n  <h2 class="text-xl font-semibold text-gray-800 mb-2">Intermediate Layout</h2>\n  <p class="text-gray-600 mb-4">This example includes grid layout and more advanced styling.</p>\n  <div class="grid grid-cols-3 gap-4 mb-4">\n    <div class="bg-blue-100 p-4 rounded-lg text-center">1</div>\n    <div class="bg-blue-200 p-4 rounded-lg text-center">2</div>\n    <div class="bg-blue-300 p-4 rounded-lg text-center">3</div>\n  </div>\n  <button class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 rounded-lg hover:opacity-90 transition-opacity">Continue</button>\n</div>',
+        '<div class="max-w-md mx-auto p-8 bg-white/90 backdrop-blur rounded-2xl shadow-xl">\n  <h2 class="text-xl font-semibold text-gray-900 mb-2">Intermediate Layout</h2>\n  <p class="text-gray-600 mb-4">This example includes grid layout and more advanced styling.</p>\n  <div class="grid grid-cols-3 gap-4 mb-4">\n    <div class="bg-blue-100 p-4 rounded-lg text-center">1</div>\n    <div class="bg-blue-200 p-4 rounded-lg text-center">2</div>\n    <div class="bg-blue-300 p-4 rounded-lg text-center">3</div>\n  </div>\n  <button class="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 rounded-lg hover:opacity-90 transition-opacity">Continue</button>\n</div>',
       Expert:
-        '<div class="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-8">\n  <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-lg w-full">\n    <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-4">Expert Level UI</h1>\n    <p class="text-gray-600 mb-6">This example uses gradients, custom animations, and complex responsive layouts.</p>\n    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">\n      <div class="bg-gradient-to-br from-yellow-100 to-yellow-200 p-6 rounded-xl transform hover:-translate-y-1 transition-transform">\n        <h3 class="font-semibold text-yellow-800">Feature One</h3>\n        <p class="text-yellow-600 text-sm mt-2">With hover effects</p>\n      </div>\n      <div class="bg-gradient-to-br from-green-100 to-green-200 p-6 rounded-xl transform hover:-translate-y-1 transition-transform">\n        <h3 class="font-semibold text-green-800">Feature Two</h3>\n        <p class="text-green-600 text-sm mt-2">And smooth transitions</p>\n      </div>\n    </div>\n    <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors">Launch Project 🚀</button>\n  </div>\n</div>',
+        '<div class="min-h-[60vh] bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 flex items-center justify-center p-8">\n  <div class="bg-white/95 p-8 rounded-3xl shadow-2xl max-w-lg w-full">\n    <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-600 to-indigo-600 mb-4">Expert Level UI</h1>\n    <p class="text-gray-600 mb-6">This example uses gradients, custom animations, and complex responsive layouts.</p>\n    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">\n      <div class="bg-gradient-to-br from-yellow-100 to-yellow-200 p-6 rounded-xl transform hover:-translate-y-1 transition-transform">\n        <h3 class="font-semibold text-yellow-800">Feature One</h3>\n        <p class="text-yellow-600 text-sm mt-2">With hover effects</p>\n      </div>\n      <div class="bg-gradient-to-br from-green-100 to-green-200 p-6 rounded-xl transform hover:-translate-y-1 transition-transform">\n        <h3 class="font-semibold text-green-800">Feature Two</h3>\n        <p class="text-green-600 text-sm mt-2">And smooth transitions</p>\n      </div>\n    </div>\n    <button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors">Launch Project 🚀</button>\n  </div>\n</div>',
     }),
     []
   );
@@ -132,14 +137,11 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
     const tagStack: Array<{ tag: string; line: number }> = [];
 
-    // Tailwind class validator (permissive, accepts responsive prefixes, pseudo prefixes, arbitrary values)
-    // This regex allows letters, numbers, -, _, :, /, [], %, ., #, (, ), @
     const tailwindClassRegex = /^[a-z0-9@_\-:\/\[\]\.%()#]+$/i;
 
     lines.forEach((line, index) => {
       const lineNumber = index + 1;
 
-      // HTML tag parsing (simple, not full parser)
       const tagRegex = /<\/?([a-z][a-z0-9-]*)\b([^>]*)>/gi;
       let match: RegExpExecArray | null;
       while ((match = tagRegex.exec(line)) !== null) {
@@ -147,12 +149,8 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         const tag = match[1].toLowerCase();
         const attrs = match[2] || "";
 
-        // closing tag
         if (full.startsWith("</")) {
-          if (
-            tagStack.length === 0 ||
-            tagStack[tagStack.length - 1].tag !== tag
-          ) {
+          if (tagStack.length === 0 || tagStack[tagStack.length - 1].tag !== tag) {
             found.push({
               type: "HTML",
               line: lineNumber,
@@ -164,18 +162,12 @@ const TailwindPlaygroundNoNav: React.FC = () => {
             tagStack.pop();
           }
         } else {
-          // opening tag (skip void elements)
-          if (
-            !full.endsWith("/>") &&
-            !["img", "br", "hr", "input", "meta", "link"].includes(tag)
-          ) {
+          if (!full.endsWith("/>") && !["img", "br", "hr", "input", "meta", "link"].includes(tag)) {
             tagStack.push({ tag, line: lineNumber });
           }
         }
 
-        // check for malformed attributes in this tag substring (very basic)
         if (attrs && /(\w+=[^\s"'>]+)/.test(attrs)) {
-          // attribute values should be quoted
           found.push({
             type: "HTML",
             line: lineNumber,
@@ -186,21 +178,17 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         }
       }
 
-      // Malformed standalone class attribute (e.g., class=noquotes)
       if (line.includes("class=") && !line.match(/class\s*=\s*"(.*?)"/)) {
-        // Find approximate token
         const tokenMatch = line.match(/class\s*=\s*([^\s>]+)/);
         found.push({
           type: "HTML",
           line: lineNumber,
-          message:
-            'Malformed class attribute — ensure class="..." (use double quotes).',
+          message: 'Malformed class attribute — ensure class="..." (use double quotes).',
           severity: "warning",
           word: tokenMatch ? tokenMatch[1] : "class=",
         });
       }
 
-      // Tailwind-like class checking: extract class="..."/className="..."
       const classAttrRegex = /(?:class|className)\s*=\s*"([^"]*)"/g;
       let classMatch: RegExpExecArray | null;
       while ((classMatch = classAttrRegex.exec(line)) !== null) {
@@ -217,7 +205,6 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               word: cls,
             });
           } else {
-            // optional: flag suspicious patterns (typos like 'bg--blue' or stray colon at end)
             if (/--/.test(cls) || /:$/.test(cls) || /^-/.test(cls)) {
               found.push({
                 type: "Tailwind",
@@ -231,7 +218,6 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         });
       }
 
-      // Basic check for missing closing angle bracket
       if (line.includes("<") && !line.includes(">") && /\<\w+/.test(line)) {
         found.push({
           type: "HTML",
@@ -243,7 +229,6 @@ const TailwindPlaygroundNoNav: React.FC = () => {
       }
     });
 
-    // any unclosed tags left?
     if (tagStack.length > 0) {
       tagStack.forEach((t) =>
         found.push({
@@ -280,32 +265,17 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   }, []);
 
   /* ---------------------- Firebase placeholder helpers ---------------------- */
-  // STUBS - replace with your Firestore calls after adding lib/firebase.ts
-  // Example:
-  // import { db } from '@/lib/firebase'
-  // import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
-
   const saveSnippetToFirebase = useCallback(async (item: SavedItem) => {
-    // STUB - replace with Firestore call e.g.:
-    // const docRef = await addDoc(collection(db, 'snippets'), item);
-    // return { ...item, id: docRef.id };
     console.info("[Firebase Stub] saveSnippetToFirebase", item);
     return { ...item };
   }, []);
 
-  const loadSnippetsFromFirebase = useCallback(async (): Promise<
-    SavedItem[]
-  > => {
-    // STUB - replace with Firestore fetching logic:
-    // const snap = await getDocs(collection(db, 'snippets'));
-    // return snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+  const loadSnippetsFromFirebase = useCallback(async (): Promise<SavedItem[]> => {
     console.info("[Firebase Stub] loadSnippetsFromFirebase");
     return [];
   }, []);
 
   const deleteSnippetFromFirebase = useCallback(async (id: string) => {
-    // STUB - replace with Firestore delete logic:
-    // await deleteDoc(doc(db, 'snippets', id));
     console.info("[Firebase Stub] deleteSnippetFromFirebase", id);
   }, []);
 
@@ -329,24 +299,12 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     [level, readSavedSnippets, writeSavedSnippets]
   );
 
-  const handleSaveClick = useCallback(() => {
-    setSaveName(`Code ${new Date().toLocaleTimeString()}`);
-  }, []);
-
   const handleSaveSubmit = useCallback(
     async (alsoSaveToFirebase = false) => {
-      const nameToUse =
-        saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
-
+      const nameToUse = saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
       try {
         const saved = await saveLocally(nameToUse, code);
-
-        if (alsoSaveToFirebase) {
-          // Replace the stub with a Firestore implementation
-          await saveSnippetToFirebase(saved);
-          // Optionally replace the saved.id after firebase returns actual id
-        }
-
+        if (alsoSaveToFirebase) await saveSnippetToFirebase(saved);
         setSaveName("");
       } catch (e) {
         console.error("Failed to save snippet", e);
@@ -366,8 +324,6 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         const filtered = existing.filter((s) => s.id !== id);
         writeSavedSnippets(filtered);
         setSavedItems(filtered);
-
-        // If you add Firebase deletion, call deleteSnippetFromFirebase(id) here.
       } catch (e) {
         console.error("Failed to delete snippet", e);
       }
@@ -393,26 +349,19 @@ const TailwindPlaygroundNoNav: React.FC = () => {
       previewRef.current.innerHTML = code;
     }
 
-    // status animation
     setTimeout(() => {
       setStatus("Updated");
       setTimeout(() => setStatus("Ready"), 1200);
     }, 250);
   }, [code, detectErrors]);
 
-  /* --------------------------- Download to disk ----------------------------- */
-
+  /* ------------------------- Download to disk ----------------------------- */
   const downloadToDisk = useCallback(
     (as: "html" | "txt") => {
-      const filenameBase =
-        (saveName && saveName.trim()) ||
-        `tailwind-playground-${new Date().toISOString()}`;
+      const filenameBase = (saveName && saveName.trim()) || `tailwind-playground-${new Date().toISOString()}`;
       const ext = as === "html" ? "html" : "txt";
-      const content =
-        as === "html" ? `<!-- Tailwind HTML preview -->\n${code}` : code;
-      const blob = new Blob([content], {
-        type: as === "html" ? "text/html" : "text/plain",
-      });
+      const content = as === "html" ? `<!-- Tailwind HTML preview -->\n${code}` : code;
+      const blob = new Blob([content], { type: as === "html" ? "text/html" : "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -425,87 +374,82 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     [code, saveName]
   );
 
-  /* ------------------------- Editor helper: jump to line -------------------- */
-
+  /* ------------------------- Jump to line helper --------------------------- */
+  const editorRefLocal = editorRef; // tiny alias to keep JSX tidy
   const jumpToLine = useCallback((lineNumber: number) => {
-    const ta = editorRef.current;
+    const ta = editorRefLocal.current;
     if (!ta) return;
     const lines = ta.value.split("\n");
-
-    // compute start index of line
     let start = 0;
     for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
-      start += lines[i].length + 1; // +1 for newline
+      start += lines[i].length + 1;
     }
     const lineText = lines[lineNumber - 1] ?? "";
     const end = start + lineText.length;
-
-    // focus and select that line
     ta.focus();
     ta.selectionStart = start;
     ta.selectionEnd = end;
-
-    // scroll to approx position - compute line height
     try {
       const style = window.getComputedStyle(ta);
-      const lineHeightStr = style.lineHeight;
-      const lineHeight =
-        lineHeightStr && lineHeightStr.includes("px")
-          ? parseFloat(lineHeightStr)
-          : 18;
-      ta.scrollTop = Math.max(0, (lineNumber - 1) * lineHeight - 40); // offset
+      const lh = style.lineHeight && style.lineHeight.includes("px") ? parseFloat(style.lineHeight) : 18;
+      ta.scrollTop = Math.max(0, (lineNumber - 1) * lh - 40);
     } catch {
-      // fallback
       ta.scrollTop = Math.max(0, (lineNumber - 1) * 18 - 40);
     }
-  }, []);
+  }, [editorRefLocal]);
 
   /* -------------------------- Component lifecycle --------------------------- */
-  // show welcome modal by default
   const [showWelcome, setShowWelcome] = useState(() => {
-    if (typeof window !== "undefined") {
-      return !localStorage.getItem("welcomeShown");
-    }
+    if (typeof window !== "undefined") return !localStorage.getItem("welcomeShown");
     return true;
   });
 
-  // character effect
   useEffect(() => {
+    // Tutorial logic takes precedence if Beginner and not done
+    if (level === "Beginner" && tutorialStep < tutorialHints.length) {
+      // On first mount of Beginner mode, show hello mood/message
+      if (tutorialStep === 0 && !showWelcome) {
+        setCharacterMood("hello");
+        setCharacterMessage("Let's learn Tailwind step by step!");
+        return;
+      }
+    }
+
     if (showWelcome) {
       setCharacterMood("happy");
       setCharacterMessage("Welcome to playground. Let's start learning");
-      return; // skip other checks while welcome modal is open
+      return;
     }
 
-    if (errors.length > 0) {
-      setCharacterMood("error");
-      setCharacterMessage(`Oops! ${errors.length} error(s) detected!`);
-    } else if (code.trim() !== "") {
-      setCharacterMood("correctcode");
-      setCharacterMessage("All good! 🎉");
-    } else {
-      setCharacterMood("idle");
-      setCharacterMessage("Keep coding! 😎");
+    // If tutorial not active, fallback to error/correct/idle
+    if (!(level === "Beginner" && tutorialStep < tutorialHints.length)) {
+      if (errors.length > 0) {
+        setCharacterMood("error");
+        setCharacterMessage(`Oops! ${errors.length} error(s) detected!`);
+      } else if (code.trim() !== "") {
+        setCharacterMood("correctcode");
+        setCharacterMessage("All good! 🎉");
+      } else {
+        setCharacterMood("idle");
+        setCharacterMessage("Keep coding! 😎");
+      }
+      const timer = setTimeout(() => setCharacterMessage(""), 3000);
+      return () => clearTimeout(timer);
     }
-
-    const timer = setTimeout(() => setCharacterMessage(""), 3000);
-    return () => clearTimeout(timer);
-  }, [errors, code, showWelcome]);
+    // Otherwise, don't override mood/message (handled in tutorial logic)
+    // No timer here to keep tutorial message visible
+  }, [errors, code, showWelcome, tutorialStep, level, tutorialHints.length]);
 
   useEffect(() => {
     if (!isMounted) return;
-
     setCode(presets[level]);
-
-    // load saved snippets
     const local = readSavedSnippets();
     setSavedItems(local);
-
-    // If you implement Firebase load, call loadSnippetsFromFirebase here and merge results
-    // Example:
+    // Reset tutorial step if level changes
+    setTutorialStep(0);
+    // Optionally merge Firebase-sourced snippets
     // loadSnippetsFromFirebase().then(remote => setSavedItems(prev => [...remote, ...prev]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMounted]);
+  }, [isMounted, level, presets, readSavedSnippets]);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -525,55 +469,63 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   }, [updatePreview, isMounted]);
 
   /* ------------------------------- Status UI -------------------------------- */
-
-  const StatusBadge: React.FC<{
-    status: "Ready" | "Updating..." | "Updated";
-  }> = ({ status }) => {
-    const cls =
-      status === "Updating..."
-        ? "bg-yellow-100 text-yellow-800"
-        : status === "Updated"
-        ? "bg-green-100 text-green-800"
-        : "bg-purple-100 text-purple-800";
-    return (
-      <span className={`text-xs px-2 py-1 rounded-full ${cls}`}>{status}</span>
-    );
-  };
+  const StatusBadge: React.FC<{ status: "Ready" | "Updating..." | "Updated" }>
+    = ({ status }) => {
+      const cls =
+        status === "Updating..."
+          ? "bg-yellow-400/10 text-yellow-300 ring-1 ring-yellow-500/30"
+          : status === "Updated"
+          ? "bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-500/30"
+          : "bg-indigo-400/10 text-indigo-200 ring-1 ring-indigo-500/30";
+      return (
+        <span className={`text-xs px-2 py-1 rounded-full ${cls}`}>{status}</span>
+      );
+    };
 
   /* ------------------------------- Rendering -------------------------------- */
-
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
-      <main className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Nebula background */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#2e026d] via-[#15162c] to-[#0f172a]" />
+      <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-fuchsia-600/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -right-24 h-96 w-96 rounded-full bg-indigo-600/30 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-purple-500/20 blur-3xl" />
+
+      <main className="max-w-7xl mx-auto px-6 py-10">
+        {/* Title */}
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 via-indigo-300 to-sky-300">
+            TailSpark Playground
+          </h1>
+          <p className="mt-2 text-indigo-200/80 text-sm">
+            Master Tailwind CSS through interactive learning
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" ref={playgroundRef}>
           {/* Editor Column */}
-          <section className="flex flex-col space-y-4">
-            <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200">
+          <section className="relative flex flex-col space-y-4">
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)]">
               {/* Header */}
-              <div className="flex items-center justify-between bg-gray-800 px-4 py-3">
+              <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-700/60 to-fuchsia-700/60">
                 <div className="flex items-center gap-3">
                   <Code className="w-5 h-5 text-white" />
-                  <h2 className="text-white font-semibold">
-                    Edit Tailwind HTML
-                  </h2>
-                  <span className="text-sm text-gray-300 ml-2">Preset:</span>
+                  <h2 className="text-white font-semibold">Edit Tailwind HTML</h2>
+                  <span className="text-sm text-indigo-200 ml-2">Preset:</span>
                   <select
                     value={level}
                     onChange={(e) => {
-                      const v = e.target.value as
-                        | "Beginner"
-                        | "Intermediate"
-                        | "Expert";
+                      const v = e.target.value as "Beginner" | "Intermediate" | "Expert";
                       setLevel(v);
                       setCode(presets[v]);
                     }}
-                    className="ml-2 bg-indigo-700 text-white px-2 py-1 rounded text-sm"
+                    className="ml-2 bg-white/10 text-white px-2 py-1 rounded text-xs border border-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/50"
                   >
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Expert">Expert</option>
+                    <option className="bg-slate-800" value="Beginner">Beginner</option>
+                    <option className="bg-slate-800" value="Intermediate">Intermediate</option>
+                    <option className="bg-slate-800" value="Expert">Expert</option>
                   </select>
                 </div>
 
@@ -581,18 +533,16 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                   <button
                     onClick={updatePreview}
                     title="Run (Ctrl + Enter)"
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                    className="flex items-center gap-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm shadow hover:shadow-lg transition-all"
                   >
                     <Play className="w-4 h-4" />
                     Run
                   </button>
 
                   <button
-                    onClick={() =>
-                      setSaveName(`Code ${new Date().toLocaleTimeString()}`)
-                    }
+                    onClick={() => setSaveName(`Code ${new Date().toLocaleTimeString()}`)}
                     title="Prepare save name"
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                    className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-3 py-1.5 rounded-lg text-sm shadow hover:shadow-lg transition-all"
                   >
                     <Save className="w-4 h-4" />
                     Save
@@ -601,23 +551,121 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               </div>
 
               {/* Editor */}
-              <div className="bg-gray-900 p-4">
+              <div className="bg-slate-950/90 p-4">
                 <textarea
                   ref={editorRef}
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  onChange={(e) => {
+                    const newCode = e.target.value;
+                    setCode(newCode);
+                    // Tutorial logic: check progress for each level
+                    if (
+                      level === "Beginner" &&
+                      tutorialStep < tutorialHints.length
+                    ) {
+                      const currentHint = tutorialHints[tutorialStep];
+                      if (currentHint && currentHint.expectedRegex.test(newCode)) {
+                        setTutorialStep(tutorialStep + 1);
+                        setCharacterMood("motivating");
+                        setCharacterMessage("Awesome! Next step unlocked!");
+                        if (tutorialStep + 1 < tutorialHints.length) {
+                          setTimeout(() => {
+                            setCharacterMood("hello");
+                            setCharacterMessage(tutorialHints[tutorialStep + 1].message);
+                          }, 2000);
+                        }
+                        return;
+                      }
+                    }
+                    if (
+                      level === "Intermediate" &&
+                      tutorialStepIntermediate < intermediateHints.length
+                    ) {
+                      const currentHint = intermediateHints[tutorialStepIntermediate];
+                      if (currentHint && currentHint.expectedRegex.test(newCode)) {
+                        setTutorialStepIntermediate(tutorialStepIntermediate + 1);
+                        setCharacterMood("motivating");
+                        setCharacterMessage("Great job! Next intermediate step!");
+                        if (tutorialStepIntermediate + 1 < intermediateHints.length) {
+                          setTimeout(() => {
+                            setCharacterMood("hello");
+                            setCharacterMessage(intermediateHints[tutorialStepIntermediate + 1].message);
+                          }, 2000);
+                        }
+                        return;
+                      }
+                    }
+                    if (
+                      level === "Expert" &&
+                      tutorialStepExpert < expertHints.length
+                    ) {
+                      const currentHint = expertHints[tutorialStepExpert];
+                      if (currentHint && currentHint.expectedRegex.test(newCode)) {
+                        setTutorialStepExpert(tutorialStepExpert + 1);
+                        setCharacterMood("motivating");
+                        setCharacterMessage("Excellent! Next expert step!");
+                        if (tutorialStepExpert + 1 < expertHints.length) {
+                          setTimeout(() => {
+                            setCharacterMood("hello");
+                            setCharacterMessage(expertHints[tutorialStepExpert + 1].message);
+                          }, 2000);
+                        }
+                        return;
+                      }
+                    }
+                  }}
                   spellCheck={false}
-                  className="w-full h-96 resize-none bg-transparent text-green-300 font-mono text-sm leading-5 focus:outline-none"
+                  className="w-full h-96 resize-none bg-transparent text-emerald-300/95 placeholder-indigo-300 font-mono text-sm leading-5 focus:outline-none caret-fuchsia-300"
                 />
               </div>
             </div>
 
-            {/* Buttons row (compact, consistent sizes) */}
+            {/* Tutorial Hint under editor */}
+            { (level === "Beginner" && tutorialStep < tutorialHints.length) ||
+              (level === "Intermediate" && tutorialStepIntermediate < intermediateHints.length) ||
+              (level === "Expert" && tutorialStepExpert < expertHints.length) ? (
+              (() => {
+                // Mood-to-image mapping for avatar
+                const moodImages = {
+                  happy: "/characters/happy_face.png",
+                  error: "/characters/error_face.png",
+                  motivating: "/characters/cat_motivating.png",
+                  hello: "/characters/cat_hello.png",
+                  idle: "/characters/idle_face.png",
+                  correct: "/characters/correctcode_face.png"
+                };
+                return (
+                  <div className="mt-2 flex items-center gap-4 rounded-2xl bg-indigo-500/10 ring-2 ring-indigo-400/30 shadow-lg px-6 py-4 text-indigo-100 transition-all">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-indigo-700/20 flex items-center justify-center">
+                      <img
+                        src={moodImages[characterMood] || moodImages.idle}
+                        alt="Character"
+                        className="w-12 h-12 rounded-full"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <span className="block text-sm text-indigo-300 uppercase tracking-wider font-medium">
+                        Tutorial Step {level === "Beginner" ? tutorialStep + 1 : level === "Intermediate" ? tutorialStepIntermediate + 1 : tutorialStepExpert + 1}
+                      </span>
+                      <p className="text-indigo-100 font-semibold">
+                        {level === "Beginner"
+                          ? tutorialHints[tutorialStep].message
+                          : level === "Intermediate"
+                          ? intermediateHints[tutorialStepIntermediate].message
+                          : expertHints[tutorialStepExpert].message}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : null }
+
+            {/* Action Row */}
             <div className="flex flex-wrap gap-3 items-center">
               <div className="flex gap-2">
                 <button
                   onClick={() => handleSaveSubmit(false)}
-                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded flex items-center gap-2"
+                  className="px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg shadow hover:shadow-lg transition-all flex items-center gap-2"
                   title="Save locally"
                 >
                   <Save className="w-4 h-4" /> Save (Local)
@@ -625,18 +673,12 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
                 <button
                   onClick={async () => {
-                    // Save locally first
-                    const nameToUse =
-                      saveName.trim() ||
-                      `Code ${new Date().toLocaleTimeString()}`;
+                    const nameToUse = saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
                     const saved = await saveLocally(nameToUse, code);
-                    // Then call Firebase stub (replace later)
                     await saveSnippetToFirebase(saved);
-                    alert(
-                      "Saved locally and (stub) to Firebase. Replace stub with Firestore implementation to persist on cloud."
-                    );
+                    alert("Saved locally and (stub) to Firebase. Replace stub with Firestore implementation to persist on cloud.");
                   }}
-                  className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded flex items-center gap-2"
+                  className="px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg shadow hover:shadow-lg transition-all flex items-center gap-2"
                   title="Save to Firebase (stub)"
                 >
                   <Database className="w-4 h-4" /> Save → Firebase
@@ -644,14 +686,14 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
                 <button
                   onClick={() => downloadToDisk("html")}
-                  className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded flex items-center gap-2"
+                  className="px-3 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600 text-white rounded-lg flex items-center gap-2 border border-white/10 transition-all"
                 >
                   <Download className="w-4 h-4" /> Download HTML
                 </button>
 
                 <button
                   onClick={() => downloadToDisk("txt")}
-                  className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded flex items-center gap-2"
+                  className="px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg flex items-center gap-2 border border-white/10 transition-all"
                 >
                   <Download className="w-4 h-4" /> Download TXT
                 </button>
@@ -661,23 +703,17 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                 <button
                   onClick={() => {
                     if (!editorRef.current) return;
-                    navigator.clipboard
-                      ?.writeText(editorRef.current.value)
-                      .then(() => {
-                        // feedback
-                      });
+                    navigator.clipboard?.writeText(editorRef.current.value);
                   }}
-                  className="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded flex items-center gap-2"
+                  className="px-3 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600 text-white rounded-lg flex items-center gap-2 transition-all"
                   title="Copy code to clipboard"
                 >
                   <Copy className="w-4 h-4" /> Copy
                 </button>
 
                 <button
-                  onClick={() => {
-                    setCode(presets[level]);
-                  }}
-                  className="px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded flex items-center gap-2"
+                  onClick={() => { setCode(presets[level]); }}
+                  className="px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg flex items-center gap-2 transition-all"
                   title="Reset to preset"
                 >
                   Reset
@@ -687,27 +723,18 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
             {/* Error Panel */}
             {errors.length > 0 && (
-              <div
-                className={`mt-1 bg-red-50 border border-red-200 rounded-lg overflow-hidden transition-all ${
-                  showErrors ? "max-h-96" : "max-h-12"
-                }`}
+              <div className={`mt-1 rounded-2xl overflow-hidden transition-all border ${showErrors ? "" : ""} bg-rose-900/20 border-rose-500/20 backdrop-blur`}
               >
                 <div
-                  className="px-4 py-2 bg-red-100 border-b border-red-200 flex justify-between items-center cursor-pointer"
+                  className="px-4 py-2 bg-rose-900/40 border-b border-rose-500/20 flex justify-between items-center cursor-pointer"
                   onClick={() => setShowErrors((s) => !s)}
                 >
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-700" />
-                    <h3 className="font-semibold text-red-800">
-                      Errors ({errors.length})
-                    </h3>
+                    <AlertCircle className="w-4 h-4 text-rose-300" />
+                    <h3 className="font-semibold text-rose-100">Errors ({errors.length})</h3>
                   </div>
-                  <button className="text-red-600">
-                    {showErrors ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
+                  <button className="text-rose-200">
+                    {showErrors ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
                 </div>
 
@@ -715,51 +742,32 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                   <div className="p-3 max-h-64 overflow-y-auto">
                     <ul className="space-y-2 text-sm">
                       {errors.map((err, idx) => (
-                        <li
-                          key={`${err.line}-${idx}`}
-                          className="flex items-start gap-3"
-                        >
+                        <li key={`${err.line}-${idx}`} className="flex items-start gap-3">
                           <div className="mt-0.5">
                             {err.severity === "error" ? (
-                              <AlertCircle className="w-5 h-5 text-red-500" />
+                              <AlertCircle className="w-5 h-5 text-rose-300" />
                             ) : (
-                              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                              <AlertTriangle className="w-5 h-5 text-amber-300" />
                             )}
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 text-indigo-100/90">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-red-800">
-                                Line {err.line}
-                              </span>
-                              <span
-                                className={`px-2 py-0.5 rounded text-xs ${
-                                  err.type === "HTML"
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-purple-100 text-purple-800"
-                                }`}
-                              >
+                              <span className="text-xs font-medium text-rose-200">Line {err.line}</span>
+                              <span className={`px-2 py-0.5 rounded text-xs ${err.type === "HTML" ? "bg-blue-400/10 text-blue-200 ring-1 ring-blue-400/20" : "bg-purple-400/10 text-purple-200 ring-1 ring-purple-400/20"}`}>
                                 {err.type}
                               </span>
-                              <span
-                                className={`px-2 py-0.5 rounded text-xs ${
-                                  err.severity === "error"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }`}
-                              >
+                              <span className={`px-2 py-0.5 rounded text-xs ${err.severity === "error" ? "bg-rose-400/10 text-rose-200 ring-1 ring-rose-400/20" : "bg-amber-400/10 text-amber-200 ring-1 ring-amber-400/20"}`}>
                                 {err.severity}
                               </span>
                               {err.word && (
-                                <span className="ml-auto text-xs text-gray-600 italic">
-                                  "{err.word}"
-                                </span>
+                                <span className="ml-auto text-xs text-indigo-200/70 italic">"{err.word}"</span>
                               )}
                             </div>
-                            <div className="mt-1 text-sm text-gray-700">
+                            <div className="mt-1 text-sm text-indigo-100/90">
                               {err.message}
                               <button
                                 onClick={() => jumpToLine(err.line)}
-                                className="ml-3 text-indigo-600 text-xs"
+                                className="ml-3 text-fuchsia-300 hover:text-fuchsia-200 text-xs"
                                 title={`Jump to line ${err.line}`}
                               >
                                 Jump
@@ -774,80 +782,72 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               </div>
             )}
 
-            {/* Save snippets small controls */}
-            <div className="flex gap-2 items-center">
+            {/* Controls for snippet saving, now moved to Preview & Saved Column */}
+          </section>
+
+          {/* Preview & Saved Column */}
+          <aside className="flex flex-col space-y-4">
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)]">
+              <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-700/60 to-fuchsia-700/60">
+                <div className="flex items-center gap-3">
+                  <Eye className="w-5 h-5 text-white" />
+                  <h3 className="font-semibold text-white">Live Preview</h3>
+                </div>
+                <StatusBadge status={status} />
+              </div>
+
+              <div ref={previewRef} className="h-96 overflow-auto bg-gradient-to-b from-indigo-950/60 to-indigo-900/30 p-4" />
+            </div>
+
+            {/* Controls for snippet saving */}
+            <div className="flex items-center gap-3 mb-4">
               <input
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
                 placeholder="Snippet name (optional)"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded"
+                className="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-indigo-100 placeholder-indigo-300 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/40"
               />
               <button
                 onClick={() => handleSaveSubmit(false)}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+                className="px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-xl"
               >
                 Quick Save
               </button>
               <button
                 onClick={() => handleSaveSubmit(true)}
-                className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+                className="px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl"
               >
                 Save + Firebase (stub)
               </button>
               <button
                 onClick={handleClearAllSaves}
-                className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded"
+                className="px-3 py-2 bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600 text-white rounded-xl"
               >
                 Clear All Saves
               </button>
             </div>
-          </section>
 
-          {/* Preview & Saved Column */}
-          <aside className="flex flex-col space-y-4">
-            <div className="rounded-xl overflow-hidden shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between px-4 py-3 bg-purple-200">
-                <div className="flex items-center gap-3">
-                  <Eye className="w-5 h-5 text-purple-800" />
-                  <h3 className="font-semibold text-purple-800">
-                    Live Preview
-                  </h3>
-                </div>
-                <StatusBadge status={status} />
-              </div>
-
-              <div
-                ref={previewRef}
-                className="h-96 overflow-auto bg-gradient-to-b from-purple-50 to-purple-100 p-4"
-              />
-            </div>
-
-            <div className="bg-white p-4 rounded-xl shadow border border-gray-200">
+            <div className="p-4 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)]">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-gray-800 flex items-center gap-2">
-                  <Database className="w-5 h-5 text-blue-500" /> Saved Snippets
+                <h4 className="font-semibold text-indigo-100 flex items-center gap-2">
+                  <Database className="w-5 h-5 text-sky-300" /> Saved Snippets
                 </h4>
-                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                <span className="text-xs bg-white/10 text-indigo-200 px-2 py-1 rounded-full border border-white/10">
                   {savedItems.length}
                 </span>
               </div>
 
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {savedItems.length === 0 ? (
-                  <div className="text-sm text-gray-500 text-center py-6">
+                  <div className="text-sm text-indigo-200/70 text-center py-6">
                     No saved code snippets yet
                   </div>
                 ) : (
                   savedItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between px-3 py-2 border rounded"
-                    >
+                    <div key={item.id} className="flex items-center justify-between px-3 py-2 border border-white/10 rounded-xl bg-white/5 text-indigo-100">
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">
-                          {item.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="font-medium">{item.name}</div>
+                        <div className="text-xs text-indigo-200/70">
                           {new Date(item.timestamp).toLocaleString()}
                         </div>
                       </div>
@@ -856,14 +856,14 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                         <button
                           title="Load snippet"
                           onClick={() => handleLoadCode(item.code)}
-                          className="px-2 py-1 bg-white border rounded text-sm hover:bg-gray-50"
+                          className="px-2 py-1 bg-white/10 border border-white/10 rounded text-sm hover:bg-white/15"
                         >
                           Load
                         </button>
                         <button
                           title="Delete snippet"
                           onClick={() => handleDeleteItem(item.id)}
-                          className="px-2 py-1 bg-red-50 rounded text-sm text-red-700 hover:bg-red-100"
+                          className="px-2 py-1 bg-rose-500/10 border border-rose-400/20 rounded text-sm text-rose-200 hover:bg-rose-500/20"
                         >
                           Delete
                         </button>
@@ -876,35 +876,24 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
             {/* Welcome modal */}
             {showWelcome && (
-              <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-                  <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-center">
-                    <h2 className="text-2xl font-bold text-white">
-                      Welcome to TailSpark! 🎉
-                    </h2>
+              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-white/10">
+                  <div className="bg-gradient-to-r from-indigo-700 to-fuchsia-700 p-6 text-center">
+                    <h2 className="text-2xl font-bold text-white">Welcome to TailSpark! 🎉</h2>
                   </div>
                   <div className="p-6">
-                    <p className="text-gray-600 mb-6 text-center">
-                      Start experimenting with Tailwind HTML. Edit on the left,
-                      preview on the right. Save locally or later connect to
-                      Firebase.
+                    <p className="text-indigo-100/90 mb-6 text-center">
+                      Start experimenting with Tailwind HTML. Edit on the left, preview on the right. Save locally or later connect to Firebase.
                     </p>
 
-                    <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                      <h3 className="font-semibold text-blue-800">
-                        Quick tips
-                      </h3>
-                      <ul className="list-disc list-inside text-blue-700 text-sm mt-2 space-y-1">
+                    <div className="bg-indigo-400/10 ring-1 ring-indigo-400/20 p-4 rounded-xl mb-4">
+                      <h3 className="font-semibold text-indigo-100">Quick tips</h3>
+                      <ul className="list-disc list-inside text-indigo-200 text-sm mt-2 space-y-1">
                         <li>Use the preset selector to load sample layouts.</li>
                         <li>
-                          Press{" "}
-                          <span className="font-semibold">Ctrl + Enter</span> to
-                          run.
+                          Press <span className="font-semibold">Ctrl + Enter</span> to run.
                         </li>
-                        <li>
-                          Click an error's "Jump" to focus and select the
-                          offending line.
-                        </li>
+                        <li>Click an error's "Jump" to focus the offending line.</li>
                       </ul>
                     </div>
 
@@ -914,15 +903,13 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                           setShowWelcome(false);
                           localStorage.setItem("welcomeShown", "true");
                         }}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded"
+                        className="flex-1 bg-gradient-to-r from-fuchsia-500 to-indigo-500 hover:from-fuchsia-600 hover:to-indigo-600 text-white px-4 py-2 rounded-xl"
                       >
                         Let's go
                       </button>
                       <button
-                        onClick={() => {
-                          setShowWelcome(false);
-                        }}
-                        className="flex-1 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded"
+                        onClick={() => { setShowWelcome(false); }}
+                        className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-4 py-2 rounded-xl"
                       >
                         Dismiss
                       </button>
@@ -933,12 +920,11 @@ const TailwindPlaygroundNoNav: React.FC = () => {
             )}
           </aside>
         </div>
-        <div className="fixed bottom-6 right-6 z-50">
-          <Character mood={characterMood} message={characterMessage} />
-        </div>
+
       </main>
     </div>
   );
 };
 
 export default TailwindPlaygroundNoNav;
+     
