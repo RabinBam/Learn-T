@@ -78,7 +78,6 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   // Reference to the playground coding/output section
   const playgroundRef = useRef<HTMLDivElement>(null);
 
-  // Hints for beginner tutorial steps
   // For smooth scroll and state reset on initial mount
   useEffect(() => {
     // Reset all states to initial/default
@@ -88,13 +87,35 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     setTutorialStepExpert(0);
     setCharacterMood("idle");
 
-    // Smooth scroll to Tailwind coding/output section
-    if (playgroundRef.current) {
-      setTimeout(() => {
-        playgroundRef.current!.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 300);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Ultra-smooth auto-scroll
+    const scrollToBottom = () => {
+      const start = window.scrollY;
+      const duration = 2000; // 2 seconds
+      const startTime = performance.now();
+
+      // easeInOutCubic: slow start, fast middle, slow end
+      const easeInOutCubic = (t: number) =>
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+      const scroll = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeInOutCubic(progress);
+        const end = document.body.scrollHeight - window.innerHeight;
+
+        window.scrollTo(0, start + (end - start) * easedProgress);
+
+        if (progress < 1) {
+          requestAnimationFrame(scroll);
+        }
+      };
+
+      requestAnimationFrame(scroll);
+    };
+
+    // Small delay to ensure page layout is ready
+    const timer = setTimeout(scrollToBottom, 500);
+    return () => clearTimeout(timer);
   }, []);
   const tutorialHints: { step: number, message: string, expectedRegex: RegExp }[] = [
     { step: 1, message: "Change bg-white to bg-blue-500 to see the magic!", expectedRegex: /bg-blue-\d{3}/ },
