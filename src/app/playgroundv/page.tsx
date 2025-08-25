@@ -1,5 +1,5 @@
 "use client";
-
+import Character from "../characters/page";
 import React, {
   useCallback,
   useEffect,
@@ -7,6 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import {
   Play,
   Save,
@@ -85,6 +86,9 @@ interface SavedItem {
 const TailwindPlaygroundNoNav: React.FC = () => {
   // Hydration guard
   const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Editor & UI state
   const [code, setCode] = useState<string>("");
@@ -98,8 +102,12 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   );
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
   const [saveName, setSaveName] = useState<string>("");
-  const [showWelcome, setShowWelcome] = useState<boolean>(true);
 
+  // Character state
+  const [characterMood, setCharacterMood] = useState<
+    "idle" | "happy" | "error" | "correctcode"
+  >("idle");
+  const [characterMessage, setCharacterMessage] = useState<string>("");
   // Refs
   const previewRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
@@ -453,10 +461,36 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   }, []);
 
   /* -------------------------- Component lifecycle --------------------------- */
+  // show welcome modal by default
+  const [showWelcome, setShowWelcome] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("welcomeShown");
+    }
+    return true;
+  });
 
+  // character effect
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    if (showWelcome) {
+      setCharacterMood("happy");
+      setCharacterMessage("Welcome to playground. Let's start learning");
+      return; // skip other checks while welcome modal is open
+    }
+
+    if (errors.length > 0) {
+      setCharacterMood("error");
+      setCharacterMessage(`Oops! ${errors.length} error(s) detected!`);
+    } else if (code.trim() !== "") {
+      setCharacterMood("correctcode");
+      setCharacterMessage("All good! 🎉");
+    } else {
+      setCharacterMood("idle");
+      setCharacterMessage("Keep coding! 😎");
+    }
+
+    const timer = setTimeout(() => setCharacterMessage(""), 3000);
+    return () => clearTimeout(timer);
+  }, [errors, code, showWelcome]);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -898,6 +932,9 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               </div>
             )}
           </aside>
+        </div>
+        <div className="fixed bottom-6 right-6 z-50">
+          <Character mood={characterMood} message={characterMessage} />
         </div>
       </main>
     </div>
