@@ -4,7 +4,60 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-function getUserData() {
+// Default avatar component - a nice geometric pattern
+const DefaultAvatar = ({ name, size = 160 }: { name: string; size?: number }) => {
+  // Generate a consistent color based on the name
+  const getColorFromName = (name: string): string => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 60%)`;
+  };
+
+  const backgroundColor = getColorFromName(name);
+  const initials = name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <div 
+      className="w-full h-full rounded-full flex items-center justify-center text-white font-bold relative overflow-hidden"
+      style={{ backgroundColor }}
+    >
+      {/* Geometric pattern background */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-white rounded-full"></div>
+        <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-white/30 rounded-full"></div>
+        <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-white/40 rounded-full"></div>
+      </div>
+      
+      {/* Initials */}
+      <span style={{ fontSize: size * 0.35 }} className="relative z-10 font-black">
+        {initials}
+      </span>
+    </div>
+  );
+};
+
+// User data interface
+interface User {
+  name: string;
+  level: number;
+  xp: number;
+  nextLevelXp: number;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  avatar: string | null;
+  bio: string;
+}
+
+function getUserData(): User {
   return {
     name: "PlayerOne",
     level: 15,
@@ -13,14 +66,14 @@ function getUserData() {
     gamesPlayed: 120,
     wins: 85,
     losses: 35,
-    avatar: "/avatar.png",
+    avatar: null, // Changed to null to indicate no custom avatar set
     bio: "",
   };
 }
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -44,11 +97,14 @@ export default function ProfilePage() {
   const winRate = ((user.wins / user.gamesPlayed) * 100).toFixed(1);
   const xpProgress = (user.xp / user.nextLevelXp) * 100;
 
-  const handleInputChange = (field: string, value: string) => {
-    setUser((prevUser: any) => ({
-      ...prevUser,
-      [field]: value,
-    }));
+  const handleInputChange = (field: keyof User, value: string | number) => {
+    setUser((prevUser: User | null) => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        [field]: value,
+      };
+    });
     // TODO: Update user field in Firebase here
   };
 
@@ -57,10 +113,13 @@ export default function ProfilePage() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setUser((prevUser: any) => ({
-          ...prevUser,
-          avatar: reader.result as string,
-        }));
+        setUser((prevUser: User | null) => {
+          if (!prevUser) return null;
+          return {
+            ...prevUser,
+            avatar: reader.result as string,
+          };
+        });
         setIsEditingAvatar(false);
         // TODO: Update avatar in Firebase here
       };
@@ -69,10 +128,13 @@ export default function ProfilePage() {
   };
 
   const handleRemoveAvatar = () => {
-    setUser((prevUser: any) => ({
-      ...prevUser,
-      avatar: "/avatar.png",
-    }));
+    setUser((prevUser: User | null) => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        avatar: null, // Set to null to show default avatar
+      };
+    });
     setIsEditingAvatar(false);
     // TODO: Update avatar removal in Firebase here
   };
@@ -117,13 +179,17 @@ export default function ProfilePage() {
           {/* Avatar Section */}
           <div className="relative w-40 h-40 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-1 shadow-2xl">
             <div className="w-full h-full rounded-full overflow-hidden bg-gray-900">
-              <Image
-                src={user.avatar}
-                alt={`${user.name} avatar`}
-                fill
-                sizes="160px"
-                className="object-cover rounded-full"
-              />
+              {user.avatar ? (
+                <Image
+                  src={user.avatar}
+                  alt={`${user.name} avatar`}
+                  fill
+                  sizes="160px"
+                  className="object-cover rounded-full"
+                />
+              ) : (
+                <DefaultAvatar name={user.name} size={160} />
+              )}
             </div>
           </div>
 
@@ -135,7 +201,7 @@ export default function ProfilePage() {
                 className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-full text-sm font-semibold hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 focus:outline-none"
                 aria-label="Edit avatar"
               >
-                Change Avatar
+                {user.avatar ? "Change Avatar" : "Upload Avatar"}
               </button>
             ) : isEditMode && isEditingAvatar ? (
               <div className="flex flex-col w-full gap-3">
@@ -152,12 +218,14 @@ export default function ProfilePage() {
                     className="hidden"
                   />
                 </label>
-                <button
-                  onClick={handleRemoveAvatar}
-                  className="w-full px-6 py-2 bg-red-500/80 backdrop-blur text-white rounded-full text-sm font-semibold hover:bg-red-600/80 transition-all duration-300 focus:outline-none"
-                >
-                  Remove Picture
-                </button>
+                {user.avatar && (
+                  <button
+                    onClick={handleRemoveAvatar}
+                    className="w-full px-6 py-2 bg-red-500/80 backdrop-blur text-white rounded-full text-sm font-semibold hover:bg-red-600/80 transition-all duration-300 focus:outline-none"
+                  >
+                    Use Default Avatar
+                  </button>
+                )}
                 <button
                   onClick={() => setIsEditingAvatar(false)}
                   className="w-full px-6 py-2 bg-white/20 backdrop-blur text-white rounded-full text-sm font-semibold hover:bg-white/30 transition-all duration-300 focus:outline-none"
