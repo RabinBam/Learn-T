@@ -317,6 +317,12 @@ function generateLevel(id: number): LevelDef {
     ]),
   ].slice(0, 20);
 
+  // Shuffle palette to randomize option order
+  for (let i = palette.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [palette[i], palette[j]] = [palette[j], palette[i]];
+  }
+
   const timeLimit = Math.max(45 - difficulty * 3, 15);
   const challenge = CHALLENGES[id % CHALLENGES.length];
 
@@ -931,13 +937,102 @@ function LevelMap({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(168,85,247,.08),transparent_40%),radial-gradient(circle_at_80%_60%,rgba(34,211,238,.08),transparent_38%)]" />
 
       <div className="relative z-10 p-8">
+        {/* Animated gradient border keyframes for current level */}
+        <style>
+          {`
+            @keyframes gradientMove {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+            .animate-gradient {
+              animation: gradientMove 4s linear infinite;
+              background-clip: border-box;
+            }
+          `}
+        </style>
         <div className="grid grid-cols-1 gap-8">
           {nodes.map((n) => {
             const locked = n > current;
             const level = generateLevel(n);
             const xOffset =
               n % 2 === 0 ? "md:translate-x-40" : "md:-translate-x-20";
-
+            // Determine card className based on completion and locked status
+            let cardClass =
+              "relative rounded-3xl p-6 bg-white/8 border border-white/15 backdrop-blur-xl shadow-2xl";
+            if (n < current) {
+              cardClass =
+                "relative rounded-3xl p-6 bg-white/8 border border-white/15 backdrop-blur-xl shadow-2xl transition-transform duration-300 hover:scale-105 hover:bg-gradient-to-br hover:from-pink-500/30 hover:to-purple-500/30";
+            } else if (locked && n !== current) {
+              cardClass =
+                "relative rounded-3xl p-6 bg-white/8 border border-white/15 backdrop-blur-xl shadow-2xl transition-transform duration-300 hover:scale-105 hover:bg-white/10";
+            }
+            // Card content for easy wrapping
+            const cardContent = (
+              <div className={cardClass}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-14 h-14 rounded-2xl grid place-items-center font-bold text-lg ${
+                        locked
+                          ? "bg-white/5"
+                          : "bg-gradient-to-br from-purple-500 to-cyan-500"
+                      }`}
+                    >
+                      {n}
+                    </div>
+                    <div>
+                      <div className="text-xl font-semibold mb-1">
+                        Level {n} •{" "}
+                        <span className="text-sm opacity-70 uppercase">
+                          {level.type}
+                        </span>
+                      </div>
+                      <div className="text-sm opacity-70 mb-2">
+                        {level.description}
+                      </div>
+                      <div className="flex gap-2">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            level.mode === "palette"
+                              ? "bg-green-500/20 text-green-300"
+                              : level.mode === "typing"
+                              ? "bg-blue-500/20 text-blue-300"
+                              : "bg-purple-500/20 text-purple-300"
+                          }`}
+                        >
+                          {level.mode}
+                        </span>
+                        <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">
+                          ★{level.difficulty}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right text-sm opacity-70">
+                      <div>⏱ {level.timeLimit}s</div>
+                      <div>{level.required.length} classes</div>
+                    </div>
+                    <button
+                      onClick={() => onPlay(n)}
+                      disabled={locked && n !== current}
+                      className={`px-6 py-3 rounded-xl border font-semibold transition-all duration-200 ${
+                        locked && n !== current
+                          ? "opacity-40 cursor-not-allowed border-white/10"
+                          : "border-white/20 hover:bg-white/10 hover:scale-105"
+                      }`}
+                    >
+                      {n < current
+                        ? "Replay"
+                        : n === current
+                        ? "Play"
+                        : "Locked"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
             return (
               <motion.div
                 id={`node-${n}`}
@@ -949,69 +1044,75 @@ function LevelMap({
                 className={`relative mx-auto w-full md:w-2/3 ${xOffset}`}
               >
                 <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/0 via-white/5 to-cyan-500/0 blur-2xl rounded-3xl" />
-                <div className="relative rounded-3xl p-6 bg-white/8 border border-white/15 backdrop-blur-xl shadow-2xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`w-14 h-14 rounded-2xl grid place-items-center font-bold text-lg ${
-                          locked
-                            ? "bg-white/5"
-                            : "bg-gradient-to-br from-purple-500 to-cyan-500"
-                        }`}
-                      >
-                        {n}
-                      </div>
-                      <div>
-                        <div className="text-xl font-semibold mb-1">
-                          Level {n} •{" "}
-                          <span className="text-sm opacity-70 uppercase">
-                            {level.type}
-                          </span>
-                        </div>
-                        <div className="text-sm opacity-70 mb-2">
-                          {level.description}
-                        </div>
-                        <div className="flex gap-2">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs ${
-                              level.mode === "palette"
-                                ? "bg-green-500/20 text-green-300"
-                                : level.mode === "typing"
-                                ? "bg-blue-500/20 text-blue-300"
-                                : "bg-purple-500/20 text-purple-300"
+                {n === current ? (
+                  <div className="relative rounded-3xl p-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-[length:200%_200%] animate-gradient">
+                    <div className={cardClass}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`w-14 h-14 rounded-2xl grid place-items-center font-bold text-lg ${
+                              locked
+                                ? "bg-white/5"
+                                : "bg-gradient-to-br from-purple-500 to-cyan-500"
                             }`}
                           >
-                            {level.mode}
-                          </span>
-                          <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">
-                            ★{level.difficulty}
-                          </span>
+                            {n}
+                          </div>
+                          <div>
+                            <div className="text-xl font-semibold mb-1">
+                              Level {n} •{" "}
+                              <span className="text-sm opacity-70 uppercase">
+                                {level.type}
+                              </span>
+                            </div>
+                            <div className="text-sm opacity-70 mb-2">
+                              {level.description}
+                            </div>
+                            <div className="flex gap-2">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${
+                                  level.mode === "palette"
+                                    ? "bg-green-500/20 text-green-300"
+                                    : level.mode === "typing"
+                                    ? "bg-blue-500/20 text-blue-300"
+                                    : "bg-purple-500/20 text-purple-300"
+                                }`}
+                              >
+                                {level.mode}
+                              </span>
+                              <span className="px-2 py-1 rounded-full text-xs bg-yellow-500/20 text-yellow-300">
+                                ★{level.difficulty}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right text-sm opacity-70">
+                            <div>⏱ {level.timeLimit}s</div>
+                            <div>{level.required.length} classes</div>
+                          </div>
+                          <button
+                            onClick={() => onPlay(n)}
+                            disabled={locked && n !== current}
+                            className={`px-6 py-3 rounded-xl border font-semibold transition-all duration-200 ${
+                              locked && n !== current
+                                ? "opacity-40 cursor-not-allowed border-white/10"
+                                : "border-white/20 hover:bg-white/10 hover:scale-105"
+                            }`}
+                          >
+                            {n < current
+                              ? "Replay"
+                              : n === current
+                              ? "Play"
+                              : "Locked"}
+                          </button>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right text-sm opacity-70">
-                        <div>⏱ {level.timeLimit}s</div>
-                        <div>{level.required.length} classes</div>
-                      </div>
-                      <button
-                        onClick={() => onPlay(n)}
-                        disabled={locked && n !== current}
-                        className={`px-6 py-3 rounded-xl border font-semibold transition-all duration-200 ${
-                          locked && n !== current
-                            ? "opacity-40 cursor-not-allowed border-white/10"
-                            : "border-white/20 hover:bg-white/10 hover:scale-105"
-                        }`}
-                      >
-                        {n < current
-                          ? "Replay"
-                          : n === current
-                          ? "Play"
-                          : "Locked"}
-                      </button>
-                    </div>
                   </div>
-                </div>
+                ) : (
+                  cardContent
+                )}
               </motion.div>
             );
           })}
@@ -1078,6 +1179,9 @@ function Game({
   const [timeLeft, setTimeLeft] = useState(level.timeLimit);
   const [hinted, setHinted] = useState(false);
   const [failedPopup, setFailedPopup] = useState(false);
+  const [revealedHints, setRevealedHints] = useState<string[]>([]);
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -1120,18 +1224,35 @@ function Game({
 
     if (!isCorrect) {
       // Wrong selection → show failed popup modal
+      const remaining = level.required.filter(
+        (r) => !revealedHints.includes(r) && !selection.includes(r)
+      );
+
+      if (remaining.length === 1) {
+        // Only one correct option left unchosen
+        setPopupMessage(
+          "Give it one more try!\nJust 1 correct option left to choose."
+        );
+      } else if (remaining.length > 1) {
+        const newHint = remaining[0];
+        setRevealedHints([...revealedHints, newHint]);
+        setPopupMessage(`Hint: Try using "${newHint}"`);
+      } else {
+        setPopupMessage("Incorrect choice, try again");
+      }
+
       setFailedPopup(true);
       return;
     }
 
-    if (selection.length >= 3) return; // Max 3 selections allowed
+    if (selection.length >= level.required.length) return; // Limit by required classes
 
     const newSelection = [...selection, c];
     setSelection(newSelection);
 
-    // If user has selected all 3 correct options, win immediately
+    // If user has selected all required correct options, win immediately
     if (
-      newSelection.length === 3 &&
+      newSelection.length === level.required.length &&
       level.required.every((r) => newSelection.includes(r))
     ) {
       onWin();
@@ -1148,13 +1269,7 @@ function Game({
           Level Failed!
         </div>
         <div className="mb-4 text-white/90 text-lg">
-          <span className="block mb-2">Hint:</span>
-          <span>
-            One required class is{" "}
-            <code className="px-2 py-1 rounded-lg bg-black/30 text-cyan-300 font-mono">
-              {level.required[0]}
-            </code>
-          </span>
+          {popupMessage && <p>{popupMessage}</p>}
         </div>
         <div className="flex gap-4 mt-6 justify-center">
           <button
@@ -1366,7 +1481,16 @@ function Game({
                 Give Up
               </button>
               <button
-                onClick={() => setHinted(true)}
+                onClick={() => {
+                  // Reveal one unrevealed correct option as a hint
+                  const remaining = level.required.filter(r => !revealedHints.includes(r));
+                  if (remaining.length > 0) {
+                    const newHint = remaining[0];
+                    setRevealedHints([...revealedHints, newHint]);
+                    setHint(newHint); // store current hint
+                  }
+                  setHinted(true);
+                }}
                 disabled={hinted}
                 className="px-4 py-2 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 disabled:opacity-50 transition-all duration-200"
               >
@@ -1383,12 +1507,12 @@ function Game({
               </button>
             </div>
 
-            {hinted && (
+            {hinted && hint && (
               <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
                 <div className="text-sm text-yellow-300">
                   Hint: One required class is{" "}
                   <code className="bg-black/20 px-1 rounded">
-                    {level.required[0]}
+                    {hint}
                   </code>
                 </div>
               </div>
@@ -1441,17 +1565,20 @@ function EnhancedBackground() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Memoize particle positions and animation params
-  const particles = useMemo(
-    () =>
+  // Hydration-safe: particles are generated only on client in useEffect
+  const [particles, setParticles] = useState<
+    { left: string; top: string; duration: number; delay: number }[]
+  >([]);
+  useEffect(() => {
+    setParticles(
       Array.from({ length: 100 }).map(() => ({
         left: `${Math.random() * 100}%`,
         top: `${Math.random() * 100}%`,
         duration: 4 + Math.random() * 4,
         delay: Math.random() * 3,
-      })),
-    []
-  );
+      }))
+    );
+  }, []);
 
   return (
     <div className="pointer-events-none absolute inset-0">
