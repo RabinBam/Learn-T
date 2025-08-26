@@ -387,9 +387,8 @@ export default function EnhancedTailwindQuest() {
   const nextLevel = useMemo(() => generateLevel(save.currentLevel), [save.currentLevel]);
 
   // Global Hearts State
-  const [hearts, setHearts] = useState(3); // 3 hearts (can be 0.5 increments)
-  // Only one heart restores at a time, timer is for the leftmost missing heart (half or full)
-  const [heartTimers, setHeartTimers] = useState<number[]>([]); // [secondsRemaining] or []
+  const [hearts, setHearts] = useState(3); // 3 full hearts
+  const [heartTimer, setHeartTimer] = useState<number>(0); // single countdown timer in seconds
   const [notifications, setNotifications] = useState<string[]>([]);
 
   // Function to show notification
@@ -400,64 +399,34 @@ export default function EnhancedTailwindQuest() {
     }, 3000);
   }
 
-  // Start a heart restore timer (sequential: only if not already restoring and hearts < 3)
+  // Start a heart restore timer (only if timer is not running and hearts < 3)
   function startHeartRestoreTimer() {
-    setHeartTimers((prev) => {
-      if (prev.length === 0 && hearts < 3) {
-        // Determine if the leftmost missing heart is a half-heart
-        // hearts can be 0, 0.5, 1, 1.5, 2, 2.5
-        // If hearts is 0.5, leftmost missing is a half-heart
-        // If hearts is x.5, leftmost missing is a half-heart, otherwise full
-        const isHalfHeart = hearts % 1 !== 0;
-        const timer = isHalfHeart ? 60 : 120;
-        return [timer];
-      }
-      return prev;
-    });
+    if (heartTimer === 0 && hearts < 3) {
+      setHeartTimer(120); // always 120 seconds per heart
+    }
   }
 
-  // Heart timers countdown (sequential: decrement timer, restore only one heart at a time, half-heart logic)
+  // Heart timer countdown: decrement timer, restore one full heart every 120s
   useEffect(() => {
-    if (heartTimers.length === 0) return;
+    if (heartTimer <= 0) return;
+    if (hearts >= 3) {
+      setHeartTimer(0);
+      return;
+    }
     const interval = setInterval(() => {
-      setHeartTimers((prev) => {
-        if (prev.length === 0) return prev;
-        const t = prev[0];
-        if (t - 1 <= 0) {
-          // Timer expired, restore one heart or half-heart
-          setHearts((h) => {
-            let newHearts = h;
-            // If we are restoring a half-heart (hearts is x.5), next is +0.5, else +1
-            // But restoration always starts from leftmost missing heart,
-            // so if hearts is x.5, restore +0.5 (to next integer), else restore +1 (to next integer or up to 3)
-            if (h % 1 !== 0) {
-              // Restore half-heart
-              newHearts = Math.min(3, Math.round((h + 0.5) * 2) / 2);
-            } else {
-              // Restore full heart
-              newHearts = Math.min(3, h + 1);
-            }
-            showNotification("A heart has been restored!");
-            // After restoring, if still missing hearts, start next timer (with correct duration)
-            if (newHearts < 3) {
-              setTimeout(() => {
-                // If the next heart to restore is a half-heart, timer is 60s; else 120s
-                const isHalfNext = newHearts % 1 !== 0;
-                setHeartTimers([isHalfNext ? 60 : 120]);
-              }, 0);
-            }
-            return newHearts;
-          });
-          // Remove timer; next timer will be started by setHearts above if needed
-          return [];
-        } else {
-          // Decrement timer
-          return [t - 1];
+      setHeartTimer((t) => {
+        if (t <= 1) {
+          // Add exactly one full heart
+          const newHearts = Math.min(3, hearts + 1);
+          setHearts(newHearts);
+          // If we're full, stop. Otherwise restart for the next full heart
+          return newHearts >= 3 ? 0 : 120;
         }
+        return t - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [heartTimers]);
+  }, [heartTimer, hearts]);
 
   // Override startLevel to prevent starting with 0 hearts
   function startLevel(level: LevelDef) {
@@ -611,7 +580,7 @@ export default function EnhancedTailwindQuest() {
               setHearts={setHearts}
               startHeartRestoreTimer={startHeartRestoreTimer}
               showNotification={showNotification}
-              heartTimers={heartTimers}
+              heartTimer={heartTimer}
             />
           )}
           {mode === "play" && activeLevel && (
@@ -632,7 +601,7 @@ export default function EnhancedTailwindQuest() {
               startHeartRestoreTimer={startHeartRestoreTimer}
               showNotification={showNotification}
               setMode={setMode}
-              heartTimers={heartTimers}
+              heartTimer={heartTimer}
             />
           )}
         </div>
@@ -1014,7 +983,7 @@ function LevelMap({
   setHearts,
   startHeartRestoreTimer,
   showNotification,
-  heartTimers,
+  heartTimer,
 }: {
   current: number;
   onPlay: (id: number) => void;
@@ -1022,7 +991,7 @@ function LevelMap({
   setHearts?: React.Dispatch<React.SetStateAction<number>>;
   startHeartRestoreTimer?: () => void;
   showNotification?: (msg: string) => void;
-  heartTimers?: number[];
+  heartTimer?: number;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [windowEnd, setWindowEnd] = useState(current + 30);
@@ -1051,22 +1020,23 @@ function LevelMap({
       {typeof hearts === "number" && (
         <div className="fixed left-6 bottom-6 z-30 flex items-center gap-2 bg-black/40 border border-white/10 px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-xl">
           {Array.from({ length: 3 }).map((_, i) => {
-            const showTimer =
-              heartTimers && heartTimers.length > 0 && i === Math.floor(hearts) && Math.floor(hearts) < 3;
+            const fullHearts = Math.floor(hearts);
+            const hasHalf = hearts % 1 >= 0.5;
+            const showHalfOn = fullHearts; // the next heart slot that may be half
+            const timerTarget = Math.floor(Math.floor(hearts * 2) / 2); // which heart the next half will fill
+            const showTimer = (heartTimer ?? 0) > 0 && hearts < 3 && i === timerTarget;
             return (
-              <div key={i} className="relative flex flex-col items-center justify-end h-10">
-                {/* Timer above the leftmost missing heart only */}
+              <div key={i} className="relative flex items-center justify-center w-6 h-10">
                 {showTimer && (
-                  <span className="text-xs text-white mb-1">
-                    {Math.ceil(heartTimers[0])}s
+                  <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-white">
+                    {Math.ceil(heartTimer ?? 0)}s
                   </span>
                 )}
+                {/* base outline / full fill */}
                 <svg
                   viewBox="0 0 24 24"
-                  className={`w-6 h-6 ${
-                    i < Math.floor(hearts) ? "text-red-400" : "text-gray-700 opacity-30"
-                  }`}
-                  fill={i < Math.floor(hearts) ? "currentColor" : "none"}
+                  className={`w-6 h-6 ${i < fullHearts ? "text-red-400" : "text-gray-700 opacity-30"}`}
+                  fill={i < fullHearts ? "currentColor" : "none"}
                   stroke="currentColor"
                   strokeWidth={2}
                 >
@@ -1075,31 +1045,20 @@ function LevelMap({
                     strokeLinejoin="round"
                   />
                 </svg>
+                {/* half fill overlay */}
+                {i === showHalfOn && hasHalf && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="absolute inset-0 w-6 h-6 text-red-400"
+                    fill="currentColor"
+                    style={{ clipPath: "inset(0 50% 0 0)" }}
+                  >
+                    <path d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z" />
+                  </svg>
+                )}
               </div>
             );
           })}
-          {/* If half heart, show a half heart icon */}
-          {hearts % 1 !== 0 && (
-            <svg
-              viewBox="0 0 24 24"
-              className="w-6 h-6 text-red-400"
-              fill="currentColor"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <defs>
-                <linearGradient id="halfHeartMap" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="50%" stopColor="#f87171" />
-                  <stop offset="50%" stopColor="transparent" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z"
-                strokeLinejoin="round"
-                fill="url(#halfHeartMap)"
-              />
-            </svg>
-          )}
           <span className="ml-2 text-sm text-white/70">Lives</span>
         </div>
       )}
@@ -1337,7 +1296,7 @@ function Game({
   startHeartRestoreTimer,
   showNotification,
   setMode,
-  heartTimers,
+  heartTimer,
 }: {
   level: LevelDef;
   selection: string[];
@@ -1355,7 +1314,7 @@ function Game({
   startHeartRestoreTimer?: () => void;
   showNotification?: (msg: string) => void;
   setMode?: React.Dispatch<React.SetStateAction<"landing" | "map" | "play" | "events">>;
-  heartTimers?: number[];
+  heartTimer?: number;
 }) {
   const [timeLeft, setTimeLeft] = useState(level.timeLimit);
   const [hinted, setHinted] = useState(false);
@@ -1366,13 +1325,20 @@ function Game({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    timerRef.current && clearInterval(timerRef.current as any);
+    if (timerRef.current) {
+      clearInterval(timerRef.current as any);
+      timerRef.current = null;
+    }
     setTimeLeft(level.timeLimit);
-    timerRef.current = setInterval(
-      () => setTimeLeft((t) => (t > 0 ? t - 1 : 0)),
-      1000
-    ) as any;
-    return () => timerRef.current && clearInterval(timerRef.current as any);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => (t > 0 ? t - 1 : 0));
+    }, 1000) as any;
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current as any);
+        timerRef.current = null;
+      }
+    };
   }, [level.id]);
 
   useEffect(() => {
@@ -1394,12 +1360,12 @@ function Game({
     if (hasAll && newErrors.length === 0) onWin();
   }, [hasAll, newErrors]);
 
-  function toggleChip(c: string) {
+  function toggleChip(c: string): void {
     const isCorrect = level.required.includes(c);
     const alreadySelected = selection.includes(c);
 
     if (alreadySelected) {
-      setSelection((sel) => sel.filter((x) => x !== c));
+      setSelection((sel: string[]) => sel.filter((x: string) => x !== c));
       return;
     }
 
@@ -1752,22 +1718,23 @@ function Game({
       {typeof hearts === "number" && (
         <div className="fixed left-6 bottom-6 z-30 flex items-center gap-2 bg-black/40 border border-white/10 px-6 py-3 rounded-2xl shadow-2xl backdrop-blur-xl">
           {Array.from({ length: 3 }).map((_, i) => {
-            const showTimer =
-              heartTimers && heartTimers.length > 0 && i === Math.floor(hearts) && Math.floor(hearts) < 3;
+            const fullHearts = Math.floor(hearts);
+            const hasHalf = hearts % 1 >= 0.5;
+            const showHalfOn = fullHearts; // the next heart slot that may be half
+            const timerTarget = Math.floor(Math.floor(hearts * 2) / 2); // which heart the next half will fill
+            const showTimer = (heartTimer ?? 0) > 0 && hearts < 3 && i === timerTarget;
             return (
-              <div key={i} className="relative flex flex-col items-center justify-end h-10">
-                {/* Timer above the leftmost missing heart only */}
+              <div key={i} className="relative flex items-center justify-center w-6 h-10">
                 {showTimer && (
-                  <span className="text-xs text-white mb-1">
-                    {Math.ceil(heartTimers[0])}s
+                  <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-white">
+                    {Math.ceil(heartTimer ?? 0)}s
                   </span>
                 )}
+                {/* base outline / full fill */}
                 <svg
                   viewBox="0 0 24 24"
-                  className={`w-6 h-6 ${
-                    i < Math.floor(hearts) ? "text-red-400" : "text-gray-700 opacity-30"
-                  }`}
-                  fill={i < Math.floor(hearts) ? "currentColor" : "none"}
+                  className={`w-6 h-6 ${i < fullHearts ? "text-red-400" : "text-gray-700 opacity-30"}`}
+                  fill={i < fullHearts ? "currentColor" : "none"}
                   stroke="currentColor"
                   strokeWidth={2}
                 >
@@ -1776,31 +1743,20 @@ function Game({
                     strokeLinejoin="round"
                   />
                 </svg>
+                {/* half fill overlay */}
+                {i === showHalfOn && hasHalf && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="absolute inset-0 w-6 h-6 text-red-400"
+                    fill="currentColor"
+                    style={{ clipPath: "inset(0 50% 0 0)" }}
+                  >
+                    <path d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z" />
+                  </svg>
+                )}
               </div>
             );
           })}
-          {/* If half heart, show a half heart icon */}
-          {hearts % 1 !== 0 && (
-            <svg
-              viewBox="0 0 24 24"
-              className="w-6 h-6 text-red-400"
-              fill="currentColor"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <defs>
-                <linearGradient id="halfHeartGame" x1="0" x2="1" y1="0" y2="0">
-                  <stop offset="50%" stopColor="#f87171" />
-                  <stop offset="50%" stopColor="transparent" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z"
-                strokeLinejoin="round"
-                fill="url(#halfHeartGame)"
-              />
-            </svg>
-          )}
           <span className="ml-2 text-sm text-white/70">Lives</span>
         </div>
       )}
