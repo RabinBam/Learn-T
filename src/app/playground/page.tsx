@@ -401,12 +401,13 @@ export default function EnhancedTailwindQuest() {
 
   // Start a heart restore timer (only if timer is not running and hearts < 3)
   function startHeartRestoreTimer() {
+    // Revert to original: always set to 120 when hearts < 3 and timer is 0
     if (heartTimer === 0 && hearts < 3) {
-      setHeartTimer(120); // always 120 seconds per heart
+      setHeartTimer(120);
     }
   }
 
-  // Heart timer countdown: decrement timer, restore one full heart every 120s
+  // Heart timer countdown: decrement timer, restore one full or half heart
   useEffect(() => {
     if (heartTimer <= 0) return;
     if (hearts >= 3) {
@@ -417,16 +418,26 @@ export default function EnhancedTailwindQuest() {
       setHeartTimer((t) => {
         if (t <= 1) {
           // Add exactly one full heart
+          // Check for half-heart before increment
+          const hadHalf = hearts % 1 !== 0;
           const newHearts = Math.min(3, hearts + 1);
           setHearts(newHearts);
-          // If we're full, stop. Otherwise restart for the next full heart
-          return newHearts >= 3 ? 0 : 120;
+          // Updated logic: half-heart restores are 60s, otherwise 120s, but if full after restore, stop timer.
+          if (hadHalf) {
+            return newHearts >= 3 ? 0 : 60;
+          } else {
+            return newHearts >= 3 ? 0 : 120;
+          }
         }
         return t - 1;
       });
     }, 1000);
     return () => clearInterval(interval);
   }, [heartTimer, hearts]);
+
+  useEffect(() => {
+    if (hearts < 3 && heartTimer === 0) startHeartRestoreTimer();
+  }, [hearts]);
 
   // Override startLevel to prevent starting with 0 hearts
   function startLevel(level: LevelDef) {
@@ -470,12 +481,9 @@ export default function EnhancedTailwindQuest() {
         "Absolute positioning needs relative parent or inset classes"
       );
     }
-    if (
-      classStr.match(/text-\w+-\d+/) &&
-      classStr.match(/bg-\w+-\d+/) &&
-      classStr.includes(classStr.match(/text-(\w+)-\d+/)?.[1] || "") ===
-        classStr.includes(classStr.match(/bg-(\w+)-\d+/)?.[1] || "")
-    ) {
+    const textColorMatch = classStr.match(/text-(\w+)-\d+/);
+    const bgColorMatch = classStr.match(/bg-(\w+)-\d+/);
+    if (textColorMatch && bgColorMatch && textColorMatch[1] === bgColorMatch[1]) {
       errors.push("Consider contrast between text and background colors");
     }
 
@@ -1316,6 +1324,7 @@ function Game({
   setMode?: React.Dispatch<React.SetStateAction<"landing" | "map" | "play" | "events">>;
   heartTimer?: number;
 }) {
+  const [wrongSelections, setWrongSelections] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(level.timeLimit);
   const [hinted, setHinted] = useState(false);
   const [failedPopup, setFailedPopup] = useState(false);
@@ -1326,7 +1335,7 @@ function Game({
 
   useEffect(() => {
     if (timerRef.current) {
-      clearInterval(timerRef.current as any);
+      clearInterval(timerRef.current);
       timerRef.current = null;
     }
     setTimeLeft(level.timeLimit);
@@ -1335,7 +1344,7 @@ function Game({
     }, 1000) as any;
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current as any);
+        clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
@@ -1360,55 +1369,61 @@ function Game({
     if (hasAll && newErrors.length === 0) onWin();
   }, [hasAll, newErrors]);
 
+  // Refactored toggleChip function to avoid setRevealedHints inside setSelection updater
   function toggleChip(c: string): void {
     const isCorrect = level.required.includes(c);
     const alreadySelected = selection.includes(c);
+    const MAX_CORRECT = 3;
 
-    if (alreadySelected) {
-      setSelection((sel: string[]) => sel.filter((x: string) => x !== c));
-      return;
+    if (alreadySelected) return;
+
+    // If correct and not already revealed, update revealedHints first
+    if (isCorrect && !revealedHints.includes(c)) {
+      setRevealedHints((oldHints: string[]) =>
+        oldHints.includes(c) ? oldHints : [...oldHints, c]
+      );
     }
 
-    if (!isCorrect) {
-      // Only show notification and start heart timer ONCE per wrong selection, and only if hearts > 0
-      if (
-        typeof hearts === "number" &&
-        setHearts &&
-        startHeartRestoreTimer &&
-        showNotification &&
-        hearts > 0
-      ) {
-        setHearts((h) => {
-          const newHearts = h - 1;
-          // Clamp to 0, and round to nearest 0.5
-          // Do NOT start additional timers here (let timer logic handle sequentially)
-          return Math.max(0, Math.round(newHearts * 2) / 2);
-        });
+    if (isCorrect) {
+      setSelection((prev: string[]) => {
+        const currentCorrectCount = prev.filter((cls: string) =>
+          level.required.includes(cls)
+        ).length;
+        if (currentCorrectCount >= Math.min(MAX_CORRECT, level.required.length))
+          return prev;
+        if (!prev.includes(c)) {
+          return [...prev, c];
+        }
+        return prev;
+      });
+    } else {
+      if (!wrongSelections.includes(c)) setWrongSelections((prev) => [...prev, c]);
+
+      if (typeof hearts === "number" && setHearts && startHeartRestoreTimer && showNotification) {
+        setHearts((h) => Math.max(0, Math.round((h - 1) * 2) / 2));
         showNotification("You lost a heart!");
         startHeartRestoreTimer();
       }
-      // Unified popup for heart loss or out-of-hearts
+
       setPopupMessage(
         typeof hearts === "number" && hearts <= 1
           ? "You lost your last heart! Play other modes or wait for hearts to restore."
           : "Wrong selection! You lost a heart."
       );
       setFailedPopup(true);
-      return;
     }
 
-    if (selection.length >= level.required.length) return; // Limit by required classes
-
-    const newSelection = [...selection, c];
-    setSelection(newSelection);
-
-    // If user has selected all required correct options, win immediately
-    if (
-      newSelection.length === level.required.length &&
-      level.required.every((r) => newSelection.includes(r))
-    ) {
-      onWin();
-    }
+    setTimeout(() => {
+      // Count correct selections from both selection and revealedHints for all modes
+      const currentClasses = [...selection, ...revealedHints];
+      const correctCount = currentClasses.filter((cls) =>
+        level.required.includes(cls)
+      ).length;
+      const hasAll = correctCount >= Math.min(MAX_CORRECT, level.required.length);
+      const newErrors = onError(currentClasses);
+      setErrors(newErrors);
+      if (hasAll && newErrors.length === 0) onWin();
+    }, 50);
   }
 
   const previewClasses = currentClasses.join(" ") || "text-white p-4";
@@ -1601,21 +1616,28 @@ function Game({
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
                 {level.palette.map((c) => {
-                  const active = selection.includes(c);
                   const isRequired = level.required.includes(c);
+                  const isCorrect = selection.includes(c) || revealedHints.includes(c);
+                  const isWrong = wrongSelections.includes(c);
+
                   return (
                     <motion.button
                       key={c}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => toggleChip(c)}
-                      className={`text-xs px-3 py-2 rounded-xl border transition-all duration-200 ${
-                        active
+                      className={`relative text-xs px-3 py-2 rounded-xl border transition-all duration-200 ${
+                        isCorrect
                           ? "bg-gradient-to-r from-cyan-500/30 to-purple-500/30 border-white/30 shadow-lg"
+                          : isWrong
+                          ? "border-red-500 bg-red-500/10"
                           : "hover:bg-white/10 border-white/15 bg-white/5"
                       } ${isRequired ? "ring-1 ring-green-500/30" : ""}`}
                     >
-                      {active ? "✓ " : ""}
-                      {c}
+                      {isCorrect ? "✓ " : ""}
+                      <span className={isWrong ? "line-through text-red-400" : ""}>{c}</span>
+                      {isWrong && (
+                        <span className="absolute inset-x-2 top-1/2 border-t border-red-500 transform -translate-y-1/2"></span>
+                      )}
                     </motion.button>
                   );
                 })}
@@ -1666,6 +1688,7 @@ function Game({
                 onClick={() => {
                   setSelection([]);
                   setTypedClasses("");
+                  setWrongSelections([]);
                 }}
                 className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200"
               >
@@ -1802,6 +1825,7 @@ function Game({
                     className="px-5 py-2 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-400 hover:to-red-400 transition-all duration-200 text-white shadow-md"
                     onClick={() => {
                       setFailedPopup(false);
+                      setWrongSelections([]);
                       onGiveUp();
                     }}
                   >
