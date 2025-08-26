@@ -333,8 +333,8 @@ export default function Navbar() {
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/10" />
 
                   {[
-                    { href: "/profile", label: "Profile" },
-                    { href: "/settings", label: "Settings" },
+                    { href: "/dashboard", label: "Profile" },
+                    { href: "/dashboard", label: "Settings" },
                     { label: "Logout", isButton: true },
                   ].map((item, idx) => (
                     <div key={idx} className="relative group">
