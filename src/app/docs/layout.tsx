@@ -41,10 +41,12 @@ export default async function Layout({
           {children}
         </div>
 
-        {/* RIGHT SIDEBAR (Table of Contents + Promo) */}
+        {/* RIGHT SIDEBAR */}
         <div className="relative col-start-5 row-span-full row-start-1 max-lg:hidden">
-          <div className="sticky top-16 bottom-0 right-0 h-[calc(100vh-4rem)] overflow-y-auto p-6">
+          <div className="sticky top-16 bottom-0 right-0 h-[calc(100vh-4rem)] overflow-y-auto p-6 space-y-8">
+            {/* Do NOT let the TOC show a fallback promo; it should render nothing when empty */}
             <TableOfContents tableOfContents={[]} />
+            {/* Promo appears only here */}
             <RandomPromo />
           </div>
         </div>

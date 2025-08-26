@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { NavList, NavListHeading, NavListItem, NavListItems, NavListLink } from "./nav-list";
+import {
+  NavList,
+  NavListHeading,
+  NavListItem,
+  NavListItems,
+  NavListLink,
+} from "./nav-list";
 
 export type TOCEntry = {
   level: number;
@@ -10,7 +16,11 @@ export type TOCEntry = {
   children: TOCEntry[];
 };
 
-export default function TableOfContents({ tableOfContents }: { tableOfContents: TOCEntry[] }) {
+export default function TableOfContents({
+  tableOfContents,
+}: {
+  tableOfContents: TOCEntry[];
+}) {
   let [activeSection, setActiveSection] = useState<string | null>(null);
   useEffect(() => {
     const root = document.querySelector('[data-content="true"]');
@@ -20,7 +30,8 @@ export default function TableOfContents({ tableOfContents }: { tableOfContents: 
     let sections: Map<Element, string> = new Map();
     let currentSectionId: string | null = null;
     for (let element of elements) {
-      if (element.id && (element.tagName === "H2" || element.tagName === "H3")) currentSectionId = element.id;
+      if (element.id && (element.tagName === "H2" || element.tagName === "H3"))
+        currentSectionId = element.id;
       if (!currentSectionId) continue;
 
       sections.set(element, `#${currentSectionId}`);
@@ -37,7 +48,9 @@ export default function TableOfContents({ tableOfContents }: { tableOfContents: 
         }
       }
 
-      let firstVisibleSection = Array.from(sections.entries()).find(([element]) => visibleElements.has(element));
+      let firstVisibleSection = Array.from(sections.entries()).find(
+        ([element]) => visibleElements.has(element)
+      );
       if (!firstVisibleSection) return;
       setActiveSection(firstVisibleSection[1]);
     };
@@ -57,14 +70,23 @@ export default function TableOfContents({ tableOfContents }: { tableOfContents: 
       <NavListItems data-toc="true">
         {tableOfContents.map(({ text, slug, children }, i) => (
           <NavListItem key={i}>
-            <NavListLink aria-current={activeSection === slug ? "location" : undefined} href={slug}>
+            <NavListLink
+              aria-current={activeSection === slug ? "location" : undefined}
+              href={slug}
+            >
               {text}
             </NavListLink>
             {children.length > 0 && (
               <NavListItems nested>
                 {children.map(({ text, slug }, i) => (
                   <NavListItem key={i}>
-                    <NavListLink nested aria-current={activeSection === slug ? "location" : undefined} href={slug}>
+                    <NavListLink
+                      nested
+                      aria-current={
+                        activeSection === slug ? "location" : undefined
+                      }
+                      href={slug}
+                    >
                       {text}
                     </NavListLink>
                   </NavListItem>
