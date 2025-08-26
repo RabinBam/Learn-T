@@ -53,16 +53,6 @@ export default async function Layout({
 
         {/* Right border */}
         <div className="col-start-4 row-span-full border-x border-cyan-300/20 bg-[image:repeating-linear-gradient(315deg,rgba(255,255,255,0.05)_0,rgba(255,255,255,0.05)_1px,transparent_0,transparent_50%)] bg-[size:10px_10px] max-lg:hidden" />
-
-        {/* Footer */}
-        <div className="col-span-full col-start-2 h-px bg-white/10" />
-        <div className="row-start-2 lg:col-start-3">
-          <FooterSitemap className="max-w-2xl lg:max-w-5xl" />
-        </div>
-        <div className="col-span-full col-start-2 h-px bg-white/10" />
-        <div className="row-start-3 grid lg:col-start-3">
-          <FooterMeta className="max-w-2xl lg:max-w-5xl" />
-        </div>
       </div>
     </div>
   );

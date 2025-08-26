@@ -11,9 +11,9 @@ import {
 } from "../api";
 
 type Props = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 // ✅ generate static params from docs/*.mdx
@@ -24,8 +24,10 @@ export async function generateStaticParams() {
 
 // ✅ proper metadata
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const sectionAndTitle = await getSectionAndTitleBySlug(params.slug);
-  const post = await getDocPageBySlug(params.slug);
+  const { slug } = await params; // 🔑 await params
+
+  const sectionAndTitle = await getSectionAndTitleBySlug(slug);
+  const post = await getDocPageBySlug(slug);
 
   if (!post) return notFound();
 
@@ -39,14 +41,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description: post.description,
       type: "article",
-      url: `/docs/${params.slug}`,
-      images: [{ url: `/api/og?path=/docs/${params.slug}` }],
+      url: `/docs/${slug}`,
+      images: [{ url: `/api/og?path=/docs/${slug}` }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: post.description,
-      images: [{ url: `/api/og?path=/docs/${params.slug}` }],
+      images: [{ url: `/api/og?path=/docs/${slug}` }],
       site: "@tailwindcss",
       creator: "@tailwindcss",
     },
@@ -54,11 +56,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function DocPage({ params }: Props) {
-  const sectionAndTitle = await getSectionAndTitleBySlug(params.slug);
+  const { slug } = await params; // 🔑 await params
+
+  const sectionAndTitle = await getSectionAndTitleBySlug(slug);
 
   const [post, tableOfContents] = await Promise.all([
-    getDocPageBySlug(params.slug),
-    generateTableOfContents(params.slug),
+    getDocPageBySlug(slug),
+    generateTableOfContents(slug),
   ]);
 
   if (!post) return notFound();
@@ -96,7 +100,7 @@ export default async function DocPage({ params }: Props) {
             <post.Component />
           </div>
 
-          <Pagination slug={params.slug} />
+          <Pagination slug={slug} />
         </div>
 
         <div className="max-xl:hidden">

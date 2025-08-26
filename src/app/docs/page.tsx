@@ -1,111 +1,48 @@
-import Pagination from "@/components/pagination";
-import { RandomPromo } from "@/components/promos";
-import TableOfContents from "@/components/table-of-contents";
-import { notFound } from "next/navigation";
-import { Metadata } from "next/types";
+"use client";
 
-import {
-  generateTableOfContents,
-  getDocPageBySlug,
-  getDocPageSlugs,
-  getSectionAndTitleBySlug,
-} from "./api";
+import { motion } from "framer-motion";
 
-type Props = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
-
-export async function generateStaticParams() {
-  let slugs = await getDocPageSlugs();
-  return slugs.map((slug: string) => ({ slug }));
-}
-
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  let params = await props.params;
-  let sectionAndTitle = await getSectionAndTitleBySlug(params.slug);
-  let post = await getDocPageBySlug(params.slug);
-
-  if (!post) {
-    return notFound();
-  }
-
-  let title = `${post.title} - ${sectionAndTitle?.section ?? ""}`;
-
-  return {
-    metadataBase: new URL("https://tailwindcss.com"),
-    title,
-    description: post.description,
-    openGraph: {
-      title,
-      description: post.description,
-      type: "article",
-      url: `/docs/${params.slug}`,
-      images: [{ url: `/api/og?path=/docs/${params.slug}` }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description: post.description,
-      images: [{ url: `/api/og?path=/docs/${params.slug}` }],
-      site: "@tailwindcss",
-      creator: "@tailwindcss",
-    },
-  };
-}
-
-export default async function DocPage(props: Props) {
-  let params = await props.params;
-
-  let sectionAndTitle = getSectionAndTitleBySlug(params.slug);
-
-  let [post, tableOfContents] = await Promise.all([
-    getDocPageBySlug(params.slug),
-    generateTableOfContents(params.slug),
-  ]);
-
-  if (!post) {
-    return notFound();
-  }
-
+export default function Welcome() {
   return (
-    <>
-      <div hidden />
-      <div className="mx-auto grid w-full max-w-2xl grid-cols-1 gap-10 xl:max-w-5xl xl:grid-cols-[minmax(0,1fr)_var(--container-2xs)]">
-        <div className="px-4 pt-10 pb-24 sm:px-6 xl:pr-0">
-          {sectionAndTitle ? (
-            <p
-              className="flex items-center gap-2 font-mono text-xs/6 font-medium tracking-widest text-gray-600 uppercase dark:text-gray-400"
-              data-section="true"
-            >
-              {sectionAndTitle.section}
-            </p>
-          ) : null}
-          <h1
-            data-title="true"
-            className="mt-2 text-3xl font-medium tracking-tight text-gray-950 dark:text-white"
-          >
-            {post.title}
-          </h1>
-          <p
-            data-description="true"
-            className="mt-6 text-base/7 text-gray-700 dark:text-gray-400"
-          >
-            {post.description}
-          </p>
-          <div className="prose mt-10" data-content="true">
-            <post.Component />
-          </div>
-          <Pagination slug={params.slug} />
-        </div>
-        <div className="max-xl:hidden">
-          <div className="sticky top-14 max-h-[calc(100svh-3.5rem)] overflow-x-hidden px-6 pt-10 pb-24">
-            <TableOfContents tableOfContents={tableOfContents} />
-            <RandomPromo />
-          </div>
-        </div>
-      </div>
-    </>
+    <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center text-center px-4">
+      {/* Animated gradient background */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-purple-800 via-blue-800 to-indigo-900 opacity-30"
+        animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+        transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+        style={{ backgroundSize: "200% 200%" }}
+      />
+
+      {/* Main content */}
+      <motion.h1
+        className="relative text-5xl font-bold tracking-tight text-white drop-shadow-lg sm:text-6xl"
+        initial={{ opacity: 0, y: -40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        Welcome to the Docs 🚀
+      </motion.h1>
+
+      <motion.p
+        className="relative mt-6 max-w-2xl text-lg text-gray-200 sm:text-xl"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
+        Use the <span className="font-semibold text-sky-400">sidebar</span> on
+        the left to explore the documentation and guides.
+      </motion.p>
+
+      {/* Floating callout */}
+      <motion.div
+        className="relative mt-12 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-gray-200 shadow-lg backdrop-blur"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 4, repeat: Infinity }}
+      >
+        <p className="text-sm sm:text-base">
+          👉 Choose a topic from the sidebar to get started
+        </p>
+      </motion.div>
+    </div>
   );
 }
