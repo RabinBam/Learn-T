@@ -14,23 +14,23 @@ export default function TailwindTutorial() {
 
   const tutorials = {
     beginner: [
-      { title: "Include Tailwind CSS", content: `Add Tailwind via CDN in your HTML <head>:\n\n<link href="https://cdn.tailwindcss.com" rel="stylesheet">` },
-      { title: "Basic HTML Structure", content: `Create a basic HTML file:\n\n<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>Tailwind Tutorial</title>\n  <link href="https://cdn.tailwindcss.com" rel="stylesheet">\n</head>\n<body>\n  <h1 class="text-3xl font-bold">Hello Tailwind!</h1>\n</body>\n</html>` },
-      { title: "Utility Classes", content: `Use Tailwind utility classes for styling:\n\n<h2 class="text-blue-500 bg-gray-100 p-4 rounded">This is a styled heading</h2>` },
-      { title: "Responsive Design", content: `Tailwind makes responsive design easy:\n\n<div class="text-base md:text-lg lg:text-xl">Resize the browser to see changes!</div>` },
-      { title: "Testing Tailwind", content: `Open your HTML in a browser and edit classes like:\n\n<h1 class="text-red-500">Red Heading</h1>\n\nIf it changes, Tailwind is working!` },
+      { title: "Include Tailwind CSS", content: `Add Tailwind via CDN in your HTML <head>:\n\n<link href="https://cdn.tailwindcss.com" rel="stylesheet">`, description: "This adds Tailwind CSS to your project using a CDN link in the HTML head." },
+      { title: "Basic HTML Structure", content: `Create a basic HTML file:\n\n<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <title>Tailwind Tutorial</title>\n  <link href="https://cdn.tailwindcss.com" rel="stylesheet">\n</head>\n<body>\n  <h1 class="text-3xl font-bold">Hello Tailwind!</h1>\n</body>\n</html>`, description: "This is a simple HTML file structure with Tailwind CSS included and a styled heading." },
+      { title: "Utility Classes", content: `Use Tailwind utility classes for styling:\n\n<h2 class="text-blue-500 bg-gray-100 p-4 rounded">This is a styled heading</h2>`, description: "Tailwind utility classes apply colors, padding, and rounded corners to elements." },
+      { title: "Responsive Design", content: `Tailwind makes responsive design easy:\n\n<div class="text-base md:text-lg lg:text-xl">Resize the browser to see changes!</div>`, description: "Use responsive prefixes to change text size on different screen widths." },
+      { title: "Testing Tailwind", content: `Open your HTML in a browser and edit classes like:\n\n<h1 class="text-red-500">Red Heading</h1>\n\nIf it changes, Tailwind is working!`, description: "Check if Tailwind is active by changing classes and seeing the effect in the browser." },
     ],
     intermediate: [
-      { title: "Custom Colors", content: `Tailwind CDN allows custom colors via <script>:\n\n<script>\n  tailwind.config = {\n    theme: {\n      extend: {\n        colors: { brandBlue: "#1e40af", brandPink: "#db2777" },\n      },\n    },\n  };\n</script>` },
-      { title: "Custom Fonts", content: `Add Google Fonts in HTML:\n\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">\n<script>\n  tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } };\n</script>\n<p class="font-sans">This uses Inter font</p>` },
-      { title: "Plugins", content: `Some Tailwind plugins also work with CDN. Example: forms plugin:\n<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/forms"></script>\nUse class="form-input" on inputs.` },
-      { title: "Dark Mode", content: `Enable dark mode via class:\n<body class="dark">\n<h1 class="text-white dark:text-black">Dark Mode Example</h1>\n</body>` },
+      { title: "Custom Colors", content: `Tailwind CDN allows custom colors via <script>:\n\n<script>\n  tailwind.config = {\n    theme: {\n      extend: {\n        colors: { brandBlue: "#1e40af", brandPink: "#db2777" },\n      },\n    },\n  };\n</script>`, description: "Add your own colors to Tailwind's configuration using a script tag." },
+      { title: "Custom Fonts", content: `Add Google Fonts in HTML:\n\n<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">\n<script>\n  tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } };\n</script>\n<p class="font-sans">This uses Inter font</p>`, description: "Include a Google Font and configure Tailwind to use it in your project." },
+      { title: "Plugins", content: `Some Tailwind plugins also work with CDN. Example: forms plugin:\n<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/forms"></script>\nUse class="form-input" on inputs.`, description: "Enhance Tailwind with plugins like forms by adding script tags." },
+      { title: "Dark Mode", content: `Enable dark mode via class:\n<body class="dark">\n<h1 class="text-white dark:text-black">Dark Mode Example</h1>\n</body>`, description: "Use the 'dark' class on the body to enable dark mode styles." },
     ],
     expert: [
-      { title: "Arbitrary Values", content: `Tailwind CDN supports arbitrary values:\n\n<div class="bg-[#123456] text-[22px] p-[10px]">Custom colors & size</div>` },
-      { title: "Advanced Responsiveness", content: `Combine responsive and pseudo-class utilities:\n\n<button class="bg-blue-500 hover:bg-blue-700 md:text-xl">Hover & responsive!</button>` },
-      { title: "Theming", content: `You can use multiple themes with JavaScript + Tailwind:\n\n<script>\n  document.body.classList.add('dark');\n</script>` },
-      { title: "Production Optimization", content: `When using CDN for small projects, Tailwind is already optimized.\nFor bigger projects, consider using CLI to purge unused CSS.` },
+      { title: "Arbitrary Values", content: `Tailwind CDN supports arbitrary values:\n\n<div class="bg-[#123456] text-[22px] p-[10px]">Custom colors & size</div>`, description: "Use custom colors and sizes by specifying exact values in square brackets." },
+      { title: "Advanced Responsiveness", content: `Combine responsive and pseudo-class utilities:\n\n<button class="bg-blue-500 hover:bg-blue-700 md:text-xl">Hover & responsive!</button>`, description: "Apply styles based on hover state and screen size together." },
+      { title: "Theming", content: `You can use multiple themes with JavaScript + Tailwind:\n\n<script>\n  document.body.classList.add('dark');\n</script>`, description: "Switch themes dynamically by adding classes with JavaScript." },
+      { title: "Production Optimization", content: `When using CDN for small projects, Tailwind is already optimized.\nFor bigger projects, consider using CLI to purge unused CSS.`, description: "Optimize your CSS for production by removing unused styles." },
     ],
   };
 
@@ -104,7 +104,7 @@ export default function TailwindTutorial() {
   const isExpertCompleted = level === "expert" && step === tutorials.expert.length - 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-purple-900 to-pink-900 text-gray-100 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-r from-indigo-900 via-purple-900 to-blue-900 text-gray-100 flex flex-col items-center justify-center p-8 relative overflow-hidden">
 
       {/* Particle background */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
@@ -120,6 +120,12 @@ export default function TailwindTutorial() {
             }}
           />
         ))}
+
+        {/* Glowing geometric shapes */}
+        <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-blue-500 opacity-30 blur-3xl"></div>
+        <div className="absolute top-1/3 right-20 w-40 h-40 rounded-full bg-gradient-to-br from-purple-600 via-pink-500 to-indigo-600 opacity-20 blur-2xl"></div>
+        <div className="absolute bottom-20 left-1/4 w-24 h-24 rotate-45 bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 opacity-25 blur-2xl rounded-lg"></div>
+        <div className="absolute bottom-10 right-10 w-28 h-28 rounded-full bg-gradient-to-l from-cyan-400 via-blue-500 to-indigo-700 opacity-15 blur-3xl"></div>
       </div>
 
       <style jsx>{`
@@ -133,6 +139,18 @@ export default function TailwindTutorial() {
           animation-timing-function: ease-in-out;
           animation-iteration-count: infinite;
         }
+        .perspective {
+          perspective: 1000px;
+        }
+        .backface-hidden {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          -moz-backface-visibility: hidden;
+          -ms-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+          transform: rotateY(180deg);
+        }
       `}</style>
 
       {/* Popup */}
@@ -140,26 +158,26 @@ export default function TailwindTutorial() {
         <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
           <div className="relative w-96 h-64 perspective">
             <div className={`absolute w-full h-full transition-transform duration-500 ${flipped ? 'rotate-y-180' : ''}`}>
-              <div className="bg-gradient-to-br from-purple-700 via-blue-700 to-pink-600 p-8 rounded-3xl shadow-2xl flex flex-col justify-center items-center h-full text-center backface-hidden">
+              <div className="bg-gradient-to-br from-indigo-700 via-purple-700 to-blue-600 p-8 rounded-3xl shadow-2xl flex flex-col justify-center items-center h-full text-center backface-hidden">
                 <h2 className="text-3xl font-extrabold mb-6 text-yellow-300 flex items-center gap-2">
                   <Sparkles className="animate-pulse" /> Choose Your Tailwind Level
                 </h2>
                 <div className="flex flex-col gap-3 w-full">
                   <button 
                     onClick={() => selectLevel("beginner")} 
-                    className="bg-blue-500 hover:bg-blue-400 py-2 rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
+                    className="bg-gradient-to-r from-blue-500 to-cyan-400 py-2 rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
                   >
                     <Zap size={16} /> Beginner
                   </button>
                   <button 
                     onClick={() => selectLevel("intermediate")} 
-                    className="bg-green-500 hover:bg-green-400 py-2 rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
+                    className="bg-gradient-to-r from-green-500 to-emerald-400 py-2 rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
                   >
                     <Code size={16} /> Intermediate
                   </button>
                   <button 
                     onClick={() => selectLevel("expert")} 
-                    className="bg-purple-500 hover:bg-purple-400 py-2 rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
+                    className="bg-gradient-to-r from-purple-500 to-pink-400 py-2 rounded-lg flex items-center justify-center gap-2 transition-all hover:scale-105"
                   >
                     <Palette size={16} /> Expert
                   </button>
@@ -173,18 +191,17 @@ export default function TailwindTutorial() {
         </div>
       )}
 
-      <h1 className="text-4xl font-extrabold mb-8 z-10 flex items-center gap-2">
+      <h1 className="text-4xl font-extrabold mb-8 z-10 flex items-center gap-2 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
         <Sparkles className="text-yellow-300 animate-pulse" /> Tailwind CSS Learning Path (HTML)
       </h1>
       <a 
-        href="https://tailwindcss.com/docs" 
-        target="_blank" 
+        href="/docs" 
         className="text-blue-400 underline mb-6 z-10 flex items-center gap-1 hover:text-blue-300 transition-colors"
       >
         <BookOpen size={16} /> Visit Official Tailwind Docs
       </a>
 
-     <div className="bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg rounded-2xl p-10 w-full max-w-4xl min-h-[600px] relative z-10 border border-gray-700 flex flex-col justify-between">
+     <div className="bg-gradient-to-br from-indigo-950/80 via-purple-900/70 to-blue-950/80 backdrop-blur-xl border border-indigo-500/20 shadow-lg shadow-indigo-900/40 rounded-2xl p-10 w-full max-w-4xl min-h-[600px] relative z-10 flex flex-col justify-between">
   {/* Header */}
   <div>
     <div className="mb-6 flex justify-between items-center">
@@ -205,33 +222,34 @@ export default function TailwindTutorial() {
       <select
         value={level}
         onChange={handleLevelChange}
-        className="bg-gray-700 text-gray-100 px-4 py-2 rounded-lg"
+        className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-pink-400 transition-all"
       >
-        <option value="beginner">Beginner</option>
-        <option value="intermediate">Intermediate</option>
-        <option value="expert">Expert</option>
+        <option value="beginner" className="bg-gray-800 text-white">Beginner</option>
+        <option value="intermediate" className="bg-gray-800 text-white">Intermediate</option>
+        <option value="expert" className="bg-gray-800 text-white">Expert</option>
       </select>
     </div>
 
     {/* Step Content */}
     <div
-      className={`bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8 rounded-2xl shadow-md mb-6 transition-all duration-300 ${
+      className={`bg-gradient-to-br from-indigo-950/80 via-purple-900/70 to-blue-950/80 backdrop-blur-xl border border-indigo-500/20 shadow-lg shadow-indigo-900/40 p-8 rounded-2xl mb-6 transition-all duration-300 ${
         animateCard
           ? "opacity-0 translate-x-10"
           : "opacity-100 translate-x-0"
-      } border border-gray-700`}
+      }`}
     >
-      <h2 className="text-3xl font-bold mb-6 text-white">{currentStep.title}</h2>
-      <pre className="bg-gray-800 text-green-400 p-6 rounded whitespace-pre-wrap border border-gray-700 text-base leading-relaxed">
+      <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-300 bg-clip-text text-transparent">{currentStep.title}</h2>
+      <pre className="bg-black/40 border border-purple-500/30 rounded-lg backdrop-blur-sm shadow-inner p-6 whitespace-pre-wrap text-green-400 text-base leading-relaxed">
         {currentStep.content}
       </pre>
+      <p className="mt-4 text-gray-300 text-sm leading-relaxed">{currentStep.description}</p>
     </div>
   </div>
 
   {/* Footer Buttons pinned at bottom */}
   <div className="flex justify-between mt-6">
     <button
-      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-500 hover:to-blue-600 disabled:opacity-50 flex items-center gap-2 transition-all hover:scale-105"
+      className="px-6 py-3 bg-gradient-to-r from-sky-600 to-indigo-600 rounded-lg hover:from-sky-500 hover:to-indigo-500 disabled:opacity-50 flex items-center gap-2 transition-all hover:scale-105"
       onClick={handlePrev}
       disabled={step === 0 && level === "beginner"}
     >
@@ -241,13 +259,13 @@ export default function TailwindTutorial() {
     {isExpertCompleted ? (
       <a
         href="/playground"
-        className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg hover:from-yellow-400 hover:to-yellow-500 flex items-center gap-2 transition-all hover:scale-105"
+        className="px-6 py-3 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-lg hover:from-pink-400 hover:via-purple-400 hover:to-indigo-400 flex items-center gap-2 transition-all hover:scale-105"
       >
         <Play size={18} /> Go to Playground
       </a>
     ) : (
       <button
-        className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-500 hover:to-green-600 flex items-center gap-2 transition-all hover:scale-105"
+        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg hover:from-green-400 hover:to-emerald-400 flex items-center gap-2 transition-all hover:scale-105"
         onClick={handleNext}
       >
         Next <ArrowRight size={18} />

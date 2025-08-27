@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { auth, db } from "@/lib/firebase/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  doc,
+  onSnapshot,
+  updateDoc,
+  arrayUnion,
+  serverTimestamp,
+  getDoc,
+} from "firebase/firestore";
 
 interface Achievement {
   id: string;
@@ -9,18 +19,17 @@ interface Achievement {
   description: string;
   icon: string;
   category: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: "common" | "rare" | "epic" | "legendary";
   progress: number;
   maxProgress: number;
   unlocked: boolean;
-  unlockedDate?: Date;
+  unlockedDate?: Date | null;
   xpReward: number;
   gradient: string;
 }
 
 function getAchievementsData(): Achievement[] {
   return [
-    // Beginner Achievements
     {
       id: "first_steps",
       title: "First Steps",
@@ -30,10 +39,10 @@ function getAchievementsData(): Achievement[] {
       rarity: "common",
       progress: 1,
       maxProgress: 1,
-      unlocked: true,
-      unlockedDate: new Date('2024-01-15'),
+      unlocked: false,
+      unlockedDate: null,
       xpReward: 50,
-      gradient: "from-green-400 to-emerald-500"
+      gradient: "from-green-400 to-emerald-500",
     },
     {
       id: "quick_learner",
@@ -44,10 +53,10 @@ function getAchievementsData(): Achievement[] {
       rarity: "common",
       progress: 5,
       maxProgress: 5,
-      unlocked: true,
-      unlockedDate: new Date('2024-01-20'),
+      unlocked: false,
+      unlockedDate: null,
       xpReward: 100,
-      gradient: "from-blue-400 to-cyan-500"
+      gradient: "from-blue-400 to-cyan-500",
     },
     {
       id: "css_warrior",
@@ -59,8 +68,9 @@ function getAchievementsData(): Achievement[] {
       progress: 18,
       maxProgress: 20,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 250,
-      gradient: "from-purple-500 to-pink-500"
+      gradient: "from-purple-500 to-pink-500",
     },
     {
       id: "speed_demon",
@@ -71,10 +81,10 @@ function getAchievementsData(): Achievement[] {
       rarity: "rare",
       progress: 1,
       maxProgress: 1,
-      unlocked: true,
-      unlockedDate: new Date('2024-02-01'),
+      unlocked: false,
+      unlockedDate: null,
       xpReward: 200,
-      gradient: "from-yellow-400 to-orange-500"
+      gradient: "from-yellow-400 to-orange-500",
     },
     {
       id: "perfectionist",
@@ -86,8 +96,9 @@ function getAchievementsData(): Achievement[] {
       progress: 7,
       maxProgress: 10,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 500,
-      gradient: "from-cyan-400 to-blue-600"
+      gradient: "from-cyan-400 to-blue-600",
     },
     {
       id: "marathon_runner",
@@ -99,8 +110,9 @@ function getAchievementsData(): Achievement[] {
       progress: 22,
       maxProgress: 30,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 750,
-      gradient: "from-indigo-500 to-purple-600"
+      gradient: "from-indigo-500 to-purple-600",
     },
     {
       id: "layout_master",
@@ -112,8 +124,9 @@ function getAchievementsData(): Achievement[] {
       progress: 45,
       maxProgress: 50,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 1000,
-      gradient: "from-pink-500 via-purple-500 to-indigo-500"
+      gradient: "from-pink-500 via-purple-500 to-indigo-500",
     },
     {
       id: "animation_wizard",
@@ -125,8 +138,9 @@ function getAchievementsData(): Achievement[] {
       progress: 12,
       maxProgress: 25,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 1200,
-      gradient: "from-emerald-400 via-cyan-500 to-blue-600"
+      gradient: "from-emerald-400 via-cyan-500 to-blue-600",
     },
     {
       id: "community_helper",
@@ -138,8 +152,9 @@ function getAchievementsData(): Achievement[] {
       progress: 35,
       maxProgress: 50,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 300,
-      gradient: "from-rose-400 to-pink-500"
+      gradient: "from-rose-400 to-pink-500",
     },
     {
       id: "streak_master",
@@ -151,8 +166,9 @@ function getAchievementsData(): Achievement[] {
       progress: 65,
       maxProgress: 100,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 2000,
-      gradient: "from-orange-400 via-red-500 to-pink-600"
+      gradient: "from-orange-400 via-red-500 to-pink-600",
     },
     {
       id: "explorer",
@@ -164,8 +180,9 @@ function getAchievementsData(): Achievement[] {
       progress: 8,
       maxProgress: 10,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 150,
-      gradient: "from-teal-400 to-cyan-500"
+      gradient: "from-teal-400 to-cyan-500",
     },
     {
       id: "night_owl",
@@ -177,10 +194,44 @@ function getAchievementsData(): Achievement[] {
       progress: 15,
       maxProgress: 20,
       unlocked: false,
+      unlockedDate: null,
       xpReward: 300,
-      gradient: "from-violet-500 to-purple-600"
-    }
+      gradient: "from-violet-500 to-purple-600",
+    },
   ];
+}
+
+// XP thresholds used to unlock achievements (based on cumulative XP).
+// Adjust values to match the exact experience-to-achievement mapping you want.
+const ACHIEVEMENT_XP_THRESHOLDS: Record<string, number> = {
+  first_steps: 50,
+  quick_learner: 200,
+  css_warrior: 1000,
+  speed_demon: 100, // this is time-based originally; we allow XP fallback
+  perfectionist: 1500,
+  marathon_runner: 3000,
+  layout_master: 8000,
+  animation_wizard: 10000,
+  community_helper: 500,
+  streak_master: 5000,
+  explorer: 250,
+  night_owl: 400,
+};
+
+// compute cumulative total XP from profile fields (profileLevel + xp).
+// Uses initial XP threshold 5000 and multiplier 1.5 per level — matches server scaling.
+function computeTotalXpFromProfile(profile: {
+  profileLevel?: number;
+  xp?: number;
+}) {
+  const initial = 5000;
+  const scale = 1.5;
+  const level = Math.max(1, profile.profileLevel ?? 1);
+  let sum = 0;
+  for (let i = 1; i < level; i++) {
+    sum += Math.floor(initial * Math.pow(scale, i - 1));
+  }
+  return sum + (profile.xp ?? 0);
 }
 
 export default function AchievementsPage() {
@@ -190,39 +241,135 @@ export default function AchievementsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const data = getAchievementsData();
-    setAchievements(data);
+    setAchievements(getAchievementsData());
   }, []);
 
-  const categories = ["All", ...Array.from(new Set(achievements.map(a => a.category)))];
+  useEffect(() => {
+    // Listen for auth + user's profile doc to compute XP and unlock achievements
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // clear local unlocks if signed out
+        setAchievements(getAchievementsData());
+        return;
+      }
+
+      const userDoc = doc(db, "users", user.uid);
+      const unsubSnap = onSnapshot(
+        userDoc,
+        async (snap) => {
+          // load server profile fields
+          const profileData = snap.exists() ? (snap.data() as any) : {};
+          const profileAchievements: string[] = Array.isArray(
+            profileData.achievements
+          )
+            ? profileData.achievements
+            : [];
+
+          const totalXp = computeTotalXpFromProfile({
+            profileLevel: profileData.profileLevel,
+            xp: profileData.xp,
+          });
+
+          // determine which achievements should be unlocked by XP
+          const data = getAchievementsData();
+          const toPersist: string[] = [];
+          const now = new Date();
+
+          const updated = data.map((a) => {
+            const threshold = ACHIEVEMENT_XP_THRESHOLDS[a.id] ?? Infinity;
+            const shouldUnlockByXp = totalXp >= threshold;
+            const alreadyUnlockedInProfile = profileAchievements.includes(a.id);
+            // unlocked if server-profile has it or XP meets threshold
+            const unlocked = alreadyUnlockedInProfile || shouldUnlockByXp;
+
+            if (shouldUnlockByXp && !alreadyUnlockedInProfile) {
+              toPersist.push(a.id);
+            }
+
+            return {
+              ...a,
+              unlocked,
+              unlockedDate: unlocked
+                ? alreadyUnlockedInProfile
+                  ? a.unlockedDate ?? now
+                  : now
+                : null,
+            };
+          });
+
+          setAchievements(updated);
+
+          // persist newly unlocked achievement ids to Firestore (arrayUnion)
+          if (toPersist.length) {
+            try {
+              await updateDoc(userDoc, {
+                achievements: arrayUnion(...toPersist),
+                updatedAt: serverTimestamp(),
+              });
+            } catch (e) {
+              // non-fatal; UI already shows unlocked based on XP
+              console.warn("Failed to persist unlocked achievements:", e);
+            }
+          }
+        },
+        (err) => {
+          console.error("user doc onSnapshot error:", err);
+        }
+      );
+
+      // cleanup snapshot when auth changes
+      return () => unsubSnap();
+    });
+
+    return () => unsubAuth();
+  }, []);
+
+  const categories = [
+    "All",
+    ...Array.from(new Set(achievements.map((a) => a.category))),
+  ];
   const rarities = ["All", "common", "rare", "epic", "legendary"];
 
-  const filteredAchievements = achievements.filter(achievement => {
-    const categoryMatch = selectedCategory === "All" || achievement.category === selectedCategory;
-    const rarityMatch = selectedRarity === "All" || achievement.rarity === selectedRarity;
+  const filteredAchievements = achievements.filter((achievement) => {
+    const categoryMatch =
+      selectedCategory === "All" || achievement.category === selectedCategory;
+    const rarityMatch =
+      selectedRarity === "All" || achievement.rarity === selectedRarity;
     return categoryMatch && rarityMatch;
   });
 
-  const unlockedCount = achievements.filter(a => a.unlocked).length;
-  const totalXpEarned = achievements.filter(a => a.unlocked).reduce((sum, a) => sum + a.xpReward, 0);
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const totalXpEarned = achievements
+    .filter((a) => a.unlocked)
+    .reduce((sum, a) => sum + a.xpReward, 0);
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
-      case 'common': return 'from-gray-400 to-gray-600';
-      case 'rare': return 'from-blue-400 to-blue-600';
-      case 'epic': return 'from-purple-500 to-pink-600';
-      case 'legendary': return 'from-yellow-400 via-orange-500 to-red-500';
-      default: return 'from-gray-400 to-gray-600';
+      case "common":
+        return "from-gray-400 to-gray-600";
+      case "rare":
+        return "from-blue-400 to-blue-600";
+      case "epic":
+        return "from-purple-500 to-pink-600";
+      case "legendary":
+        return "from-yellow-400 via-orange-500 to-red-500";
+      default:
+        return "from-gray-400 to-gray-600";
     }
   };
 
   const getRarityBorder = (rarity: string) => {
     switch (rarity) {
-      case 'common': return 'border-gray-400/50';
-      case 'rare': return 'border-blue-400/50';
-      case 'epic': return 'border-purple-500/50';
-      case 'legendary': return 'border-yellow-400/50 shadow-yellow-400/25';
-      default: return 'border-gray-400/50';
+      case "common":
+        return "border-gray-400/50";
+      case "rare":
+        return "border-blue-400/50";
+      case "epic":
+        return "border-purple-500/50";
+      case "legendary":
+        return "border-yellow-400/50 shadow-yellow-400/25";
+      default:
+        return "border-gray-400/50";
     }
   };
 
@@ -246,8 +393,10 @@ export default function AchievementsPage() {
           <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-300 via-purple-300 to-pink-300 bg-clip-text text-transparent mb-4">
             🏆 Achievements
           </h1>
-          <p className="text-xl text-white/70 mb-8">Celebrate your learning milestones and unlock new challenges</p>
-          
+          <p className="text-xl text-white/70 mb-8">
+            Celebrate your learning milestones and unlock new challenges
+          </p>
+
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="backdrop-blur-xl bg-white/10 rounded-2xl p-6 border border-white/20">
@@ -275,7 +424,7 @@ export default function AchievementsPage() {
         <div className="flex flex-col lg:flex-row gap-6 mb-8 justify-center items-center">
           <div className="flex flex-wrap gap-3">
             <span className="text-white/70 font-medium">Category:</span>
-            {categories.map(category => (
+            {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
@@ -289,10 +438,10 @@ export default function AchievementsPage() {
               </button>
             ))}
           </div>
-          
+
           <div className="flex flex-wrap gap-3">
             <span className="text-white/70 font-medium">Rarity:</span>
-            {rarities.map(rarity => (
+            {rarities.map((rarity) => (
               <button
                 key={rarity}
                 onClick={() => setSelectedRarity(rarity)}
@@ -314,45 +463,59 @@ export default function AchievementsPage() {
             <div
               key={achievement.id}
               className={`backdrop-blur-xl rounded-3xl p-6 border-2 transition-all duration-300 hover:scale-105 relative overflow-hidden ${
-                achievement.unlocked 
-                  ? `bg-white/15 ${getRarityBorder(achievement.rarity)} shadow-lg hover:shadow-2xl` 
+                achievement.unlocked
+                  ? `bg-white/15 ${getRarityBorder(
+                      achievement.rarity
+                    )} shadow-lg hover:shadow-2xl`
                   : "bg-white/5 border-white/10 grayscale hover:grayscale-0"
               }`}
             >
               {/* Rarity Glow Effect for Legendary */}
-              {achievement.rarity === 'legendary' && achievement.unlocked && (
+              {achievement.rarity === "legendary" && achievement.unlocked && (
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-orange-500/10 to-red-500/10 animate-pulse"></div>
               )}
-              
+
               {/* Achievement Icon */}
               <div className="relative z-10">
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${achievement.gradient} flex items-center justify-center text-3xl shadow-lg mb-4 ${
-                  achievement.unlocked ? "animate-pulse" : "opacity-50"
-                }`}>
+                <div
+                  className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${
+                    achievement.gradient
+                  } flex items-center justify-center text-3xl shadow-lg mb-4 ${
+                    achievement.unlocked ? "animate-pulse" : "opacity-50"
+                  }`}
+                >
                   {achievement.icon}
                 </div>
 
                 {/* Achievement Title and Category */}
                 <div className="mb-3">
-                  <h3 className={`text-xl font-bold mb-1 ${
-                    achievement.unlocked 
-                      ? "text-white" 
-                      : "text-white/60"
-                  }`}>
+                  <h3
+                    className={`text-xl font-bold mb-1 ${
+                      achievement.unlocked ? "text-white" : "text-white/60"
+                    }`}
+                  >
                     {achievement.title}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-1 rounded-full bg-gradient-to-r ${getRarityColor(achievement.rarity)} text-white font-semibold uppercase tracking-wide`}>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full bg-gradient-to-r ${getRarityColor(
+                        achievement.rarity
+                      )} text-white font-semibold uppercase tracking-wide`}
+                    >
                       {achievement.rarity}
                     </span>
-                    <span className="text-xs text-white/60">{achievement.category}</span>
+                    <span className="text-xs text-white/60">
+                      {achievement.category}
+                    </span>
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className={`text-sm mb-4 ${
-                  achievement.unlocked ? "text-white/80" : "text-white/50"
-                }`}>
+                <p
+                  className={`text-sm mb-4 ${
+                    achievement.unlocked ? "text-white/80" : "text-white/50"
+                  }`}
+                >
                   {achievement.description}
                 </p>
 
@@ -361,12 +524,19 @@ export default function AchievementsPage() {
                   <div className="mb-4">
                     <div className="flex justify-between text-xs text-white/60 mb-2">
                       <span>Progress</span>
-                      <span>{achievement.progress}/{achievement.maxProgress}</span>
+                      <span>
+                        {achievement.progress}/{achievement.maxProgress}
+                      </span>
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                       <div
                         className={`h-2 rounded-full bg-gradient-to-r ${achievement.gradient} transition-all duration-500`}
-                        style={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
+                        style={{
+                          width: `${
+                            (achievement.progress / achievement.maxProgress) *
+                            100
+                          }%`,
+                        }}
                       ></div>
                     </div>
                   </div>
@@ -376,18 +546,21 @@ export default function AchievementsPage() {
                 <div className="flex justify-between items-center">
                   {achievement.unlocked ? (
                     <div className="text-xs text-green-400 font-medium">
-                      ✅ Unlocked {achievement.unlockedDate?.toLocaleDateString()}
+                      ✅ Unlocked{" "}
+                      {achievement.unlockedDate
+                        ? new Date(
+                            achievement.unlockedDate
+                          ).toLocaleDateString()
+                        : ""}
                     </div>
                   ) : (
-                    <div className="text-xs text-white/50">
-                      🔒 Locked
-                    </div>
+                    <div className="text-xs text-white/50">🔒 Locked</div>
                   )}
-                  <div className={`text-xs font-bold ${
-                    achievement.unlocked 
-                      ? "text-yellow-400" 
-                      : "text-white/50"
-                  }`}>
+                  <div
+                    className={`text-xs font-bold ${
+                      achievement.unlocked ? "text-yellow-400" : "text-white/50"
+                    }`}
+                  >
                     +{achievement.xpReward} XP
                   </div>
                 </div>
@@ -400,15 +573,19 @@ export default function AchievementsPage() {
         {filteredAchievements.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold text-white/80 mb-2">No achievements found</h3>
-            <p className="text-white/60">Try adjusting your filters to see more achievements</p>
+            <h3 className="text-2xl font-bold text-white/80 mb-2">
+              No achievements found
+            </h3>
+            <p className="text-white/60">
+              Try adjusting your filters to see more achievements
+            </p>
           </div>
         )}
 
         {/* Back Button */}
         <div className="flex justify-center mt-12">
-          <button 
-            onClick={() => router.push("/dashboard")} 
+          <button
+            onClick={() => router.push("/dashboard")}
             className="backdrop-blur-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl px-8 py-4 border border-white/20 hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-300 hover:scale-105 group"
           >
             <div className="flex items-center gap-3">
@@ -416,7 +593,9 @@ export default function AchievementsPage() {
                 ←
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-semibold text-white">Back to Dashboard</h4>
+                <h4 className="text-lg font-semibold text-white">
+                  Back to Dashboard
+                </h4>
                 <p className="text-white/60 text-sm">Return to your profile</p>
               </div>
             </div>

@@ -10,9 +10,10 @@ import { Oxanium } from "next/font/google";
 const oxanium = Oxanium({ subsets: ["latin"], weight: ["400", "600", "700"] });
 
 const NAV_LINKS = [
-  { href: "/aboutus", label: "About Us", icon: "/icons/info.svg" },
   { href: "/docs", label: "Learning", icon: "/icons/book.svg" },
   { href: "/options", label: "Playground", icon: "/icons/gamepad.svg" },
+  { href: "/events", label: "Events", icon: "/icons/event.svg" },
+  { href: "/aboutus", label: "About Us", icon: "/icons/info.svg" },
   { href: "/contactus", label: "Contact Us", icon: "/icons/envelope.svg" },
 ];
 
@@ -225,7 +226,7 @@ export default function Navbar() {
           </Link>
 
           {/* Compact Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center space-x-1 ml-auto pl-8">
             {NAV_LINKS.map((link, idx) => {
               const isActive = pathname === link.href;
               return (

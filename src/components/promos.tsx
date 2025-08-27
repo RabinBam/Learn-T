@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, type ReactElement } from "react";
 import bookPromo from "./book-promo.jpg";
-import coursePromo from "./course-promo.jpg";
+import coursePromo from "./course-promo.jpg.webp";
 // import LinkButton from "./home/link-button";
 
 import clsx from "clsx";

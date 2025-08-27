@@ -6,10 +6,12 @@ import {
   removeAvatar,
   UserProfile,
 } from "@/services/profile";
-import { auth } from "@/lib/firebase/firebase";
+import { auth, db } from "@/lib/firebase/firebase";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
 
 // Default avatar component - a nice geometric pattern
 const DefaultAvatar = ({
@@ -60,22 +62,8 @@ const DefaultAvatar = ({
   );
 };
 
-// User data interface
+// Use the same UserProfile type
 type User = UserProfile;
-
-function getUserData(): User {
-  return {
-    name: "PlayerOne",
-    level: 15,
-    xp: 3500,
-    nextLevelXp: 5000,
-    gamesPlayed: 120,
-    wins: 85,
-    losses: 35,
-    avatar: null, // Changed to null to indicate no custom avatar set
-    bio: "",
-  };
-}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -85,16 +73,45 @@ export default function ProfilePage() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    const firebaseUser = auth.currentUser;
-    if (!firebaseUser) return;
+    let unsubSnapshot: (() => void) | null = null;
+    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
+      // signed out -> clear UI
+      if (!firebaseUser) {
+        setUser(null);
+        if (unsubSnapshot) {
+          unsubSnapshot();
+          unsubSnapshot = null;
+        }
+        return;
+      }
 
-    getOrCreateProfile(firebaseUser.uid).then((profile) => {
-      setUser(profile);
+      // start listening to user's doc so dashboard reacts to remote updates
+      const userDoc = doc(db, "users", firebaseUser.uid);
+      unsubSnapshot = onSnapshot(
+        userDoc,
+        (snap) => {
+          if (!snap.exists()) {
+            // create and load default profile if missing
+            getOrCreateProfile(firebaseUser.uid).then((profile) => {
+              setUser({ ...profile, avatar: profile.avatar ?? "" });
+            });
+            return;
+          }
+          const profile = snap.data() as User;
+          // ensure avatar is string
+          setUser({ ...profile, avatar: profile.avatar ?? "" });
+        },
+        (err) => {
+          console.error("User doc snapshot error:", err);
+        }
+      );
     });
-  }, []);
 
-  // TODO: Add Firebase update calls when user state changes if needed
-  // For now, no persistence
+    return () => {
+      unsubAuth();
+      if (unsubSnapshot) unsubSnapshot();
+    };
+  }, []);
 
   if (!user)
     return (
@@ -103,10 +120,16 @@ export default function ProfilePage() {
       </div>
     );
 
-  const winRate = ((user.wins / user.gamesPlayed) * 100).toFixed(1);
-  const xpProgress = (user.xp / user.nextLevelXp) * 100;
+  // safe computations
+  const winRate = user.gamesPlayed
+    ? ((user.wins / user.gamesPlayed) * 100).toFixed(1)
+    : "0.0";
+  const xpProgress = user.nextLevelXp ? (user.xp / user.nextLevelXp) * 100 : 0;
 
-  const handleInputChange = (field: keyof User, value: string | number) => {
+  const handleInputChange = (
+    field: keyof UserProfile,
+    value: string | number
+  ) => {
     setUser((prevUser: User | null) => {
       if (!prevUser) return null;
       return {
@@ -125,7 +148,7 @@ export default function ProfilePage() {
     if (file && auth.currentUser) {
       // upload to Firebase Storage
       uploadAvatar(auth.currentUser.uid, file).then((url) => {
-        setUser((prev) => (prev ? { ...prev, avatar: url } : null));
+        setUser((prev) => (prev ? { ...prev, avatar: url ?? "" } : null));
         setIsEditingAvatar(false);
       });
     }
@@ -134,7 +157,8 @@ export default function ProfilePage() {
   const handleRemoveAvatar = () => {
     if (auth.currentUser) {
       removeAvatar(auth.currentUser.uid).then(() => {
-        setUser((prev) => (prev ? { ...prev, avatar: null } : null));
+        // set avatar to empty string to match UserProfile.avatar:string
+        setUser((prev) => (prev ? { ...prev, avatar: "" } : null));
         setIsEditingAvatar(false);
       });
     }
@@ -142,7 +166,6 @@ export default function ProfilePage() {
 
   const handleEditToggle = () => {
     setIsEditMode(!isEditMode);
-    // Reset editing states when exiting edit mode
     if (isEditMode) {
       setIsEditingName(false);
       setIsEditingAvatar(false);
@@ -272,9 +295,11 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Level Badge */}
+          {/* Level Badge - use currentLevel */}
           <div className="mt-3 px-6 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full shadow-lg">
-            <p className="text-sm font-bold text-white">Level {user.level}</p>
+            <p className="text-sm font-bold text-white">
+              Stage {user.currentLevel}
+            </p>
           </div>
 
           {/* Bio Section */}
@@ -419,7 +444,10 @@ export default function ProfilePage() {
                   Experience Progress
                 </h3>
                 <p className="text-white/60">
-                  Level {user.level} → Level {user.level + 1}
+                  XP Level {user.profileLevel} → {user.profileLevel + 1}
+                </p>
+                <p className="text-white/60">
+                  Stage Progress: {user.currentLevel}
                 </p>
               </div>
             </div>
@@ -452,7 +480,7 @@ export default function ProfilePage() {
                 <span className="font-semibold">
                   {user.nextLevelXp - user.xp} XP
                 </span>{" "}
-                needed to reach Level {user.level + 1}
+                needed to reach XP Level {user.profileLevel + 1}
               </p>
             </div>
           </div>

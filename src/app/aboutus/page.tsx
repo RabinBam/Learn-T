@@ -17,36 +17,49 @@ export default function AboutPage() {
   const connectionLinesRef = useRef<SVGPathElement[]>([]);
   const teamSectionRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const [particles, setParticles] = useState<{top:string, left:string, duration:string, delay:string}[]>([]);
+
+  useEffect(() => {
+    // Only generate particles on the client
+    const generated = Array.from({ length: 25 }).map(() => ({
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      duration: `${5 + Math.random() * 5}s`,
+      delay: `${Math.random() * 5}s`,
+    }));
+    setParticles(generated);
+  }, []);
+  const lineOffsetRef = useRef(0); // keeps current offset
 
   const members: TeamMember[] = [
     {
       name: "Rabin Bam",
       role: "Leader",
-      img: "/assets/img/Rabin.jpg",
+      img: "/icons/Rabin.jpg",
       bio: "There's only one way to live life, and that's without regrets. So I don't want regret not learning it.",
     },
     {
       name: "Sachin",
       role: "Lead Designer",
-      img: "/assets/img/Sachin.jpg",
+      img: "/icons/Sachin.jpg",
       bio: "Learning is boaring without a challenge. So I will change the way how you look at learning.",
     },
     {
       name: "Roshit Lamichanne",
       role: "Animation and Creative Director",
-      img: "/assets/img/Roshit.jpg",
+      img: "/icons/Roshit.jpg",
       bio: "It does not feel real when its not moving. So I will make it move.",
     },
     {
       name: "Oscar",
       role: "Tester and Developer",
-      img: "/assets/img/Oscar.jpg",
+      img: "/icons/oscar.jpg",
       bio: "I hate bug and I will squash them all. So I will make sure everything works as expected.",
     },
     {
       name: "Sanskar",
       role: "Logic and Asset creator",
-      img: "/assets/img/Sanskar.jpg",
+      img: "/icons/Sanskar.jpg",
       bio: "I prefer logic over design and Asset over woman. So I will make sure everything is logical and assets are ready.",
     },
   ];
@@ -58,6 +71,7 @@ export default function AboutPage() {
   };
 
   useEffect(() => {
+    requestAnimationFrame(updateLineDrawing);
     const handleScroll = () => {
       if (!teamSectionRef.current) return;
 
@@ -94,16 +108,14 @@ export default function AboutPage() {
     if (!teamSectionRef.current || !svgRef.current) return;
 
     const cardWidth = 520;
-    const sideMargin = 80;
     const verticalSpacing = 280;
-    
+    const sideMargin = 80;
+
     // Determine side (left/right)
     const side = index % 2 === 0 ? "left" : "right";
-    // x position depends on side
     const xPos = side === "left"
       ? sideMargin
       : window.innerWidth - cardWidth - sideMargin;
-    // y position grows with index
     const yPos = index * verticalSpacing + 50;
 
     // Create card element
@@ -132,73 +144,80 @@ export default function AboutPage() {
     // Animate drop with bounce
     setTimeout(() => {
       card.classList.add("show");
+
       // Expand content after drop animation
       setTimeout(() => {
         card.classList.add("expanded");
-      }, 1100);
+
+        // Create straight dotted connection line after animation
+        if (index > 0) {
+          const prevCard = dropCardsRef.current[index - 1];
+          if (!prevCard || !svgRef.current) return;
+
+          const prevRect = prevCard.getBoundingClientRect();
+          const currRect = card.getBoundingClientRect();
+          const svgRect = svgRef.current.getBoundingClientRect();
+
+          // Use vertical center of each card for line alignment
+          const centerOffsetYPrev = prevRect.height / 2;
+          const centerOffsetYCurr = currRect.height / 2;
+
+          const x1 = prevRect.left + prevRect.width / 2 - svgRect.left;
+          const y1 = prevRect.top + centerOffsetYPrev - svgRect.top;
+          const x2 = currRect.left + currRect.width / 2 - svgRect.left;
+          const y2 = currRect.top + centerOffsetYCurr - svgRect.top;
+
+          const line = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          line.setAttribute("x1", x1.toString());
+          line.setAttribute("y1", y1.toString());
+          line.setAttribute("x2", x2.toString());
+          line.setAttribute("y2", y2.toString());
+          line.classList.add("connection-line"); // uses flowing dotted CSS
+
+          svgRef.current.appendChild(line);
+          connectionLinesRef.current.push(line);
+        }
+      }, 600);
     }, 50);
-
-    // Create connection line if not the first card
-    if (index > 0) {
-      const prevCard = dropCardsRef.current[index - 1];
-      if (!prevCard) return;
-
-      // Use getBoundingClientRect for precise positioning relative to viewport + scroll offset
-      const prevRect = prevCard.getBoundingClientRect();
-      const currRect = card.getBoundingClientRect();
-
-      // Calculate line start (bottom center of previous card, relative to svg container)
-      const svgRect = svgRef.current.getBoundingClientRect();
-      const prevX = prevRect.left + prevRect.width / 2 - svgRect.left;
-      const prevY = prevRect.top + prevRect.height - svgRect.top;
-
-      // Calculate line end (top center of current card)
-      const currX = currRect.left + currRect.width / 2 - svgRect.left;
-      const currY = currRect.top - svgRect.top;
-
-      // Create cubic bezier path for smooth curve
-      const controlYOffset = 80;
-      const d = `M${prevX},${prevY} C${prevX},${
-        prevY + controlYOffset
-      } ${currX},${currY - controlYOffset} ${currX},${currY}`;
-
-      const path = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "path"
-      );
-      path.setAttribute("d", d);
-      path.classList.add("connection-line");
-      path.style.strokeDashoffset = path.getTotalLength().toString(); // Hide initially
-
-      svgRef.current.appendChild(path);
-      connectionLinesRef.current.push(path);
-    }
   };
 
   const updateLineDrawing = () => {
     if (!connectionLinesRef.current.length) return;
 
     const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
 
-    connectionLinesRef.current.forEach((path) => {
-      const length = path.getTotalLength();
-      const startY = parseFloat(path.getAttribute('d')?.split(' ')[1] || '0');
-      const endY = parseFloat(path.getAttribute('d')?.split(' ')[8] || '0');
+    // Target offset based on scroll
+    const targetOffset = scrollY % 16; // 16 = dash + gap
+    // Smoothly interpolate
+    lineOffsetRef.current += (targetOffset - lineOffsetRef.current) * 0.1;
 
-      // Animate line drawing between startY-windowHeight and endY-100
-      const startScroll = startY - windowHeight + 100;
-      const endScroll = endY - 100;
-
-      let progress = (scrollY - startScroll) / (endScroll - startScroll);
-      progress = Math.min(Math.max(progress, 0), 1);
-
-      path.style.strokeDashoffset = (length * (1 - progress)).toString();
+    connectionLinesRef.current.forEach((line) => {
+      line.style.strokeDashoffset = lineOffsetRef.current.toString();
     });
+
+    requestAnimationFrame(updateLineDrawing); // continue animation
   };
 
   return (
     <div className="min-h-screen">
+      {/* Particle background */}
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
+        {particles.map((p, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-yellow-400 rounded-full animate-float"
+            style={{
+              top: p.top,
+              left: p.left,
+              animationDuration: p.duration,
+              animationDelay: p.delay,
+            }}
+          />
+        ))}
+      </div>
       {/* Page Header */}
       <header className="page-header">
         <h1 className="text-4xl md:text-5xl font-bold">Our Amazing Team</h1>
@@ -247,15 +266,22 @@ export default function AboutPage() {
         </section>
 
         {/* Team reveal section */}
-        <section className="team-section" ref={teamSectionRef}>
           <h2 className="section-title">Meet Our Team</h2>
+        <section className="team-section" ref={teamSectionRef}>
           {/* Drop Zone */}
-          <div id="team" className="relative min-h-[1500px]">
+          <div id="team" className="relative min-h-[1400px]">
             <svg
               ref={svgRef}
               id="connection-svg"
               className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            ></svg>
+            >
+              <defs>
+                <linearGradient id="gradientStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#06b6d4" />
+                  <stop offset="100%" stopColor="#0284c7" />
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
         </section>
 
@@ -278,14 +304,40 @@ export default function AboutPage() {
         body {
           margin: 0;
           font-family: "Poppins", sans-serif;
-          background-color: #f0f9ff;
+          background: linear-gradient(
+            to bottom right, 
+            #4c1d95,   /* purple-900 */
+            #1e3a8a,   /* blue-900 */
+            #3730a3    /* indigo-900 */
+          );
           color: #333;
           overflow-x: hidden;
         }
 
+        /* particles background */
+        @keyframes float {
+          0% {
+            transform: translateY(0px);
+            opacity: 0.7;
+          }
+          50% {
+            transform: translateY(-20px);
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateY(0px);
+            opacity: 0.7;
+          }
+        }
+
+        .animate-float {
+          animation-name: float;
+          animation-timing-function: ease-in-out;
+          animation-iteration-count: infinite;
+        }
+
         /* Header section */
         .page-header {
-          background: linear-gradient(120deg, #0284c7, #06b6d4);
           color: white;
           text-align: center;
           padding: 5rem 1rem;
@@ -300,11 +352,6 @@ export default function AboutPage() {
           left: 0;
           width: 100%;
           height: 100%;
-          background: radial-gradient(
-            circle at 20% 30%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 60%
-          );
         }
 
         .tagline {
@@ -321,10 +368,10 @@ export default function AboutPage() {
           flex-wrap: wrap;
           gap: 3rem;
           padding: 4rem 2rem;
-          background: white;
+          background: rgba(30, 41, 59, 0.8);
           align-items: center;
           justify-content: center;
-          max-width: 1200px;
+          max-width: 1300px;
           margin: -3rem auto 0;
           border-radius: 16px;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
@@ -359,7 +406,7 @@ export default function AboutPage() {
         .about-text p {
           line-height: 1.8;
           margin-bottom: 1.5rem;
-          color: #444;
+          color: white;
         }
 
         .read-more-btn {
@@ -397,16 +444,15 @@ export default function AboutPage() {
         .team-section {
           position: relative;
           min-height: 100vh;
-          background: #f0f9ff;
           padding: 4rem 2rem 0;
           overflow: hidden;
         }
 
         .section-title {
           text-align: center;
-          color: #0284c7;
+          color: white;
           font-size: 2.5rem;
-          margin-bottom: 3rem;
+          margin: 3rem;
           position: relative;
         }
 
@@ -424,49 +470,33 @@ export default function AboutPage() {
 
         /* Mission section */
         .mission {
-          padding: 6rem 2rem;
-          background: linear-gradient(135deg, #0284c7, #06b6d4);
-          color: white;
-          text-align: center;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 3rem;
+          padding: 4rem 2rem;
+          background: rgba(30, 41, 59, 0.8);
+          align-items: center;
+          justify-content: center;
+          max-width: 1300px;
+          margin: 4rem auto 0; /* place at end with some spacing */
+          border-radius: 16px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
           position: relative;
+          z-index: 2;
+          text-align: center; /* optional for content */
+          flex-direction: column; /* stack content vertically */
         }
-
-        .mission::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%230284c7' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
-          opacity: 0.3;
-        }
-
         .mission h2 {
+          width: 100%;
           font-size: 2.5rem;
-          margin-bottom: 1.5rem;
-          position: relative;
-          display: inline-block;
+          margin-bottom: 2rem;
+          color: white;
         }
-
-        .mission h2::after {
-          content: "";
-          position: absolute;
-          bottom: -15px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 80px;
-          height: 4px;
-          background: white;
-          border-radius: 2px;
-        }
-
         .mission p {
-          font-size: 1.3rem;
-          max-width: 700px;
-          margin: 2rem auto 0;
+          max-width: 800px;
           line-height: 1.8;
-          font-weight: 300;
+          font-size: 1.2rem;
+          color: white;
         }
 
         /* Animation background for team section */
@@ -494,10 +524,10 @@ export default function AboutPage() {
           position: absolute;
           width: 520px;
           min-height: 260px;
-          background: linear-gradient(135deg, #ffffff, #f0f9ff);
+          background: rgba(30, 41, 59, 1);
           border-radius: 1.5rem;
           box-shadow: 0 10px 30px rgba(2, 132, 199, 0.3);
-          color: #0c4a6e;
+          color: #ffffffff;
           font-family: "Poppins", sans-serif;
           opacity: 0;
           transform-origin: center top;
@@ -548,17 +578,17 @@ export default function AboutPage() {
           font-size: 1.8rem;
           font-weight: 700;
           margin: 0;
-          color: #0c4a6e;
+          color: #ffffffff;
         }
         .drop-card p.role {
-          color: #0284c7;
+          color: #ffffffff;
           margin: 0.3rem 0 1rem 0;
           font-weight: 600;
           font-size: 1.1rem;
           font-style: italic;
         }
         .drop-card p.bio {
-          color: #334155;
+          color: #ffffffff;
           font-size: 1rem;
           line-height: 1.4;
           margin: 0;
@@ -575,12 +605,11 @@ export default function AboutPage() {
         .connection-line {
           stroke: #06b6d4;
           stroke-width: 3;
-          stroke-dasharray: 200;
-          stroke-dashoffset: 200; /* hide initially */
           fill: none;
-          opacity: 1;
-          transition: opacity 0.3s ease;
-          filter: drop-shadow(0 0 3px rgba(2, 132, 199, 0.2));
+          stroke-dasharray: 8 8; /* makes it dotted */
+          stroke-dashoffset: 0; /* initial offset */
+          transition: stroke-dashoffset 0.1s linear; /* smooth update on scroll */
+          filter: drop-shadow(0 0 3px rgba(2, 132, 199, 0.3));
         }
 
         /* Keyframes */

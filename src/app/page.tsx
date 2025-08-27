@@ -4,15 +4,17 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const [user] = useAuthState(auth);
   const [isOpen, setIsOpen] = useState(false); // keep modal for fallback
   const [isLogin, setIsLogin] = useState(true);
+  const router = useRouter();
 
   // Simulate navigation
   const navigate = (path: string) => {
-    console.log(`Navigating to ${path}`);
+    router.push(path);
   };
 
   const handleAction = (path: string) => {
@@ -58,7 +60,7 @@ export default function HomePage() {
         <motion.div
           className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl shadow-xl hover:shadow-2xl transition cursor-pointer"
           whileHover={{ scale: 1.02 }}
-          onClick={() => handleAction("/play")}
+          onClick={() => handleAction("/options")}
         >
           <h2 className="text-2xl font-bold text-pink-400 mb-3">
             Play by Learning
@@ -67,7 +69,10 @@ export default function HomePage() {
             Practice Tailwind by solving quests, earn points, and level up while
             enjoying the game-like experience.
           </p>
-          <button className="px-6 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-semibold shadow hover:scale-105 transition">
+          <button
+            onClick={() => handleAction("/options")}
+            className="px-6 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl font-semibold shadow hover:scale-105 transition"
+          >
             Start Playing
           </button>
         </motion.div>
