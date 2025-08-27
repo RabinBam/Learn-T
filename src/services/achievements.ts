@@ -1,5 +1,5 @@
 // src/services/achievements.ts
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 export type Achievement = {

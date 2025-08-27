@@ -2,11 +2,13 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 export default function HomePage() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [user] = useAuthState(auth);
+  const [isOpen, setIsOpen] = useState(false); // keep modal for fallback
   const [isLogin, setIsLogin] = useState(true);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Simulate navigation
   const navigate = (path: string) => {
@@ -14,9 +16,9 @@ export default function HomePage() {
   };
 
   const handleAction = (path: string) => {
-    if (!isLoggedIn) {
-      setIsOpen(true); // Open login/signup modal
-      setIsLogin(true);
+    if (!user) {
+      // either show modal or directly call Google Sign In
+      setIsOpen(true);
       return;
     }
     navigate(path);
@@ -24,8 +26,7 @@ export default function HomePage() {
 
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login/signup success
-    setIsLoggedIn(true);
+    // if you want email/password auth, hook it here
     setIsOpen(false);
   };
 
@@ -88,8 +89,41 @@ export default function HomePage() {
         </motion.div>
       </div>
 
-      {/* Auth Dialog */}
-      {isOpen && (
+      {/* Auth Section */}
+      <div className="mt-10 flex flex-col items-center">
+        {!user ? (
+          <>
+            <button
+              onClick={signInWithGoogle}
+              className="px-6 py-2 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-xl font-semibold shadow hover:scale-105 transition"
+            >
+              Sign in with Google
+            </button>
+            <p className="text-sm text-gray-400 mt-3">
+              Or{" "}
+              <button
+                onClick={() => setIsOpen(true)}
+                className="text-pink-400 hover:underline"
+              >
+                Login with Email
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-lg mb-2">Welcome, {user.displayName}</p>
+            <button
+              onClick={signOutUser}
+              className="px-6 py-2 bg-red-500 rounded-xl font-semibold shadow hover:scale-105 transition"
+            >
+              Sign Out
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Auth Modal (only if using email/password) */}
+      {isOpen && !user && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <motion.div
             className="bg-gray-900 p-8 rounded-2xl w-full max-w-md shadow-2xl"

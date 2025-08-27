@@ -1,8 +1,14 @@
-// Client-side Firebase initialization (modular SDK)
-// No UI code here; safe to import in client components.
+// firebase.ts
 
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut, User } from "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+  User,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -24,13 +30,29 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+const provider = new GoogleAuthProvider();
+let popupInProgress = false;
+
 export async function signInWithGoogle() {
-  const provider = new GoogleAuthProvider();
-  return signInWithPopup(auth, provider);
+  if (popupInProgress) return; // prevent multiple popups
+  popupInProgress = true;
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (error: any) {
+    if (error.code === "auth/popup-closed-by-user") {
+      console.warn("User closed the login popup.");
+    } else if (error.code === "auth/cancelled-popup-request") {
+      console.warn("Cancelled because another popup was already open.");
+    } else {
+      console.error("Login error:", error);
+    }
+  } finally {
+    popupInProgress = false;
+  }
 }
 
 export async function signOutUser() {
-  return signOut(auth);
+  await signOut(auth);
 }
 
 export function watchAuth(callback: (user: User | null) => void) {

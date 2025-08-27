@@ -1,11 +1,24 @@
 "use client";
-
+import {
+  getOrCreateProfile,
+  updateProfileField,
+  uploadAvatar,
+  removeAvatar,
+  UserProfile,
+} from "@/services/profile";
+import { auth } from "@/lib/firebase/firebase";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 // Default avatar component - a nice geometric pattern
-const DefaultAvatar = ({ name, size = 160 }: { name: string; size?: number }) => {
+const DefaultAvatar = ({
+  name,
+  size = 160,
+}: {
+  name: string;
+  size?: number;
+}) => {
   // Generate a consistent color based on the name
   const getColorFromName = (name: string): string => {
     let hash = 0;
@@ -18,14 +31,14 @@ const DefaultAvatar = ({ name, size = 160 }: { name: string; size?: number }) =>
 
   const backgroundColor = getColorFromName(name);
   const initials = name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 
   return (
-    <div 
+    <div
       className="w-full h-full rounded-full flex items-center justify-center text-white font-bold relative overflow-hidden"
       style={{ backgroundColor }}
     >
@@ -35,9 +48,12 @@ const DefaultAvatar = ({ name, size = 160 }: { name: string; size?: number }) =>
         <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-white/30 rounded-full"></div>
         <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-white/40 rounded-full"></div>
       </div>
-      
+
       {/* Initials */}
-      <span style={{ fontSize: size * 0.35 }} className="relative z-10 font-black">
+      <span
+        style={{ fontSize: size * 0.35 }}
+        className="relative z-10 font-black"
+      >
         {initials}
       </span>
     </div>
@@ -45,17 +61,7 @@ const DefaultAvatar = ({ name, size = 160 }: { name: string; size?: number }) =>
 };
 
 // User data interface
-interface User {
-  name: string;
-  level: number;
-  xp: number;
-  nextLevelXp: number;
-  gamesPlayed: number;
-  wins: number;
-  losses: number;
-  avatar: string | null;
-  bio: string;
-}
+type User = UserProfile;
 
 function getUserData(): User {
   return {
@@ -79,20 +85,23 @@ export default function ProfilePage() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    // TODO: Fetch user data from Firebase here and setUser with the result
-    // For now, use default data
-    const data = getUserData();
-    setUser(data);
+    const firebaseUser = auth.currentUser;
+    if (!firebaseUser) return;
+
+    getOrCreateProfile(firebaseUser.uid).then((profile) => {
+      setUser(profile);
+    });
   }, []);
 
   // TODO: Add Firebase update calls when user state changes if needed
   // For now, no persistence
 
-  if (!user) return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-      <div className="text-center text-white text-xl">Loading...</div>
-    </div>
-  );
+  if (!user)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center text-white text-xl">Loading...</div>
+      </div>
+    );
 
   const winRate = ((user.wins / user.gamesPlayed) * 100).toFixed(1);
   const xpProgress = (user.xp / user.nextLevelXp) * 100;
@@ -105,38 +114,30 @@ export default function ProfilePage() {
         [field]: value,
       };
     });
-    // TODO: Update user field in Firebase here
+
+    if (auth.currentUser) {
+      updateProfileField(auth.currentUser.uid, field, value as any);
+    }
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUser((prevUser: User | null) => {
-          if (!prevUser) return null;
-          return {
-            ...prevUser,
-            avatar: reader.result as string,
-          };
-        });
+    if (file && auth.currentUser) {
+      // upload to Firebase Storage
+      uploadAvatar(auth.currentUser.uid, file).then((url) => {
+        setUser((prev) => (prev ? { ...prev, avatar: url } : null));
         setIsEditingAvatar(false);
-        // TODO: Update avatar in Firebase here
-      };
-      reader.readAsDataURL(file);
+      });
     }
   };
 
   const handleRemoveAvatar = () => {
-    setUser((prevUser: User | null) => {
-      if (!prevUser) return null;
-      return {
-        ...prevUser,
-        avatar: null, // Set to null to show default avatar
-      };
-    });
-    setIsEditingAvatar(false);
-    // TODO: Update avatar removal in Firebase here
+    if (auth.currentUser) {
+      removeAvatar(auth.currentUser.uid).then(() => {
+        setUser((prev) => (prev ? { ...prev, avatar: null } : null));
+        setIsEditingAvatar(false);
+      });
+    }
   };
 
   const handleEditToggle = () => {
@@ -167,8 +168,8 @@ export default function ProfilePage() {
           <button
             onClick={handleEditToggle}
             className={`absolute top-6 right-6 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
-              isEditMode 
-                ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg hover:shadow-green-400/25" 
+              isEditMode
+                ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg hover:shadow-green-400/25"
                 : "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-purple-500/25"
             } hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50`}
             aria-label={isEditMode ? "Exit edit mode" : "Enter edit mode"}
@@ -282,7 +283,9 @@ export default function ProfilePage() {
             onChange={(e) => handleInputChange("bio", e.target.value)}
             placeholder="Tell us about yourself..."
             className={`mt-6 w-full bg-white/10 backdrop-blur rounded-xl p-4 text-white resize-none border border-white/20 transition-all duration-300 ${
-              isEditMode ? "focus:ring-2 focus:ring-cyan-400 focus:border-transparent" : "cursor-default"
+              isEditMode
+                ? "focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                : "cursor-default"
             }`}
             rows={3}
             disabled={!isEditMode}
@@ -292,10 +295,30 @@ export default function ProfilePage() {
           {/* Stats Sidebar */}
           <div className="mt-8 w-full space-y-4">
             {[
-              { label: "Games Played", value: user.gamesPlayed, icon: "🎮", gradient: "from-blue-400 to-purple-500" },
-              { label: "Wins", value: user.wins, icon: "🏆", gradient: "from-green-400 to-emerald-500" },
-              { label: "Losses", value: user.losses, icon: "💔", gradient: "from-red-400 to-pink-500" },
-              { label: "Win Rate", value: `${winRate}%`, icon: "📊", gradient: "from-yellow-400 to-orange-500" },
+              {
+                label: "Games Played",
+                value: user.gamesPlayed,
+                icon: "🎮",
+                gradient: "from-blue-400 to-purple-500",
+              },
+              {
+                label: "Wins",
+                value: user.wins,
+                icon: "🏆",
+                gradient: "from-green-400 to-emerald-500",
+              },
+              {
+                label: "Losses",
+                value: user.losses,
+                icon: "💔",
+                gradient: "from-red-400 to-pink-500",
+              },
+              {
+                label: "Win Rate",
+                value: `${winRate}%`,
+                icon: "📊",
+                gradient: "from-yellow-400 to-orange-500",
+              },
             ].map((stat, idx) => (
               <div
                 key={idx}
@@ -303,9 +326,13 @@ export default function ProfilePage() {
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{stat.icon}</span>
-                  <span className="font-medium text-white/90">{stat.label}</span>
+                  <span className="font-medium text-white/90">
+                    {stat.label}
+                  </span>
                 </div>
-                <span className={`font-bold text-lg bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
+                <span
+                  className={`font-bold text-lg bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}
+                >
                   {stat.value}
                 </span>
               </div>
@@ -320,39 +347,41 @@ export default function ProfilePage() {
             <h2 className="text-5xl font-bold bg-gradient-to-r from-cyan-300 via-purple-300 to-pink-300 bg-clip-text text-transparent mb-4">
               Player Dashboard
             </h2>
-            <p className="text-xl text-white/70">Track your progress and achievements</p>
+            <p className="text-xl text-white/70">
+              Track your progress and achievements
+            </p>
           </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[
-              { 
-                label: "Games Played", 
-                value: user.gamesPlayed, 
-                icon: "🎮", 
+              {
+                label: "Games Played",
+                value: user.gamesPlayed,
+                icon: "🎮",
                 gradient: "from-blue-400 to-purple-500",
-                description: "Total matches"
+                description: "Total matches",
               },
-              { 
-                label: "Victories", 
-                value: user.wins, 
-                icon: "🏆", 
+              {
+                label: "Victories",
+                value: user.wins,
+                icon: "🏆",
                 gradient: "from-green-400 to-emerald-500",
-                description: "Games won"
+                description: "Games won",
               },
-              { 
-                label: "Defeats", 
-                value: user.losses, 
-                icon: "💔", 
+              {
+                label: "Defeats",
+                value: user.losses,
+                icon: "💔",
                 gradient: "from-red-400 to-pink-500",
-                description: "Learning experiences"
+                description: "Learning experiences",
               },
-              { 
-                label: "Win Rate", 
-                value: `${winRate}%`, 
-                icon: "📊", 
+              {
+                label: "Win Rate",
+                value: `${winRate}%`,
+                icon: "📊",
                 gradient: "from-yellow-400 to-orange-500",
-                description: "Success percentage"
+                description: "Success percentage",
               },
             ].map((stat, idx) => (
               <div
@@ -360,7 +389,9 @@ export default function ProfilePage() {
                 className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 hover:shadow-3xl group"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${stat.gradient} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  <div
+                    className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${stat.gradient} flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                  >
                     {stat.icon}
                   </div>
                   <div className="text-right">
@@ -369,7 +400,9 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">{stat.label}</h3>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  {stat.label}
+                </h3>
                 <p className="text-white/60 text-sm">{stat.description}</p>
               </div>
             ))}
@@ -382,11 +415,15 @@ export default function ProfilePage() {
                 ⚡
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">Experience Progress</h3>
-                <p className="text-white/60">Level {user.level} → Level {user.level + 1}</p>
+                <h3 className="text-2xl font-bold text-white">
+                  Experience Progress
+                </h3>
+                <p className="text-white/60">
+                  Level {user.level} → Level {user.level + 1}
+                </p>
               </div>
             </div>
-            
+
             <div className="relative">
               <div className="w-full bg-white/10 rounded-full h-6 overflow-hidden shadow-inner backdrop-blur">
                 <div
@@ -397,15 +434,25 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div className="flex justify-between items-center mt-4">
-                <span className="text-white/80 font-mono text-sm">{user.xp} XP</span>
-                <span className="text-white/60 text-sm">{Math.round(xpProgress)}% Complete</span>
-                <span className="text-white/80 font-mono text-sm">{user.nextLevelXp} XP</span>
+                <span className="text-white/80 font-mono text-sm">
+                  {user.xp} XP
+                </span>
+                <span className="text-white/60 text-sm">
+                  {Math.round(xpProgress)}% Complete
+                </span>
+                <span className="text-white/80 font-mono text-sm">
+                  {user.nextLevelXp} XP
+                </span>
               </div>
             </div>
-            
+
             <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
               <p className="text-white/70 text-sm text-center">
-                🎯 <span className="font-semibold">{user.nextLevelXp - user.xp} XP</span> needed to reach Level {user.level + 1}
+                🎯{" "}
+                <span className="font-semibold">
+                  {user.nextLevelXp - user.xp} XP
+                </span>{" "}
+                needed to reach Level {user.level + 1}
               </p>
             </div>
           </div>
@@ -418,14 +465,18 @@ export default function ProfilePage() {
                   🚀
                 </div>
                 <div className="text-left">
-                  <h4 className="text-lg font-semibold text-white">Start New Quest</h4>
-                  <p className="text-white/60 text-sm">Begin your next adventure</p>
+                  <h4 className="text-lg font-semibold text-white">
+                    Start New Quest
+                  </h4>
+                  <p className="text-white/60 text-sm">
+                    Begin your next adventure
+                  </p>
                 </div>
               </div>
             </button>
-            
-            <button 
-              onClick={() => router.push("/achievement")} 
+
+            <button
+              onClick={() => router.push("/achievement")}
               className="backdrop-blur-xl bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl p-6 border border-white/20 hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 hover:scale-105 group"
             >
               <div className="flex items-center gap-4">
@@ -433,8 +484,12 @@ export default function ProfilePage() {
                   🏅
                 </div>
                 <div className="text-left">
-                  <h4 className="text-lg font-semibold text-white">View Achievements</h4>
-                  <p className="text-white/60 text-sm">See your accomplishments</p>
+                  <h4 className="text-lg font-semibold text-white">
+                    View Achievements
+                  </h4>
+                  <p className="text-white/60 text-sm">
+                    See your accomplishments
+                  </p>
                 </div>
               </div>
             </button>

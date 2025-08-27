@@ -1,6 +1,6 @@
 // Firestore-backed user profile helpers.
 
-import { db, storage } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase/firebase";
 import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp,
 } from "firebase/firestore";

@@ -25,6 +25,7 @@
     "next": "^15.5.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-firebase-hooks": "^5.1.1",
     "shiki": "^3.11.0"
   },
   "devDependencies": {

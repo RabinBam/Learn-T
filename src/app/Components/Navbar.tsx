@@ -1,5 +1,6 @@
 "use client";
-
+import { auth, signInWithGoogle, signOutUser } from "@/lib/firebase/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -28,6 +29,7 @@ export default function Navbar() {
   const profileRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const pathname = usePathname();
+  const [user] = useAuthState(auth); // Firebase user state
 
   // Prevent hydration mismatch
   useEffect(() => setMounted(true), []);
@@ -332,26 +334,38 @@ export default function Navbar() {
                 <div className="absolute right-0 mt-2 w-44 bg-gray-900/95 backdrop-blur-xl shadow-2xl rounded-xl py-2 border border-purple-500/30 overflow-hidden z-40">
                   <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-cyan-500/10" />
 
-                  {[
-                    { href: "/dashboard", label: "Profile" },
-                    { href: "/dashboard", label: "Settings" },
-                    { label: "Logout", isButton: true },
-                  ].map((item, idx) => (
-                    <div key={idx} className="relative group">
-                      {item.isButton ? (
-                        <button className="relative w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 transition-all duration-200">
-                          <span className="relative z-10">{item.label}</span>
-                        </button>
-                      ) : (
-                        <Link
-                          href={item.href!}
-                          className="relative block px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 transition-all duration-200"
-                        >
-                          <span className="relative z-10">{item.label}</span>
-                        </Link>
-                      )}
-                    </div>
-                  ))}
+                  {(() => {
+                    const menuItems = user
+                      ? [
+                          { href: "/dashboard", label: "Profile" },
+                          { label: "Logout", isButton: true },
+                        ]
+                      : [{ label: "Login with Google", isButton: true }];
+
+                    return menuItems.map((item, idx) => (
+                      <div key={idx} className="relative group">
+                        {item.isButton ? (
+                          <button
+                            onClick={() => {
+                              if (item.label === "Logout") signOutUser();
+                              if (item.label === "Login with Google")
+                                signInWithGoogle();
+                            }}
+                            className="relative w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 transition-all duration-200"
+                          >
+                            <span className="relative z-10">{item.label}</span>
+                          </button>
+                        ) : (
+                          <Link
+                            href={item.href!}
+                            className="relative block px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 transition-all duration-200"
+                          >
+                            <span className="relative z-10">{item.label}</span>
+                          </Link>
+                        )}
+                      </div>
+                    ));
+                  })()}
                 </div>
               )}
             </div>
@@ -475,27 +489,39 @@ export default function Navbar() {
               Profile
             </p>
 
-            {[
-              { href: "/profile", label: "My Profile" },
-              { href: "/settings", label: "Settings" },
-              { label: "Logout", isButton: true },
-            ].map((item, idx) => (
-              <div key={idx} className="relative group">
-                {item.isButton ? (
-                  <button className="relative w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 rounded-lg transition-all duration-200">
-                    <span className="relative z-10">{item.label}</span>
-                  </button>
-                ) : (
-                  <Link
-                    href={item.href!}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="relative block px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 rounded-lg transition-all duration-200"
-                  >
-                    <span className="relative z-10">{item.label}</span>
-                  </Link>
-                )}
-              </div>
-            ))}
+            {(() => {
+              const mobileItems = user
+                ? [
+                    { href: "/profile", label: "My Profile" },
+                    { label: "Logout", isButton: true },
+                  ]
+                : [{ label: "Login with Google", isButton: true }];
+
+              return mobileItems.map((item, idx) => (
+                <div key={idx} className="relative group">
+                  {item.isButton ? (
+                    <button
+                      onClick={() => {
+                        if (item.label === "Logout") signOutUser();
+                        if (item.label === "Login with Google")
+                          signInWithGoogle();
+                      }}
+                      className="relative w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 rounded-lg transition-all duration-200"
+                    >
+                      <span className="relative z-10">{item.label}</span>
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href!}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="relative block px-4 py-2 text-sm text-gray-300 hover:bg-purple-800/30 hover:text-cyan-300 rounded-lg transition-all duration-200"
+                    >
+                      <span className="relative z-10">{item.label}</span>
+                    </Link>
+                  )}
+                </div>
+              ));
+            })()}
           </div>
         </div>
       </div>

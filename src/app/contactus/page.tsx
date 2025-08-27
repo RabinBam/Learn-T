@@ -1,4 +1,5 @@
 "use client";
+import { saveContactMessage } from "@/services/contact";
 import React, { useState, FormEvent } from "react";
 
 interface FormData {
@@ -21,10 +22,17 @@ const ContactPage: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert("Thank you! Your message has been submitted.");
-    setFormData({ name: "", email: "", message: "" });
+
+    try {
+      await saveContactMessage(formData); // send data to Firestore
+      alert("✅ Thank you! Your message has been submitted.");
+      setFormData({ name: "", email: "", message: "" });
+    } catch (error) {
+      console.error("Error saving message:", error);
+      alert("❌ Something went wrong. Please try again.");
+    }
   };
 
   const [isMobile, setIsMobile] = useState(false);
