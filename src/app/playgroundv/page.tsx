@@ -67,13 +67,21 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
   // Character state
   const [characterMood, setCharacterMood] = useState<
-    "idle" | "happy" | "error" | "correctcode" | "motivating" | "hello"
+    | "idle"
+    | "happy"
+    | "error"
+    | "correctcode"
+    | "motivating"
+    | "hello"
+    | "cat_eat_fish"
   >("idle");
+
   const [characterMessage, setCharacterMessage] = useState<string>("");
 
   // Tutorial state for Beginner, Intermediate, and Expert levels
   const [tutorialStep, setTutorialStep] = useState<number>(0);
-  const [tutorialStepIntermediate, setTutorialStepIntermediate] = useState<number>(0);
+  const [tutorialStepIntermediate, setTutorialStepIntermediate] =
+    useState<number>(0);
   const [tutorialStepExpert, setTutorialStepExpert] = useState<number>(0);
   // Reference to the playground coding/output section
   const playgroundRef = useRef<HTMLDivElement>(null);
@@ -117,22 +125,73 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     const timer = setTimeout(scrollToBottom, 500);
     return () => clearTimeout(timer);
   }, []);
-  const tutorialHints: { step: number, message: string, expectedRegex: RegExp }[] = [
-    { step: 1, message: "Change bg-white to bg-blue-500 to see the magic!", expectedRegex: /bg-blue-\d{3}/ },
-    { step: 2, message: "Now try changing text-gray-900 to text-gray-700", expectedRegex: /text-gray-700/ },
-    { step: 3, message: "Great! Add hover:bg-indigo-700 to the button", expectedRegex: /hover:bg-indigo-700/ }
+  const tutorialHints: {
+    step: number;
+    message: string;
+    expectedRegex: RegExp;
+  }[] = [
+    {
+      step: 1,
+      message: "Change bg-white to bg-blue-500 to see the magic!",
+      expectedRegex: /bg-blue-\d{3}/,
+    },
+    {
+      step: 2,
+      message: "Now try changing text-gray-900 to text-gray-700",
+      expectedRegex: /text-gray-700/,
+    },
+    {
+      step: 3,
+      message: "Great! Add hover:bg-indigo-700 to the button",
+      expectedRegex: /hover:bg-indigo-700/,
+    },
   ];
   // Intermediate tutorial hints
-  const intermediateHints: { step: number, message: string, expectedRegex: RegExp }[] = [
-    { step: 1, message: "Change grid-cols-3 to grid-cols-2 to see layout adapt!", expectedRegex: /grid-cols-2/ },
-    { step: 2, message: "Add md:grid-cols-4 for responsive grids", expectedRegex: /md:grid-cols-4/ },
-    { step: 3, message: "Change the gradient button colors (from-blue-500 to from-pink-500)", expectedRegex: /from-pink-500/ }
+  const intermediateHints: {
+    step: number;
+    message: string;
+    expectedRegex: RegExp;
+  }[] = [
+    {
+      step: 1,
+      message: "Change grid-cols-3 to grid-cols-2 to see layout adapt!",
+      expectedRegex: /grid-cols-2/,
+    },
+    {
+      step: 2,
+      message: "Add md:grid-cols-4 for responsive grids",
+      expectedRegex: /md:grid-cols-4/,
+    },
+    {
+      step: 3,
+      message:
+        "Change the gradient button colors (from-blue-500 to from-pink-500)",
+      expectedRegex: /from-pink-500/,
+    },
   ];
   // Expert tutorial hints
-  const expertHints: { step: number, message: string, expectedRegex: RegExp }[] = [
-    { step: 1, message: "Make the heading text a gradient using bg-clip-text and text-transparent", expectedRegex: /bg-clip-text/ },
-    { step: 2, message: "Add hover:-translate-y-1 to card divs for animation", expectedRegex: /hover:-translate-y-1/ },
-    { step: 3, message: "Update button hover gradient to hover:from-blue-700 hover:to-purple-700", expectedRegex: /hover:from-blue-700/ }
+  const expertHints: {
+    step: number;
+    message: string;
+    expectedRegex: RegExp;
+  }[] = [
+    {
+      step: 1,
+      message:
+        "Make the heading text a gradient using bg-clip-text and text-transparent",
+      expectedRegex: /bg-clip-text/,
+    },
+    {
+      step: 2,
+      message: "Add hover:-translate-y-1 to card divs for animation",
+      expectedRegex: /hover:-translate-y-1/,
+    },
+    {
+      step: 3,
+      message:
+        "Update button hover gradient to hover:from-blue-700 hover:to-purple-700",
+      expectedRegex: /hover:from-blue-700/,
+    },
   ];
   // Refs
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -171,7 +230,10 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         const attrs = match[2] || "";
 
         if (full.startsWith("</")) {
-          if (tagStack.length === 0 || tagStack[tagStack.length - 1].tag !== tag) {
+          if (
+            tagStack.length === 0 ||
+            tagStack[tagStack.length - 1].tag !== tag
+          ) {
             found.push({
               type: "HTML",
               line: lineNumber,
@@ -183,7 +245,10 @@ const TailwindPlaygroundNoNav: React.FC = () => {
             tagStack.pop();
           }
         } else {
-          if (!full.endsWith("/>") && !["img", "br", "hr", "input", "meta", "link"].includes(tag)) {
+          if (
+            !full.endsWith("/>") &&
+            !["img", "br", "hr", "input", "meta", "link"].includes(tag)
+          ) {
             tagStack.push({ tag, line: lineNumber });
           }
         }
@@ -204,7 +269,8 @@ const TailwindPlaygroundNoNav: React.FC = () => {
         found.push({
           type: "HTML",
           line: lineNumber,
-          message: 'Malformed class attribute — ensure class="..." (use double quotes).',
+          message:
+            'Malformed class attribute — ensure class="..." (use double quotes).',
           severity: "warning",
           word: tokenMatch ? tokenMatch[1] : "class=",
         });
@@ -291,7 +357,9 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     return { ...item };
   }, []);
 
-  const loadSnippetsFromFirebase = useCallback(async (): Promise<SavedItem[]> => {
+  const loadSnippetsFromFirebase = useCallback(async (): Promise<
+    SavedItem[]
+  > => {
     console.info("[Firebase Stub] loadSnippetsFromFirebase");
     return [];
   }, []);
@@ -322,7 +390,8 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
   const handleSaveSubmit = useCallback(
     async (alsoSaveToFirebase = false) => {
-      const nameToUse = saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
+      const nameToUse =
+        saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
       try {
         const saved = await saveLocally(nameToUse, code);
         if (alsoSaveToFirebase) await saveSnippetToFirebase(saved);
@@ -379,10 +448,15 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   /* ------------------------- Download to disk ----------------------------- */
   const downloadToDisk = useCallback(
     (as: "html" | "txt") => {
-      const filenameBase = (saveName && saveName.trim()) || `tailwind-playground-${new Date().toISOString()}`;
+      const filenameBase =
+        (saveName && saveName.trim()) ||
+        `tailwind-playground-${new Date().toISOString()}`;
       const ext = as === "html" ? "html" : "txt";
-      const content = as === "html" ? `<!-- Tailwind HTML preview -->\n${code}` : code;
-      const blob = new Blob([content], { type: as === "html" ? "text/html" : "text/plain" });
+      const content =
+        as === "html" ? `<!-- Tailwind HTML preview -->\n${code}` : code;
+      const blob = new Blob([content], {
+        type: as === "html" ? "text/html" : "text/plain",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -397,31 +471,38 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
   /* ------------------------- Jump to line helper --------------------------- */
   const editorRefLocal = editorRef; // tiny alias to keep JSX tidy
-  const jumpToLine = useCallback((lineNumber: number) => {
-    const ta = editorRefLocal.current;
-    if (!ta) return;
-    const lines = ta.value.split("\n");
-    let start = 0;
-    for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
-      start += lines[i].length + 1;
-    }
-    const lineText = lines[lineNumber - 1] ?? "";
-    const end = start + lineText.length;
-    ta.focus();
-    ta.selectionStart = start;
-    ta.selectionEnd = end;
-    try {
-      const style = window.getComputedStyle(ta);
-      const lh = style.lineHeight && style.lineHeight.includes("px") ? parseFloat(style.lineHeight) : 18;
-      ta.scrollTop = Math.max(0, (lineNumber - 1) * lh - 40);
-    } catch {
-      ta.scrollTop = Math.max(0, (lineNumber - 1) * 18 - 40);
-    }
-  }, [editorRefLocal]);
+  const jumpToLine = useCallback(
+    (lineNumber: number) => {
+      const ta = editorRefLocal.current;
+      if (!ta) return;
+      const lines = ta.value.split("\n");
+      let start = 0;
+      for (let i = 0; i < lineNumber - 1 && i < lines.length; i++) {
+        start += lines[i].length + 1;
+      }
+      const lineText = lines[lineNumber - 1] ?? "";
+      const end = start + lineText.length;
+      ta.focus();
+      ta.selectionStart = start;
+      ta.selectionEnd = end;
+      try {
+        const style = window.getComputedStyle(ta);
+        const lh =
+          style.lineHeight && style.lineHeight.includes("px")
+            ? parseFloat(style.lineHeight)
+            : 18;
+        ta.scrollTop = Math.max(0, (lineNumber - 1) * lh - 40);
+      } catch {
+        ta.scrollTop = Math.max(0, (lineNumber - 1) * 18 - 40);
+      }
+    },
+    [editorRefLocal]
+  );
 
   /* -------------------------- Component lifecycle --------------------------- */
   const [showWelcome, setShowWelcome] = useState(() => {
-    if (typeof window !== "undefined") return !localStorage.getItem("welcomeShown");
+    if (typeof window !== "undefined")
+      return !localStorage.getItem("welcomeShown");
     return true;
   });
 
@@ -465,7 +546,15 @@ const TailwindPlaygroundNoNav: React.FC = () => {
     }
     // Otherwise, don't override mood/message (handled in tutorial logic)
     // No timer here to keep tutorial message visible
-  }, [errors, code, showWelcome, tutorialStep, level, tutorialHints.length, tutorialStepExpert]);
+  }, [
+    errors,
+    code,
+    showWelcome,
+    tutorialStep,
+    level,
+    tutorialHints.length,
+    tutorialStepExpert,
+  ]);
 
   useEffect(() => {
     if (!isMounted) return;
@@ -496,18 +585,19 @@ const TailwindPlaygroundNoNav: React.FC = () => {
   }, [updatePreview, isMounted]);
 
   /* ------------------------------- Status UI -------------------------------- */
-  const StatusBadge: React.FC<{ status: "Ready" | "Updating..." | "Updated" }>
-    = ({ status }) => {
-      const cls =
-        status === "Updating..."
-          ? "bg-yellow-400/10 text-yellow-300 ring-1 ring-yellow-500/30"
-          : status === "Updated"
-          ? "bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-500/30"
-          : "bg-indigo-400/10 text-indigo-200 ring-1 ring-indigo-500/30";
-      return (
-        <span className={`text-xs px-2 py-1 rounded-full ${cls}`}>{status}</span>
-      );
-    };
+  const StatusBadge: React.FC<{
+    status: "Ready" | "Updating..." | "Updated";
+  }> = ({ status }) => {
+    const cls =
+      status === "Updating..."
+        ? "bg-yellow-400/10 text-yellow-300 ring-1 ring-yellow-500/30"
+        : status === "Updated"
+        ? "bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-500/30"
+        : "bg-indigo-400/10 text-indigo-200 ring-1 ring-indigo-500/30";
+    return (
+      <span className={`text-xs px-2 py-1 rounded-full ${cls}`}>{status}</span>
+    );
+  };
 
   /* ------------------------------- Rendering -------------------------------- */
   if (!isMounted) return null;
@@ -531,7 +621,10 @@ const TailwindPlaygroundNoNav: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" ref={playgroundRef}>
+        <div
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          ref={playgroundRef}
+        >
           {/* Editor Column */}
           <section className="relative flex flex-col space-y-4">
             <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)]">
@@ -539,20 +632,31 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-indigo-700/60 to-fuchsia-700/60">
                 <div className="flex items-center gap-3">
                   <Code className="w-5 h-5 text-white" />
-                  <h2 className="text-white font-semibold">Edit Tailwind HTML</h2>
+                  <h2 className="text-white font-semibold">
+                    Edit Tailwind HTML
+                  </h2>
                   <span className="text-sm text-indigo-200 ml-2">Preset:</span>
                   <select
                     value={level}
                     onChange={(e) => {
-                      const v = e.target.value as "Beginner" | "Intermediate" | "Expert";
+                      const v = e.target.value as
+                        | "Beginner"
+                        | "Intermediate"
+                        | "Expert";
                       setLevel(v);
                       setCode(presets[v]);
                     }}
                     className="ml-2 bg-white/10 text-white px-2 py-1 rounded text-xs border border-white/10 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/50"
                   >
-                    <option className="bg-slate-800" value="Beginner">Beginner</option>
-                    <option className="bg-slate-800" value="Intermediate">Intermediate</option>
-                    <option className="bg-slate-800" value="Expert">Expert</option>
+                    <option className="bg-slate-800" value="Beginner">
+                      Beginner
+                    </option>
+                    <option className="bg-slate-800" value="Intermediate">
+                      Intermediate
+                    </option>
+                    <option className="bg-slate-800" value="Expert">
+                      Expert
+                    </option>
                   </select>
                 </div>
 
@@ -567,7 +671,9 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => setSaveName(`Code ${new Date().toLocaleTimeString()}`)}
+                    onClick={() =>
+                      setSaveName(`Code ${new Date().toLocaleTimeString()}`)
+                    }
                     title="Prepare save name"
                     className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-3 py-1.5 rounded-lg text-sm shadow hover:shadow-lg transition-all"
                   >
@@ -591,14 +697,19 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                       tutorialStep < tutorialHints.length
                     ) {
                       const currentHint = tutorialHints[tutorialStep];
-                      if (currentHint && currentHint.expectedRegex.test(newCode)) {
+                      if (
+                        currentHint &&
+                        currentHint.expectedRegex.test(newCode)
+                      ) {
                         setTutorialStep(tutorialStep + 1);
                         setCharacterMood("motivating");
                         setCharacterMessage("Awesome! Next step unlocked!");
                         if (tutorialStep + 1 < tutorialHints.length) {
                           setTimeout(() => {
                             setCharacterMood("hello");
-                            setCharacterMessage(tutorialHints[tutorialStep + 1].message);
+                            setCharacterMessage(
+                              tutorialHints[tutorialStep + 1].message
+                            );
                           }, 2000);
                         }
                         return;
@@ -608,15 +719,29 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                       level === "Intermediate" &&
                       tutorialStepIntermediate < intermediateHints.length
                     ) {
-                      const currentHint = intermediateHints[tutorialStepIntermediate];
-                      if (currentHint && currentHint.expectedRegex.test(newCode)) {
-                        setTutorialStepIntermediate(tutorialStepIntermediate + 1);
+                      const currentHint =
+                        intermediateHints[tutorialStepIntermediate];
+                      if (
+                        currentHint &&
+                        currentHint.expectedRegex.test(newCode)
+                      ) {
+                        setTutorialStepIntermediate(
+                          tutorialStepIntermediate + 1
+                        );
                         setCharacterMood("motivating");
-                        setCharacterMessage("Great job! Next intermediate step!");
-                        if (tutorialStepIntermediate + 1 < intermediateHints.length) {
+                        setCharacterMessage(
+                          "Great job! Next intermediate step!"
+                        );
+                        if (
+                          tutorialStepIntermediate + 1 <
+                          intermediateHints.length
+                        ) {
                           setTimeout(() => {
                             setCharacterMood("hello");
-                            setCharacterMessage(intermediateHints[tutorialStepIntermediate + 1].message);
+                            setCharacterMessage(
+                              intermediateHints[tutorialStepIntermediate + 1]
+                                .message
+                            );
                           }, 2000);
                         }
                         return;
@@ -627,14 +752,19 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                       tutorialStepExpert < expertHints.length
                     ) {
                       const currentHint = expertHints[tutorialStepExpert];
-                      if (currentHint && currentHint.expectedRegex.test(newCode)) {
+                      if (
+                        currentHint &&
+                        currentHint.expectedRegex.test(newCode)
+                      ) {
                         setTutorialStepExpert(tutorialStepExpert + 1);
                         setCharacterMood("motivating");
                         setCharacterMessage("Excellent! Next expert step!");
                         if (tutorialStepExpert + 1 < expertHints.length) {
                           setTimeout(() => {
                             setCharacterMood("hello");
-                            setCharacterMessage(expertHints[tutorialStepExpert + 1].message);
+                            setCharacterMessage(
+                              expertHints[tutorialStepExpert + 1].message
+                            );
                           }, 2000);
                         }
                         return;
@@ -649,64 +779,69 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
             {/* Tutorial Hint under editor */}
             {(level === "Beginner" && tutorialStep < tutorialHints.length) ||
-              (level === "Intermediate" && tutorialStepIntermediate < intermediateHints.length) ||
-              (level === "Expert" && tutorialStepExpert < expertHints.length) ? (
-              (() => {
-                // Mood images
-                const moodImages: Record<string, string> = {
-                  happy: "/characters/happy_face.png",
-                  error: "/characters/error_face.png",
-                  motivating: "/characters/cat_motivating.png",
-                  hello: "/characters/cat_hello.png",
-                  idle: "/characters/idle_face.png",
-                  correctcode: "/characters/correctcode_face.png",
-                  cat_eat_fish: "/characters/cat_eat_fish.png",
-                };
-                if (level === "Expert") {
-                  // Show cat_eat_fish image and fixed message for Expert
+            (level === "Intermediate" &&
+              tutorialStepIntermediate < intermediateHints.length) ||
+            (level === "Expert" && tutorialStepExpert < expertHints.length)
+              ? (() => {
+                  // Mood images
+                  const moodImages: Record<string, string> = {
+                    happy: "/characters/happy_face.png",
+                    error: "/characters/error_face.png",
+                    motivating: "/characters/cat_motivating.png",
+                    hello: "/characters/cat_hello.png",
+                    idle: "/characters/idle_face.png",
+                    correctcode: "/characters/correctcode_face.png",
+                    cat_eat_fish: "/characters/cat_eat_fish.png",
+                  };
+                  if (level === "Expert") {
+                    // Show cat_eat_fish image and fixed message for Expert
+                    return (
+                      <div className="mt-2 flex items-center gap-4 rounded-2xl bg-indigo-500/10 ring-2 ring-indigo-400/30 shadow-lg px-6 py-4 text-indigo-100 transition-all">
+                        <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-indigo-700/20 flex items-center justify-center">
+                          <img
+                            src="/characters/cat_eat_fish.png"
+                            alt="Cat eating fish"
+                            className="w-12 h-12 rounded-full"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <span className="block text-sm text-indigo-300 uppercase tracking-wider font-medium">
+                            Expert Stage
+                          </span>
+                          <p className="text-indigo-100 font-semibold">
+                            Stage is yours, try new things out here
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
                   return (
                     <div className="mt-2 flex items-center gap-4 rounded-2xl bg-indigo-500/10 ring-2 ring-indigo-400/30 shadow-lg px-6 py-4 text-indigo-100 transition-all">
                       <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-indigo-700/20 flex items-center justify-center">
                         <img
-                          src="/characters/cat_eat_fish.png"
-                          alt="Cat eating fish"
+                          src={moodImages[characterMood] || moodImages.idle}
+                          alt="Character"
                           className="w-12 h-12 rounded-full"
                         />
                       </div>
                       <div className="flex-1">
                         <span className="block text-sm text-indigo-300 uppercase tracking-wider font-medium">
-                          Expert Stage
+                          Tutorial Step{" "}
+                          {level === "Beginner"
+                            ? tutorialStep + 1
+                            : tutorialStepIntermediate + 1}
                         </span>
                         <p className="text-indigo-100 font-semibold">
-                          Stage is yours, try new things out here
+                          {level === "Beginner"
+                            ? tutorialHints[tutorialStep].message
+                            : intermediateHints[tutorialStepIntermediate]
+                                .message}
                         </p>
                       </div>
                     </div>
                   );
-                }
-                return (
-                  <div className="mt-2 flex items-center gap-4 rounded-2xl bg-indigo-500/10 ring-2 ring-indigo-400/30 shadow-lg px-6 py-4 text-indigo-100 transition-all">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden bg-indigo-700/20 flex items-center justify-center">
-                      <img
-                        src={moodImages[characterMood] || moodImages.idle}
-                        alt="Character"
-                        className="w-12 h-12 rounded-full"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <span className="block text-sm text-indigo-300 uppercase tracking-wider font-medium">
-                        Tutorial Step {level === "Beginner" ? tutorialStep + 1 : tutorialStepIntermediate + 1}
-                      </span>
-                      <p className="text-indigo-100 font-semibold">
-                        {level === "Beginner"
-                          ? tutorialHints[tutorialStep].message
-                          : intermediateHints[tutorialStepIntermediate].message}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })()
-            ) : null}
+                })()
+              : null}
 
             {/* Action Row */}
             <div className="flex flex-wrap gap-3 items-center">
@@ -721,10 +856,14 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
                 <button
                   onClick={async () => {
-                    const nameToUse = saveName.trim() || `Code ${new Date().toLocaleTimeString()}`;
+                    const nameToUse =
+                      saveName.trim() ||
+                      `Code ${new Date().toLocaleTimeString()}`;
                     const saved = await saveLocally(nameToUse, code);
                     await saveSnippetToFirebase(saved);
-                    alert("Saved locally and (stub) to Firebase. Replace stub with Firestore implementation to persist on cloud.");
+                    alert(
+                      "Saved locally and (stub) to Firebase. Replace stub with Firestore implementation to persist on cloud."
+                    );
                   }}
                   className="px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg shadow hover:shadow-lg transition-all flex items-center gap-2"
                   title="Save to Firebase (stub)"
@@ -760,7 +899,9 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => { setCode(presets[level]); }}
+                  onClick={() => {
+                    setCode(presets[level]);
+                  }}
                   className="px-3 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg flex items-center gap-2 transition-all"
                   title="Reset to preset"
                 >
@@ -771,7 +912,10 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 
             {/* Error Panel */}
             {errors.length > 0 && (
-              <div className={`mt-1 rounded-2xl overflow-hidden transition-all border ${showErrors ? "" : ""} bg-rose-900/20 border-rose-500/20 backdrop-blur`}
+              <div
+                className={`mt-1 rounded-2xl overflow-hidden transition-all border ${
+                  showErrors ? "" : ""
+                } bg-rose-900/20 border-rose-500/20 backdrop-blur`}
               >
                 <div
                   className="px-4 py-2 bg-rose-900/40 border-b border-rose-500/20 flex justify-between items-center cursor-pointer"
@@ -779,10 +923,16 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                 >
                   <div className="flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 text-rose-300" />
-                    <h3 className="font-semibold text-rose-100">Errors ({errors.length})</h3>
+                    <h3 className="font-semibold text-rose-100">
+                      Errors ({errors.length})
+                    </h3>
                   </div>
                   <button className="text-rose-200">
-                    {showErrors ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {showErrors ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
 
@@ -790,7 +940,10 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                   <div className="p-3 max-h-64 overflow-y-auto">
                     <ul className="space-y-2 text-sm">
                       {errors.map((err, idx) => (
-                        <li key={`${err.line}-${idx}`} className="flex items-start gap-3">
+                        <li
+                          key={`${err.line}-${idx}`}
+                          className="flex items-start gap-3"
+                        >
                           <div className="mt-0.5">
                             {err.severity === "error" ? (
                               <AlertCircle className="w-5 h-5 text-rose-300" />
@@ -800,15 +953,31 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                           </div>
                           <div className="flex-1 text-indigo-100/90">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-rose-200">Line {err.line}</span>
-                              <span className={`px-2 py-0.5 rounded text-xs ${err.type === "HTML" ? "bg-blue-400/10 text-blue-200 ring-1 ring-blue-400/20" : "bg-purple-400/10 text-purple-200 ring-1 ring-purple-400/20"}`}>
+                              <span className="text-xs font-medium text-rose-200">
+                                Line {err.line}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-xs ${
+                                  err.type === "HTML"
+                                    ? "bg-blue-400/10 text-blue-200 ring-1 ring-blue-400/20"
+                                    : "bg-purple-400/10 text-purple-200 ring-1 ring-purple-400/20"
+                                }`}
+                              >
                                 {err.type}
                               </span>
-                              <span className={`px-2 py-0.5 rounded text-xs ${err.severity === "error" ? "bg-rose-400/10 text-rose-200 ring-1 ring-rose-400/20" : "bg-amber-400/10 text-amber-200 ring-1 ring-amber-400/20"}`}>
+                              <span
+                                className={`px-2 py-0.5 rounded text-xs ${
+                                  err.severity === "error"
+                                    ? "bg-rose-400/10 text-rose-200 ring-1 ring-rose-400/20"
+                                    : "bg-amber-400/10 text-amber-200 ring-1 ring-amber-400/20"
+                                }`}
+                              >
                                 {err.severity}
                               </span>
                               {err.word && (
-                                <span className="ml-auto text-xs text-indigo-200/70 italic">"{err.word}"</span>
+                                <span className="ml-auto text-xs text-indigo-200/70 italic">
+                                  "{err.word}"
+                                </span>
                               )}
                             </div>
                             <div className="mt-1 text-sm text-indigo-100/90">
@@ -844,7 +1013,10 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                 <StatusBadge status={status} />
               </div>
 
-              <div ref={previewRef} className="h-96 overflow-auto bg-gradient-to-b from-indigo-950/60 to-indigo-900/30 p-4" />
+              <div
+                ref={previewRef}
+                className="h-96 overflow-auto bg-gradient-to-b from-indigo-950/60 to-indigo-900/30 p-4"
+              />
             </div>
 
             {/* Controls for snippet saving */}
@@ -892,7 +1064,10 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                   </div>
                 ) : (
                   savedItems.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between px-3 py-2 border border-white/10 rounded-xl bg-white/5 text-indigo-100">
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between px-3 py-2 border border-white/10 rounded-xl bg-white/5 text-indigo-100"
+                    >
                       <div className="flex-1">
                         <div className="font-medium">{item.name}</div>
                         <div className="text-xs text-indigo-200/70">
@@ -927,21 +1102,31 @@ const TailwindPlaygroundNoNav: React.FC = () => {
               <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                 <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-white/10">
                   <div className="bg-gradient-to-r from-indigo-700 to-fuchsia-700 p-6 text-center">
-                    <h2 className="text-2xl font-bold text-white">Welcome to TailSpark! 🎉</h2>
+                    <h2 className="text-2xl font-bold text-white">
+                      Welcome to TailSpark! 🎉
+                    </h2>
                   </div>
                   <div className="p-6">
                     <p className="text-indigo-100/90 mb-6 text-center">
-                      Start experimenting with Tailwind HTML. Edit on the left, preview on the right. Save locally or later connect to Firebase.
+                      Start experimenting with Tailwind HTML. Edit on the left,
+                      preview on the right. Save locally or later connect to
+                      Firebase.
                     </p>
 
                     <div className="bg-indigo-400/10 ring-1 ring-indigo-400/20 p-4 rounded-xl mb-4">
-                      <h3 className="font-semibold text-indigo-100">Quick tips</h3>
+                      <h3 className="font-semibold text-indigo-100">
+                        Quick tips
+                      </h3>
                       <ul className="list-disc list-inside text-indigo-200 text-sm mt-2 space-y-1">
                         <li>Use the preset selector to load sample layouts.</li>
                         <li>
-                          Press <span className="font-semibold">Ctrl + Enter</span> to run.
+                          Press{" "}
+                          <span className="font-semibold">Ctrl + Enter</span> to
+                          run.
                         </li>
-                        <li>Click an error's "Jump" to focus the offending line.</li>
+                        <li>
+                          Click an error's "Jump" to focus the offending line.
+                        </li>
                       </ul>
                     </div>
 
@@ -956,7 +1141,9 @@ const TailwindPlaygroundNoNav: React.FC = () => {
                         Let's go
                       </button>
                       <button
-                        onClick={() => { setShowWelcome(false); }}
+                        onClick={() => {
+                          setShowWelcome(false);
+                        }}
                         className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white px-4 py-2 rounded-xl"
                       >
                         Dismiss
@@ -968,7 +1155,6 @@ const TailwindPlaygroundNoNav: React.FC = () => {
             )}
           </aside>
         </div>
-
       </main>
     </div>
   );
@@ -977,7 +1163,9 @@ const TailwindPlaygroundNoNav: React.FC = () => {
 /* ------------------------ ChatWidget Component ------------------------ */
 const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ role: "user" | "bot"; text: string }[]>([]);
+  const [messages, setMessages] = useState<
+    { role: "user" | "bot"; text: string }[]
+  >([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -1006,7 +1194,10 @@ const ChatWidget: React.FC = () => {
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
-          { role: "bot" as "bot", text: "Error fetching reply. Please try again." },
+          {
+            role: "bot" as "bot",
+            text: "Error fetching reply. Please try again.",
+          },
         ]);
         setIsLoading(false);
       }, 500);
@@ -1020,7 +1211,9 @@ const ChatWidget: React.FC = () => {
           {/* Header */}
           <div className="flex justify-between items-center p-3 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white rounded-t-2xl">
             <span className="font-semibold">AI Assistant</span>
-            <button onClick={() => setIsOpen(false)} className="text-sm">✕</button>
+            <button onClick={() => setIsOpen(false)} className="text-sm">
+              ✕
+            </button>
           </div>
 
           {/* Messages */}
@@ -1074,7 +1267,6 @@ const ChatWidget: React.FC = () => {
     </div>
   );
 };
-
 
 // Wrapper component for the page
 const PlaygroundPage: React.FC = () => {
