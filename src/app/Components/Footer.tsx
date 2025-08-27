@@ -61,7 +61,7 @@ const TailSparkFooter: React.FC = () => {
   const quickLinks = ["Features", "Docs", "Community", "Support", "Blog"];
 
   return (
-    <footer className="relative bg-gradient-to-r from-purple-900 via-blue-900 to-indigo-900 border-t border-cyan-400/40 overflow-hidden">
+    <footer className="relative bg-gradient-to-r from-purple-900 via-blue-900 to-indigo-900 overflow-hidden">
       {/* Vibrant Animated Background Particles */}
       <div className="absolute inset-0 overflow-hidden">
         {particles.map((style, i) => (
