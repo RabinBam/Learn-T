@@ -21,12 +21,12 @@ export type UserProfile = {
 
 const DEFAULT_PROFILE: UserProfile = {
   name: "PlayerOne",
-  level: 15,
-  xp: 3500,
+  level: 1,
+  xp: 0,
   nextLevelXp: 5000,
-  gamesPlayed: 120,
-  wins: 85,
-  losses: 35,
+  gamesPlayed: 0,
+  wins: 0,
+  losses: 0,
   avatar: null,
   bio: "",
 };
