@@ -58,7 +58,7 @@ export default function HomePage() {
         <motion.div
           className="bg-white/10 backdrop-blur-lg p-6 rounded-2xl shadow-xl hover:shadow-2xl transition cursor-pointer"
           whileHover={{ scale: 1.02 }}
-          onClick={() => handleAction("/play")}
+          onClick={() => handleAction("/options")}
         >
           <h2 className="text-2xl font-bold text-pink-400 mb-3">
             Play by Learning

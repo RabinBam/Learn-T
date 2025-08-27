@@ -66,12 +66,12 @@ type User = UserProfile;
 function getUserData(): User {
   return {
     name: "PlayerOne",
-    level: 15,
-    xp: 3500,
-    nextLevelXp: 5000,
-    gamesPlayed: 120,
-    wins: 85,
-    losses: 35,
+    level: 0,
+    xp: 0,
+    nextLevelXp: 0,
+    gamesPlayed: 0,
+    wins: 0,
+    losses: 0,
     avatar: null, // Changed to null to indicate no custom avatar set
     bio: "",
   };
