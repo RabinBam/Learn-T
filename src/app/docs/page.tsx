@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import TableOfContents from "@/components/table-of-contents";
+import { RandomPromo } from "@/components/promos";
 
 export default function Welcome() {
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center text-center px-4">
+    <div className="col-span-1 flex h-[calc(100vh-4rem)] flex-col items-center justify-center text-center px-4 lg:col-start-2">
       {/* Animated gradient background */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-purple-800 via-blue-800 to-indigo-900 opacity-30"
