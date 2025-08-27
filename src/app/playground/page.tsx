@@ -3,6 +3,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
+import { auth } from "@/lib/firebase/firebase";
+import {
+  addXpAndUpdateLevel,
+  getOrCreateProfile,
+  advanceStage,
+  recordGameResult,
+} from "@/services/profile";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 // Types
 type LevelType =
@@ -41,14 +50,14 @@ interface RunStats {
 }
 
 interface SaveData {
-  currentLevel: number;
+  currentLevel: number; // stage progression
   xp: number;
-  bestStreak: number;
   achievements: string[];
-  longestLevelId?: number;
-  longestLevelMs?: number;
   history: RunStats[];
+  bestStreak: number;
   totalErrors: number;
+  // 🔥 Add this line
+  profileLevel?: number; // XP-based level from Firestore
 }
 
 // Enhanced pools with more variety
@@ -371,7 +380,14 @@ function storeSave(s: SaveData) {
 
 // Main component
 export default function EnhancedTailwindQuest() {
-  const [save, setSave] = useState<SaveData>(DEFAULT_SAVE);
+  // initialize save from localStorage so user progress persists across reloads
+  const [save, setSave] = useState<SaveData>(() => {
+    try {
+      return loadSave();
+    } catch {
+      return DEFAULT_SAVE;
+    }
+  });
   const [mode, setMode] = useState<"landing" | "map" | "play" | "events">(
     "landing"
   );
@@ -382,6 +398,59 @@ export default function EnhancedTailwindQuest() {
   const [toast, setToast] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [levelUp, setLevelUp] = useState(false);
+
+  // Persist local save to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      storeSave(save);
+    } catch (e) {
+      console.warn("Failed to persist save:", e);
+    }
+  }, [save]);
+
+  // Sync Firestore profile into local save on auth change (merge authoritative values)
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (!u) {
+        // User signed out — reset local progress to DEFAULT_SAVE (start from zero/session fresh)
+        try {
+          setSave(DEFAULT_SAVE);
+          storeSave(DEFAULT_SAVE);
+        } catch (err) {
+          console.warn("Failed to reset save on sign-out:", err);
+        }
+        return;
+      }
+
+      // User signed in — merge authoritative Firestore profile
+      try {
+        const profile = await getOrCreateProfile(u.uid);
+        setSave((s) => {
+          const merged = {
+            ...s,
+            // prefer the higher unlocked stage so we don't regress local progress
+            currentLevel: Math.max(
+              s.currentLevel || 1,
+              profile.currentLevel || 1
+            ),
+            // sync XP/profileLevel from Firestore (authoritative)
+            xp: typeof profile.xp === "number" ? profile.xp : s.xp,
+            profileLevel:
+              typeof profile.profileLevel === "number"
+                ? profile.profileLevel
+                : s.profileLevel,
+          };
+          try {
+            storeSave(merged);
+          } catch {}
+          return merged;
+        });
+      } catch (err) {
+        console.error("Failed to load profile on auth:", err);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Hydration/client detection and nextLevel fix
   const [isClient, setIsClient] = useState(false);
@@ -508,7 +577,8 @@ export default function EnhancedTailwindQuest() {
     return errors;
   }
 
-  function finishLevel(success: boolean) {
+  // Replace existing finishLevel with this async version
+  async function finishLevel(success: boolean) {
     if (!activeLevel || !run) return;
     const ended = Date.now();
     const ms = ended - run.startedAt;
@@ -531,19 +601,53 @@ export default function EnhancedTailwindQuest() {
     const errorPenalty = errors.length * 2;
     const gained = Math.max(0, baseXp + speedBonus - errorPenalty);
 
+    // Calculate next level if success
+    const nextLevelNum =
+      success && activeLevel.id === save.currentLevel
+        ? save.currentLevel + 1
+        : save.currentLevel;
+
     let nextSave: SaveData = {
       ...save,
       xp: save.xp + gained,
       bestStreak: Math.max(save.bestStreak, streakNow),
       history: newHistory,
       totalErrors: save.totalErrors + errors.length,
-      currentLevel:
-        success && activeLevel.id === save.currentLevel
-          ? save.currentLevel + 1
-          : save.currentLevel,
+      currentLevel: nextLevelNum,
     };
 
-    // Check achievements
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        // write XP and stage, then read authoritative profile
+        await addXpAndUpdateLevel(user.uid, gained);
+        await advanceStage(user.uid, nextLevelNum);
+
+        // record gamesPlayed / wins / losses atomically in Firestore
+        try {
+          await recordGameResult(user.uid, success);
+        } catch (e) {
+          console.warn("Failed to record game result:", e);
+        }
+
+        const refreshed = await getOrCreateProfile(user.uid);
+        nextSave = {
+          ...nextSave,
+          xp: refreshed.xp,
+          profileLevel: refreshed.profileLevel,
+          currentLevel: refreshed.currentLevel,
+        };
+        setSave(nextSave);
+      } catch (err) {
+        console.error("Error updating XP/level in Firestore:", err);
+        // fallback: use optimistic local save
+        setSave(nextSave);
+      }
+    } else {
+      setSave(nextSave); // unauthenticated fallback
+    }
+
+    // Achievements
     const newlyEarned = ACHIEVEMENTS.filter(
       (a) =>
         !nextSave.achievements.includes(a.id) &&
@@ -557,18 +661,19 @@ export default function EnhancedTailwindQuest() {
           .map((id) => ACHIEVEMENTS.find((a) => a.id === id)?.name)
           .join(", ")}`
       );
+      setSave((s) => ({
+        ...s,
+        achievements: [...s.achievements, ...newlyEarned],
+      }));
     }
-
-    setSave(nextSave);
 
     if (success) {
       setLevelUp(true);
-      setTimeout(() => setLevelUp(false), 2500); // auto-hide after 2.5s
+      setTimeout(() => setLevelUp(false), 2500);
     }
 
     setMode("map");
     setActiveLevel(null);
-
     setSelection([]);
     setTypedClasses("");
     setRun(null);
@@ -608,7 +713,14 @@ export default function EnhancedTailwindQuest() {
           {mode === "map" && (
             <LevelMap
               current={save.currentLevel}
-              onPlay={(id) => startLevel(generateLevel(id))}
+              onPlay={(id) => {
+                // ensure we don't attempt to start a level beyond the authoritative unlocked stage
+                if (id > save.currentLevel) {
+                  setToast("Complete previous levels first!");
+                  return;
+                }
+                startLevel(generateLevel(id));
+              }}
               hearts={hearts}
               setHearts={setHearts}
               startHeartRestoreTimer={startHeartRestoreTimer}
@@ -790,9 +902,9 @@ function Footer({ save, next }: { save: SaveData; next: LevelDef }) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {save.achievements.slice(-3).map((a) => (
+          {save.achievements.slice(-3).map((a, i) => (
             <span
-              key={a}
+              key={`${a}-${i}`}
               className="px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-white/15 text-xs"
             >
               {ACHIEVEMENTS.find((ach) => ach.id === a)?.name}
@@ -1106,10 +1218,12 @@ function LevelMap({
                   fill={i < fullHearts ? "currentColor" : "none"}
                   stroke="currentColor"
                   strokeWidth={2}
+                  aria-hidden
                 >
                   <path
                     d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z"
                     strokeLinejoin="round"
+                    strokeLinecap="round"
                   />
                 </svg>
                 {/* half fill overlay */}
@@ -1119,6 +1233,7 @@ function LevelMap({
                     className="absolute inset-0 w-6 h-6 text-red-400"
                     fill="currentColor"
                     style={{ clipPath: "inset(0 50% 0 0)" }}
+                    aria-hidden
                   >
                     <path d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z" />
                   </svg>
@@ -1794,9 +1909,7 @@ function Game({
               <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-cyan-400 to-purple-400"
-                  animate={{
-                    width: `${(correctCount / level.required.length) * 100}%`,
-                  }}
+                  animate={{}}
                   transition={{ duration: 0.3 }}
                 />
               </div>
@@ -1833,10 +1946,12 @@ function Game({
                   fill={i < fullHearts ? "currentColor" : "none"}
                   stroke="currentColor"
                   strokeWidth={2}
+                  aria-hidden
                 >
                   <path
                     d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z"
                     strokeLinejoin="round"
+                    strokeLinecap="round"
                   />
                 </svg>
                 {/* half fill overlay */}
@@ -1846,6 +1961,7 @@ function Game({
                     className="absolute inset-0 w-6 h-6 text-red-400"
                     fill="currentColor"
                     style={{ clipPath: "inset(0 50% 0 0)" }}
+                    aria-hidden
                   >
                     <path d="M12 21s-6.712-5.385-9.364-9.037C-1.206 7.006 2.75 2.25 7.143 4.444A5.07 5.07 0 0112 8.232a5.07 5.07 0 014.857-3.788C21.25 2.25 25.206 7.006 21.364 11.963 18.712 15.615 12 21 12 21z" />
                   </svg>
