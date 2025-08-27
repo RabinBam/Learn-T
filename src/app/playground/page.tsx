@@ -12,7 +12,7 @@ import {
 } from "@/services/profile";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-
+import Link from "next/link";
 // Types
 type LevelType =
   | "utilities"
@@ -867,12 +867,11 @@ function Header({
           >
             Map
           </button>
-          <button
-            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200"
-            onClick={() => onNav("events")}
-          >
-            Events
-          </button>
+         <Link href="/events" passHref>
+  <button className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200">
+    Events
+  </button>
+</Link>
           <button
             className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 transition-all duration-200"
             onClick={() => onNav("landing")}
@@ -1086,65 +1085,9 @@ function Events({ onBack }: { onBack: () => void }) {
   ];
 
   return (
-    <div className="h-full overflow-y-auto p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-            Special Events
-          </h2>
-          <button
-            onClick={onBack}
-            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15"
-          >
-            ← Back
-          </button>
-        </div>
-
-        <div className="grid gap-6">
-          {events.map((event, i) => (
-            <motion.div
-              key={event.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="p-6 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all duration-300"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {event.title}
-                  </h3>
-                  <p className="text-gray-300">{event.description}</p>
-                </div>
-                <div className="text-right">
-                  <div
-                    className={`px-3 py-1 rounded-full text-xs font-semibold mb-2 ${
-                      event.difficulty === "Hard"
-                        ? "bg-red-500/20 text-red-300"
-                        : event.difficulty === "Expert"
-                        ? "bg-purple-500/20 text-purple-300"
-                        : "bg-yellow-500/20 text-yellow-300"
-                    }`}
-                  >
-                    {event.difficulty}
-                  </div>
-                  <div className="text-sm text-cyan-400 font-semibold">
-                    {event.timeLeft}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-green-400 font-semibold">
-                  {event.reward}
-                </div>
-                <button className="px-6 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 transition-all duration-300">
-                  Join Event
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
+            <div className="h-screen flex items-center justify-center text-white">
+      Redirecting to Events...
+      <meta httpEquiv="refresh" content="0; URL='/events'" />
     </div>
   );
 }
