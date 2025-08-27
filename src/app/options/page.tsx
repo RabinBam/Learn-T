@@ -7,6 +7,36 @@ const InteractiveLandingPage: React.FC = () => {
   const router = useRouter();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
+  // 🔹 Fix hydration mismatch: pre-generate particle positions client-side
+  const [particles, setParticles] = useState<
+    {
+      left: string;
+      top: string;
+      animationDelay: string;
+      animationDuration: string;
+    }[]
+  >([]);
+
+  useEffect(() => {
+    setIsLoaded(true);
+
+    // existing mouse tracking
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+
+    // 🔹 generate random particle styles once
+    const generated = [...Array(50)].map(() => ({
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 3}s`,
+      animationDuration: `${2 + Math.random() * 3}s`,
+    }));
+    setParticles(generated);
+
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   useEffect(() => {
     setIsLoaded(true);
@@ -27,16 +57,11 @@ const InteractiveLandingPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
       {/* Animated Background Particles */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(50)].map((_, i) => (
+        {particles.map((style, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-white rounded-full opacity-20 animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-            }}
+            style={style}
           />
         ))}
       </div>
