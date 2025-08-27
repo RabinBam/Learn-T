@@ -68,7 +68,7 @@ const InteractiveLandingPage: React.FC = () => {
         }`}
       >
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-5">
           <h1 className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6 animate-pulse">
             TailSpark
           </h1>
