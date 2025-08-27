@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { saveContactMessage } from "@/services/contact";
 import React, { useState, FormEvent } from "react";
 
@@ -99,22 +100,32 @@ const ContactPage: React.FC = () => {
             }}
           >
             {/* Left Info */}
-            <div className="contactMessage">
-              <h2 className="contactTitle">Get in Touch with us:</h2>
-              <h3 className="contactSubtitle">
-                Out-of-hours call answering for the property sector
-              </h3>
-              <ul className="contactList">
-                <li>✔ Real people answering your phones out-of-hours</li>
-                <li>✔ Specific services for property sector pain-points</li>
-                <li>✔ 24 hour emergency contractor call outs</li>
-              </ul>
-              <div>
-                <span>Phone: 📞 0161 510 5600</span>
-                <br />
-                <span>Email: example@example.com</span>
-                <br />
-                <span>Location: Kamal Pokhari, Kathmandu</span>
+            <div className="contactMessage" style={{ marginTop: "-2rem" }}>
+              <div className="logoAndTitle" style={{display: "flex", alignItems: "center", marginBottom: "1rem"}}>
+                <Image src="/icons/LOGO.jpeg" alt="Logo" width={72} height={72} />
+                <span className="tailSparkText">
+                  TailSpark
+                </span>
+              </div>
+              <div className="leftContentContainer" style={{padding: "2.5rem"}}>
+                <div className="textContainer">
+                  <h2 className="contactTitle">Partner with TailSpark</h2>
+                  <h3 className="contactSubtitle">
+                    Gamified learning solutions for schools and institutions
+                  </h3>
+                </div>
+                <ul className="contactList">
+                  <li>✔ Engage students with interactive Tailwind CSS challenges</li>
+                  <li>✔ Custom learning modules for your curriculum</li>
+                  <li>✔ Track progress and achievements in real-time</li>
+                </ul>
+                <div style={{marginTop: "1.5rem"}}>
+                  <span>Phone: 📞 9742209455</span>
+                  <br />
+                  <span>Email: roshitlamichhane12@gmail.com</span>
+                  <br />
+                  <span>Location: Kamal Pokhari, Kathmandu</span>
+                </div>
               </div>
             </div>
 
@@ -219,6 +230,60 @@ const ContactPage: React.FC = () => {
           justify-content: center;
         }
 
+        .leftContentContainer {
+          padding: 2rem;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+          transition: transform 0.3s ease;
+        }
+
+        .leftContentContainer:hover {
+          transform: scale(1.03);
+        }
+
+        .logoAndTitle {
+          transition: transform 0.3s ease;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+        }
+
+        .logoAndTitle:hover {
+          transform: scale(1.05);
+        }
+
+        .logoAndTitle:hover .tailSparkText {
+          background: linear-gradient(90deg, #00ffff, #ff00ff, #00ffff);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradientShift 3s ease infinite;
+          transition: background 0.5s ease;
+        }
+
+        .tailSparkText {
+          margin-left: 0.75rem;
+          font-weight: 700;
+          font-size: 2rem;
+          background: linear-gradient(90deg, #FFFFFF, #E0E0E0);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          transition: background 0.5s ease;
+        }
+
+        @keyframes gradientShift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+
         .contactFormWrapper {
           color: #fff;
           padding: 2rem;
@@ -251,6 +316,13 @@ const ContactPage: React.FC = () => {
           background-color: #f9fafb;
           color: #111;
           font-size: 1rem;
+          transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:hover,
+        textarea:hover {
+          border-color: #6366f1;
+          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.10);
         }
 
         .submitBtn {
@@ -267,8 +339,8 @@ const ContactPage: React.FC = () => {
         }
 
         .submitBtn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 5px 15px rgba(59, 130, 246, 0.5);
+          transform: translateY(-2px) scale(1.05);
+          box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6);
         }
 
         /* Waves */
