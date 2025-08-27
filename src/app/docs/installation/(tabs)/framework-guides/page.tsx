@@ -1,4 +1,4 @@
-import { type Guide, loadGuides } from "@/app/(docs)/docs/installation/framework-guides";
+import { type Guide, loadGuides } from "@/app/docs/installation/framework-guides";
 import { Cta } from "@/components/cta";
 import { Metadata } from "next";
 import Link from "next/link";

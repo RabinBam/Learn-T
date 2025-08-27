@@ -1,5 +1,5 @@
 import { Breadcrumb } from "@/components/breadcrumb";
-import { getDocPageSlugs, getSectionAndTitleBySlug } from "../../../../(docs)/docs/api";
+import { getDocPageSlugs, getSectionAndTitleBySlug } from "@/app/docs/api";
 
 type Params = {
   params: Promise<{

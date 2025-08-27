@@ -44,6 +44,9 @@ importers:
       fuse.js:
         specifier: ^7.1.0
         version: 7.1.0
+      hast-util-to-jsx-runtime:
+        specifier: ^2.3.6
+        version: 2.3.6
       lucide-react:
         specifier: ^0.541.0
         version: 0.541.0(react@19.1.1)

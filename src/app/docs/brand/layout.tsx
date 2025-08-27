@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import TableOfContents from "@/components/table-of-contents";
-import { generateTableOfContentsFromMarkdown } from "../docs/api";
+import { generateTableOfContentsFromMarkdown } from "@/app/docs/api";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

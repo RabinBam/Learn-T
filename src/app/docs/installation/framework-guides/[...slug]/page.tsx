@@ -1,4 +1,4 @@
-import { loadGuide, loadGuides } from "@/app/(docs)/docs/installation/framework-guides";
+import { loadGuide, loadGuides } from "@/app/docs/installation/framework-guides";
 import { Steps } from "@/components/installation-steps";
 import { TabBar } from "@/components/installation-tabs";
 import { notFound, redirect } from "next/navigation";

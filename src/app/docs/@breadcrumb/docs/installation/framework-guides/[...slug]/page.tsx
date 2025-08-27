@@ -1,4 +1,4 @@
-import { loadGuide } from "@/app/(docs)/docs/installation/framework-guides";
+import { loadGuide } from "@/app/docs/installation/framework-guides";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { notFound } from "next/navigation";
 
