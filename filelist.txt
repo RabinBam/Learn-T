@@ -1,6 +1,7 @@
 Folder PATH listing
 Volume serial number is 90AB-3CAE
 C:.
+|   .env.local
 |   .gitignore
 |   eslint.config.mjs
 |   filelist.txt
@@ -75984,231 +75985,240 @@ C:.
     |           theme-fn.json
     |           theme.json
     |           
-    \---docs
-        |   accent-color.mdx
-        |   adding-custom-styles.mdx
-        |   align-content.mdx
-        |   align-items.mdx
-        |   align-self.mdx
-        |   animation.mdx
-        |   appearance.mdx
-        |   aspect-ratio.mdx
-        |   backdrop-filter-blur.mdx
-        |   backdrop-filter-brightness.mdx
-        |   backdrop-filter-contrast.mdx
-        |   backdrop-filter-grayscale.mdx
-        |   backdrop-filter-hue-rotate.mdx
-        |   backdrop-filter-invert.mdx
-        |   backdrop-filter-opacity.mdx
-        |   backdrop-filter-saturate.mdx
-        |   backdrop-filter-sepia.mdx
-        |   backdrop-filter.mdx
-        |   backface-visibility.mdx
-        |   background-attachment.mdx
-        |   background-blend-mode.mdx
-        |   background-clip.mdx
-        |   background-color.mdx
-        |   background-image.mdx
-        |   background-origin.mdx
-        |   background-position.mdx
-        |   background-repeat.mdx
-        |   background-size.mdx
-        |   border-collapse.mdx
-        |   border-color.mdx
-        |   border-radius.mdx
-        |   border-spacing.mdx
-        |   border-style.mdx
-        |   border-width.mdx
-        |   box-decoration-break.mdx
-        |   box-shadow.mdx
-        |   box-sizing.mdx
-        |   break-after.mdx
-        |   break-before.mdx
-        |   break-inside.mdx
-        |   caption-side.mdx
-        |   caret-color.mdx
-        |   clear.mdx
-        |   color-scheme.mdx
-        |   color.mdx
-        |   colors.mdx
-        |   columns.mdx
-        |   compatibility.mdx
-        |   content.mdx
-        |   cursor.mdx
-        |   dark-mode.mdx
-        |   detecting-classes-in-source-files.mdx
-        |   display.mdx
-        |   editor-setup.mdx
-        |   field-sizing.mdx
-        |   fill.mdx
-        |   filter-blur.mdx
-        |   filter-brightness.mdx
-        |   filter-contrast.mdx
-        |   filter-drop-shadow.mdx
-        |   filter-grayscale.mdx
-        |   filter-hue-rotate.mdx
-        |   filter-invert.mdx
-        |   filter-saturate.mdx
-        |   filter-sepia.mdx
-        |   filter.mdx
-        |   flex-basis.mdx
-        |   flex-direction.mdx
-        |   flex-grow.mdx
-        |   flex-shrink.mdx
-        |   flex-wrap.mdx
-        |   flex.mdx
-        |   float.mdx
-        |   font-family.mdx
-        |   font-size.mdx
-        |   font-smoothing.mdx
-        |   font-stretch.mdx
-        |   font-style.mdx
-        |   font-variant-numeric.mdx
-        |   font-weight.mdx
-        |   forced-color-adjust.mdx
-        |   functions-and-directives.mdx
-        |   gap.mdx
-        |   grid-auto-columns.mdx
-        |   grid-auto-flow.mdx
-        |   grid-auto-rows.mdx
-        |   grid-column.mdx
-        |   grid-row.mdx
-        |   grid-template-columns.mdx
-        |   grid-template-rows.mdx
-        |   height.mdx
-        |   hover-focus-and-other-states.mdx
-        |   hyphens.mdx
-        |   isolation.mdx
-        |   justify-content.mdx
-        |   justify-items.mdx
-        |   justify-self.mdx
-        |   letter-spacing.mdx
-        |   line-clamp.mdx
-        |   line-height.mdx
-        |   list-style-image.mdx
-        |   list-style-position.mdx
-        |   list-style-type.mdx
-        |   margin.mdx
-        |   mask-clip.mdx
-        |   mask-composite.mdx
-        |   mask-image.mdx
-        |   mask-mode.mdx
-        |   mask-origin.mdx
-        |   mask-position.mdx
-        |   mask-repeat.mdx
-        |   mask-size.mdx
-        |   mask-type.mdx
-        |   max-height.mdx
-        |   max-width.mdx
-        |   min-height.mdx
-        |   min-width.mdx
-        |   mix-blend-mode.mdx
-        |   object-fit.mdx
-        |   object-position.mdx
-        |   opacity.mdx
-        |   order.mdx
-        |   outline-color.mdx
-        |   outline-offset.mdx
-        |   outline-style.mdx
-        |   outline-width.mdx
-        |   overflow-wrap.mdx
-        |   overflow.mdx
-        |   overscroll-behavior.mdx
-        |   padding.mdx
-        |   perspective-origin.mdx
-        |   perspective.mdx
-        |   place-content.mdx
-        |   place-items.mdx
-        |   place-self.mdx
-        |   pointer-events.mdx
-        |   position.mdx
-        |   preflight.mdx
-        |   resize.mdx
-        |   responsive-design.mdx
-        |   rotate.mdx
-        |   scale.mdx
-        |   scroll-behavior.mdx
-        |   scroll-margin.mdx
-        |   scroll-padding.mdx
-        |   scroll-snap-align.mdx
-        |   scroll-snap-stop.mdx
-        |   scroll-snap-type.mdx
-        |   skew.mdx
-        |   stroke-width.mdx
-        |   stroke.mdx
-        |   styling-with-utility-classes.mdx
-        |   table-layout.mdx
-        |   text-align.mdx
-        |   text-decoration-color.mdx
-        |   text-decoration-line.mdx
-        |   text-decoration-style.mdx
-        |   text-decoration-thickness.mdx
-        |   text-indent.mdx
-        |   text-overflow.mdx
-        |   text-shadow.mdx
-        |   text-transform.mdx
-        |   text-underline-offset.mdx
-        |   text-wrap.mdx
-        |   theme.mdx
-        |   top-right-bottom-left.mdx
-        |   touch-action.mdx
-        |   transform-origin.mdx
-        |   transform-style.mdx
-        |   transform.mdx
-        |   transition-behavior.mdx
-        |   transition-delay.mdx
-        |   transition-duration.mdx
-        |   transition-property.mdx
-        |   transition-timing-function.mdx
-        |   translate.mdx
-        |   upgrade-guide.mdx
-        |   user-select.mdx
-        |   vertical-align.mdx
-        |   visibility.mdx
-        |   white-space.mdx
-        |   width.mdx
-        |   will-change.mdx
-        |   word-break.mdx
-        |   z-index.mdx
-        |   
-        +---img
-        |   |   clouds.svg
-        |   |   erin-lindford.jpg
-        |   |   intellisense.png
-        |   |   keyboard-dark.png
-        |   |   keyboard-light.png
-        |   |   mask.png
-        |   |   prettier-banner.jpg
-        |   |   t-shirt.jpg
-        |   |   
-        |   \---guides
-        |           adonis-white.react.svg
-        |           adonis.react.svg
-        |           angular-white.react.svg
-        |           angular.react.svg
-        |           astro-white.react.svg
-        |           astro.react.svg
-        |           ember.react.svg
-        |           gatsby.react.svg
-        |           laravel.react.svg
-        |           meteor.react.svg
-        |           nextjs-white.react.svg
-        |           nextjs.react.svg
-        |           nuxtjs.react.svg
-        |           parcel.react.svg
-        |           phoenix.react.svg
-        |           qwik.react.svg
-        |           rails-white.react.svg
-        |           rails.react.svg
-        |           react-router-white.react.svg
-        |           react-router.react.svg
-        |           rspack.react.svg
-        |           solidjs.react.svg
-        |           svelte.react.svg
-        |           symfony-white.react.svg
-        |           symfony.react.svg
-        |           vite.react.svg
-        |           
-        \---utils
-                colors.ts
-                
+    +---docs
+    |   |   accent-color.mdx
+    |   |   adding-custom-styles.mdx
+    |   |   align-content.mdx
+    |   |   align-items.mdx
+    |   |   align-self.mdx
+    |   |   animation.mdx
+    |   |   appearance.mdx
+    |   |   aspect-ratio.mdx
+    |   |   backdrop-filter-blur.mdx
+    |   |   backdrop-filter-brightness.mdx
+    |   |   backdrop-filter-contrast.mdx
+    |   |   backdrop-filter-grayscale.mdx
+    |   |   backdrop-filter-hue-rotate.mdx
+    |   |   backdrop-filter-invert.mdx
+    |   |   backdrop-filter-opacity.mdx
+    |   |   backdrop-filter-saturate.mdx
+    |   |   backdrop-filter-sepia.mdx
+    |   |   backdrop-filter.mdx
+    |   |   backface-visibility.mdx
+    |   |   background-attachment.mdx
+    |   |   background-blend-mode.mdx
+    |   |   background-clip.mdx
+    |   |   background-color.mdx
+    |   |   background-image.mdx
+    |   |   background-origin.mdx
+    |   |   background-position.mdx
+    |   |   background-repeat.mdx
+    |   |   background-size.mdx
+    |   |   border-collapse.mdx
+    |   |   border-color.mdx
+    |   |   border-radius.mdx
+    |   |   border-spacing.mdx
+    |   |   border-style.mdx
+    |   |   border-width.mdx
+    |   |   box-decoration-break.mdx
+    |   |   box-shadow.mdx
+    |   |   box-sizing.mdx
+    |   |   break-after.mdx
+    |   |   break-before.mdx
+    |   |   break-inside.mdx
+    |   |   caption-side.mdx
+    |   |   caret-color.mdx
+    |   |   clear.mdx
+    |   |   color-scheme.mdx
+    |   |   color.mdx
+    |   |   colors.mdx
+    |   |   columns.mdx
+    |   |   compatibility.mdx
+    |   |   content.mdx
+    |   |   cursor.mdx
+    |   |   dark-mode.mdx
+    |   |   detecting-classes-in-source-files.mdx
+    |   |   display.mdx
+    |   |   editor-setup.mdx
+    |   |   field-sizing.mdx
+    |   |   fill.mdx
+    |   |   filter-blur.mdx
+    |   |   filter-brightness.mdx
+    |   |   filter-contrast.mdx
+    |   |   filter-drop-shadow.mdx
+    |   |   filter-grayscale.mdx
+    |   |   filter-hue-rotate.mdx
+    |   |   filter-invert.mdx
+    |   |   filter-saturate.mdx
+    |   |   filter-sepia.mdx
+    |   |   filter.mdx
+    |   |   flex-basis.mdx
+    |   |   flex-direction.mdx
+    |   |   flex-grow.mdx
+    |   |   flex-shrink.mdx
+    |   |   flex-wrap.mdx
+    |   |   flex.mdx
+    |   |   float.mdx
+    |   |   font-family.mdx
+    |   |   font-size.mdx
+    |   |   font-smoothing.mdx
+    |   |   font-stretch.mdx
+    |   |   font-style.mdx
+    |   |   font-variant-numeric.mdx
+    |   |   font-weight.mdx
+    |   |   forced-color-adjust.mdx
+    |   |   functions-and-directives.mdx
+    |   |   gap.mdx
+    |   |   grid-auto-columns.mdx
+    |   |   grid-auto-flow.mdx
+    |   |   grid-auto-rows.mdx
+    |   |   grid-column.mdx
+    |   |   grid-row.mdx
+    |   |   grid-template-columns.mdx
+    |   |   grid-template-rows.mdx
+    |   |   height.mdx
+    |   |   hover-focus-and-other-states.mdx
+    |   |   hyphens.mdx
+    |   |   isolation.mdx
+    |   |   justify-content.mdx
+    |   |   justify-items.mdx
+    |   |   justify-self.mdx
+    |   |   letter-spacing.mdx
+    |   |   line-clamp.mdx
+    |   |   line-height.mdx
+    |   |   list-style-image.mdx
+    |   |   list-style-position.mdx
+    |   |   list-style-type.mdx
+    |   |   margin.mdx
+    |   |   mask-clip.mdx
+    |   |   mask-composite.mdx
+    |   |   mask-image.mdx
+    |   |   mask-mode.mdx
+    |   |   mask-origin.mdx
+    |   |   mask-position.mdx
+    |   |   mask-repeat.mdx
+    |   |   mask-size.mdx
+    |   |   mask-type.mdx
+    |   |   max-height.mdx
+    |   |   max-width.mdx
+    |   |   min-height.mdx
+    |   |   min-width.mdx
+    |   |   mix-blend-mode.mdx
+    |   |   object-fit.mdx
+    |   |   object-position.mdx
+    |   |   opacity.mdx
+    |   |   order.mdx
+    |   |   outline-color.mdx
+    |   |   outline-offset.mdx
+    |   |   outline-style.mdx
+    |   |   outline-width.mdx
+    |   |   overflow-wrap.mdx
+    |   |   overflow.mdx
+    |   |   overscroll-behavior.mdx
+    |   |   padding.mdx
+    |   |   perspective-origin.mdx
+    |   |   perspective.mdx
+    |   |   place-content.mdx
+    |   |   place-items.mdx
+    |   |   place-self.mdx
+    |   |   pointer-events.mdx
+    |   |   position.mdx
+    |   |   preflight.mdx
+    |   |   resize.mdx
+    |   |   responsive-design.mdx
+    |   |   rotate.mdx
+    |   |   scale.mdx
+    |   |   scroll-behavior.mdx
+    |   |   scroll-margin.mdx
+    |   |   scroll-padding.mdx
+    |   |   scroll-snap-align.mdx
+    |   |   scroll-snap-stop.mdx
+    |   |   scroll-snap-type.mdx
+    |   |   skew.mdx
+    |   |   stroke-width.mdx
+    |   |   stroke.mdx
+    |   |   styling-with-utility-classes.mdx
+    |   |   table-layout.mdx
+    |   |   text-align.mdx
+    |   |   text-decoration-color.mdx
+    |   |   text-decoration-line.mdx
+    |   |   text-decoration-style.mdx
+    |   |   text-decoration-thickness.mdx
+    |   |   text-indent.mdx
+    |   |   text-overflow.mdx
+    |   |   text-shadow.mdx
+    |   |   text-transform.mdx
+    |   |   text-underline-offset.mdx
+    |   |   text-wrap.mdx
+    |   |   theme.mdx
+    |   |   top-right-bottom-left.mdx
+    |   |   touch-action.mdx
+    |   |   transform-origin.mdx
+    |   |   transform-style.mdx
+    |   |   transform.mdx
+    |   |   transition-behavior.mdx
+    |   |   transition-delay.mdx
+    |   |   transition-duration.mdx
+    |   |   transition-property.mdx
+    |   |   transition-timing-function.mdx
+    |   |   translate.mdx
+    |   |   upgrade-guide.mdx
+    |   |   user-select.mdx
+    |   |   vertical-align.mdx
+    |   |   visibility.mdx
+    |   |   white-space.mdx
+    |   |   width.mdx
+    |   |   will-change.mdx
+    |   |   word-break.mdx
+    |   |   z-index.mdx
+    |   |   
+    |   +---img
+    |   |   |   clouds.svg
+    |   |   |   erin-lindford.jpg
+    |   |   |   intellisense.png
+    |   |   |   keyboard-dark.png
+    |   |   |   keyboard-light.png
+    |   |   |   mask.png
+    |   |   |   prettier-banner.jpg
+    |   |   |   t-shirt.jpg
+    |   |   |   
+    |   |   \---guides
+    |   |           adonis-white.react.svg
+    |   |           adonis.react.svg
+    |   |           angular-white.react.svg
+    |   |           angular.react.svg
+    |   |           astro-white.react.svg
+    |   |           astro.react.svg
+    |   |           ember.react.svg
+    |   |           gatsby.react.svg
+    |   |           laravel.react.svg
+    |   |           meteor.react.svg
+    |   |           nextjs-white.react.svg
+    |   |           nextjs.react.svg
+    |   |           nuxtjs.react.svg
+    |   |           parcel.react.svg
+    |   |           phoenix.react.svg
+    |   |           qwik.react.svg
+    |   |           rails-white.react.svg
+    |   |           rails.react.svg
+    |   |           react-router-white.react.svg
+    |   |           react-router.react.svg
+    |   |           rspack.react.svg
+    |   |           solidjs.react.svg
+    |   |           svelte.react.svg
+    |   |           symfony-white.react.svg
+    |   |           symfony.react.svg
+    |   |           vite.react.svg
+    |   |           
+    |   \---utils
+    |           colors.ts
+    |           
+    +---lib
+    |   \---firebase
+    |           analytics.ts
+    |           client.ts
+    |           firebase.ts
+    |           
+    \---services
+            profile.ts
+            
