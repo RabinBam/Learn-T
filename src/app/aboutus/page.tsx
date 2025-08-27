@@ -17,46 +17,49 @@ export default function AboutPage() {
   const connectionLinesRef = useRef<SVGPathElement[]>([]);
   const teamSectionRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const [particles] = useState(() => {
-    // Generate particles once on component mount
-    return Array.from({ length: 25 }).map(() => ({
+  const [particles, setParticles] = useState<{top:string, left:string, duration:string, delay:string}[]>([]);
+
+  useEffect(() => {
+    // Only generate particles on the client
+    const generated = Array.from({ length: 25 }).map(() => ({
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
       duration: `${5 + Math.random() * 5}s`,
       delay: `${Math.random() * 5}s`,
     }));
-  });
+    setParticles(generated);
+  }, []);
   const lineOffsetRef = useRef(0); // keeps current offset
 
   const members: TeamMember[] = [
     {
       name: "Rabin Bam",
       role: "Leader",
-      img: "/Rabin.jpg",
+      img: "/icons/Rabin.jpg",
       bio: "There's only one way to live life, and that's without regrets. So I don't want regret not learning it.",
     },
     {
       name: "Sachin",
       role: "Lead Designer",
-      img: "/Sachin.jpg",
+      img: "/icons/Sachin.jpg",
       bio: "Learning is boaring without a challenge. So I will change the way how you look at learning.",
     },
     {
       name: "Roshit Lamichanne",
       role: "Animation and Creative Director",
-      img: "/Roshit.jpg",
+      img: "/icons/Roshit.jpg",
       bio: "It does not feel real when its not moving. So I will make it move.",
     },
     {
       name: "Oscar",
       role: "Tester and Developer",
-      img: "/oscar.jpg",
+      img: "/icons/oscar.jpg",
       bio: "I hate bug and I will squash them all. So I will make sure everything works as expected.",
     },
     {
       name: "Sanskar",
       role: "Logic and Asset creator",
-      img: "/Sanskar.jpg",
+      img: "/icons/Sanskar.jpg",
       bio: "I prefer logic over design and Asset over woman. So I will make sure everything is logical and assets are ready.",
     },
   ];
