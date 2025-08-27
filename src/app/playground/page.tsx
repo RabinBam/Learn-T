@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Confetti from "react-confetti";
 
 // Types
 type LevelType =
@@ -380,16 +381,24 @@ export default function EnhancedTailwindQuest() {
   const [run, setRun] = useState<RunStats | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [levelUp, setLevelUp] = useState(false);
 
   // Hydration/client detection and nextLevel fix
   const [isClient, setIsClient] = useState(false);
   useEffect(() => setIsClient(true), []);
-  const nextLevel = useMemo(() => generateLevel(save.currentLevel), [save.currentLevel]);
+  const nextLevel = useMemo(
+    () => generateLevel(save.currentLevel),
+    [save.currentLevel]
+  );
 
   // Global Hearts State
   const [hearts, setHearts] = useState(3); // 3 full hearts
   const [heartTimer, setHeartTimer] = useState<number>(0); // single countdown timer in seconds
   const [notifications, setNotifications] = useState<string[]>([]);
+
+  // Heart restore intervals
+  const restoreTimeFull = 120; // seconds for full heart
+  const restoreTimeHalf = 60; // seconds for half heart
 
   // Function to show notification
   function showNotification(msg: string) {
@@ -401,13 +410,17 @@ export default function EnhancedTailwindQuest() {
 
   // Start a heart restore timer (only if timer is not running and hearts < 3)
   function startHeartRestoreTimer() {
-    // Revert to original: always set to 120 when hearts < 3 and timer is 0
+    // Only set timer if not already running and hearts < 3
     if (heartTimer === 0 && hearts < 3) {
-      setHeartTimer(120);
+      if (hearts % 1 !== 0) {
+        setHeartTimer(restoreTimeHalf); // 60s for half-heart restore
+      } else {
+        setHeartTimer(restoreTimeFull); // 120s for full-heart restore
+      }
     }
   }
 
-  // Heart timer countdown: decrement timer, restore one full or half heart
+  // Heart timer countdown: increment by 0.5 or 1 heart every restoreTimeHalf or restoreTimeFull
   useEffect(() => {
     if (heartTimer <= 0) return;
     if (hearts >= 3) {
@@ -417,16 +430,17 @@ export default function EnhancedTailwindQuest() {
     const interval = setInterval(() => {
       setHeartTimer((t) => {
         if (t <= 1) {
-          // Add exactly one full heart
-          // Check for half-heart before increment
-          const hadHalf = hearts % 1 !== 0;
-          const newHearts = Math.min(3, hearts + 1);
-          setHearts(newHearts);
-          // Updated logic: half-heart restores are 60s, otherwise 120s, but if full after restore, stop timer.
-          if (hadHalf) {
-            return newHearts >= 3 ? 0 : 60;
+          let newHearts;
+          if (hearts % 1 !== 0) {
+            // If currently at half, restore to next full
+            newHearts = Math.min(3, Math.floor(hearts) + 1);
+            setHearts(newHearts);
+            return newHearts >= 3 ? 0 : restoreTimeFull;
           } else {
-            return newHearts >= 3 ? 0 : 120;
+            // If currently at full integer, restore a half
+            newHearts = Math.min(3, hearts + 0.5);
+            setHearts(newHearts);
+            return newHearts >= 3 ? 0 : restoreTimeHalf;
           }
         }
         return t - 1;
@@ -483,7 +497,11 @@ export default function EnhancedTailwindQuest() {
     }
     const textColorMatch = classStr.match(/text-(\w+)-\d+/);
     const bgColorMatch = classStr.match(/bg-(\w+)-\d+/);
-    if (textColorMatch && bgColorMatch && textColorMatch[1] === bgColorMatch[1]) {
+    if (
+      textColorMatch &&
+      bgColorMatch &&
+      textColorMatch[1] === bgColorMatch[1]
+    ) {
       errors.push("Consider contrast between text and background colors");
     }
 
@@ -542,8 +560,15 @@ export default function EnhancedTailwindQuest() {
     }
 
     setSave(nextSave);
+
+    if (success) {
+      setLevelUp(true);
+      setTimeout(() => setLevelUp(false), 2500); // auto-hide after 2.5s
+    }
+
     setMode("map");
     setActiveLevel(null);
+
     setSelection([]);
     setTypedClasses("");
     setRun(null);
@@ -616,6 +641,34 @@ export default function EnhancedTailwindQuest() {
 
         <Footer save={save} next={nextLevel} />
       </div>
+
+      <AnimatePresence>
+        {levelUp && (
+          <motion.div
+            key="levelup"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 flex items-center justify-center z-[60] bg-black/60 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.5, rotate: -15 }}
+              animate={{ scale: 1.1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 12 }}
+              className="px-12 py-8 rounded-3xl bg-gradient-to-br from-purple-600 via-pink-500 to-cyan-500 shadow-2xl border-4 border-white/20 text-center"
+            >
+              <Confetti numberOfPieces={300} recycle={false} />
+              <h2 className="text-5xl font-extrabold text-white drop-shadow-lg mb-4">
+                🎉 Level Up! 🎉
+              </h2>
+              <p className="text-lg text-white/90">
+                Great job — keep going to unlock new challenges!
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {toast && (
@@ -1032,9 +1085,13 @@ function LevelMap({
             const hasHalf = hearts % 1 >= 0.5;
             const showHalfOn = fullHearts; // the next heart slot that may be half
             const timerTarget = Math.floor(Math.floor(hearts * 2) / 2); // which heart the next half will fill
-            const showTimer = (heartTimer ?? 0) > 0 && hearts < 3 && i === timerTarget;
+            const showTimer =
+              (heartTimer ?? 0) > 0 && hearts < 3 && i === timerTarget;
             return (
-              <div key={i} className="relative flex items-center justify-center w-6 h-10">
+              <div
+                key={i}
+                className="relative flex items-center justify-center w-6 h-10"
+              >
                 {showTimer && (
                   <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-white">
                     {Math.ceil(heartTimer ?? 0)}s
@@ -1043,7 +1100,9 @@ function LevelMap({
                 {/* base outline / full fill */}
                 <svg
                   viewBox="0 0 24 24"
-                  className={`w-6 h-6 ${i < fullHearts ? "text-red-400" : "text-gray-700 opacity-30"}`}
+                  className={`w-6 h-6 ${
+                    i < fullHearts ? "text-red-400" : "text-gray-700 opacity-30"
+                  }`}
                   fill={i < fullHearts ? "currentColor" : "none"}
                   stroke="currentColor"
                   strokeWidth={2}
@@ -1321,7 +1380,9 @@ function Game({
   setHearts?: React.Dispatch<React.SetStateAction<number>>;
   startHeartRestoreTimer?: () => void;
   showNotification?: (msg: string) => void;
-  setMode?: React.Dispatch<React.SetStateAction<"landing" | "map" | "play" | "events">>;
+  setMode?: React.Dispatch<
+    React.SetStateAction<"landing" | "map" | "play" | "events">
+  >;
   heartTimer?: number;
 }) {
   const [wrongSelections, setWrongSelections] = useState<string[]>([]);
@@ -1332,6 +1393,8 @@ function Game({
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Dedicated state to track the number of correct options selected
+  const [correctCount, setCorrectCount] = useState(0);
 
   useEffect(() => {
     if (timerRef.current) {
@@ -1358,7 +1421,6 @@ function Game({
     level.mode === "typing"
       ? typedClasses.split(" ").filter(Boolean)
       : selection;
-  const hasAll = level.required.every((r) => currentClasses.includes(r));
   const newErrors = onError(currentClasses);
 
   useEffect(() => {
@@ -1366,14 +1428,24 @@ function Game({
   }, [currentClasses]);
 
   useEffect(() => {
-    if (hasAll && newErrors.length === 0) onWin();
-  }, [hasAll, newErrors]);
+    const totalCorrectSelected = [
+      ...new Set([
+        ...selection.filter((c) => level.required.includes(c)),
+        ...revealedHints.filter((c) => level.required.includes(c)),
+      ]),
+    ].length;
 
-  // Refactored toggleChip function to avoid setRevealedHints inside setSelection updater
+    setCorrectCount(totalCorrectSelected);
+
+    if (totalCorrectSelected === level.required.length && (hearts ?? 1) > 0) {
+      onWin();
+    }
+  }, [selection, revealedHints, hearts]);
+
+  // Refactored toggleChip function to avoid setCorrectCount inside setSelection updater
   function toggleChip(c: string): void {
     const isCorrect = level.required.includes(c);
     const alreadySelected = selection.includes(c);
-    const MAX_CORRECT = 3;
 
     if (alreadySelected) return;
 
@@ -1385,44 +1457,37 @@ function Game({
     }
 
     if (isCorrect) {
-      setSelection((prev: string[]) => {
-        const currentCorrectCount = prev.filter((cls: string) =>
-          level.required.includes(cls)
-        ).length;
-        if (currentCorrectCount >= Math.min(MAX_CORRECT, level.required.length))
-          return prev;
-        if (!prev.includes(c)) {
-          return [...prev, c];
-        }
-        return prev;
-      });
-    } else {
-      if (!wrongSelections.includes(c)) setWrongSelections((prev) => [...prev, c]);
-
-      if (typeof hearts === "number" && setHearts && startHeartRestoreTimer && showNotification) {
-        setHearts((h) => Math.max(0, Math.round((h - 1) * 2) / 2));
-        showNotification("You lost a heart!");
-        startHeartRestoreTimer();
+      if (!selection.includes(c)) {
+        setSelection([...selection, c]);
       }
+    } else {
+      // If this wrong option was never clicked before
+      if (!wrongSelections.includes(c)) {
+        setWrongSelections((prev) => [...prev, c]);
 
-      setPopupMessage(
-        typeof hearts === "number" && hearts <= 1
-          ? "You lost your last heart! Play other modes or wait for hearts to restore."
-          : "Wrong selection! You lost a heart."
-      );
-      setFailedPopup(true);
+        if (
+          typeof hearts === "number" &&
+          setHearts &&
+          startHeartRestoreTimer &&
+          showNotification
+        ) {
+          setHearts((h) => Math.max(0, Math.round((h - 1) * 2) / 2));
+          showNotification("You lost a heart!");
+          startHeartRestoreTimer();
+        }
+
+        setPopupMessage(
+          typeof hearts === "number" && hearts <= 1
+            ? "You lost your last heart! Play other modes or wait for hearts to restore."
+            : "Wrong selection! You lost a heart."
+        );
+        setFailedPopup(true);
+      }
     }
 
     setTimeout(() => {
-      // Count correct selections from both selection and revealedHints for all modes
-      const currentClasses = [...selection, ...revealedHints];
-      const correctCount = currentClasses.filter((cls) =>
-        level.required.includes(cls)
-      ).length;
-      const hasAll = correctCount >= Math.min(MAX_CORRECT, level.required.length);
-      const newErrors = onError(currentClasses);
+      const newErrors = onError([...selection, ...revealedHints]);
       setErrors(newErrors);
-      if (hasAll && newErrors.length === 0) onWin();
     }, 50);
   }
 
@@ -1617,7 +1682,8 @@ function Game({
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
                 {level.palette.map((c) => {
                   const isRequired = level.required.includes(c);
-                  const isCorrect = selection.includes(c) || revealedHints.includes(c);
+                  const isCorrect =
+                    selection.includes(c) || revealedHints.includes(c);
                   const isWrong = wrongSelections.includes(c);
 
                   return (
@@ -1634,7 +1700,11 @@ function Game({
                       } ${isRequired ? "ring-1 ring-green-500/30" : ""}`}
                     >
                       {isCorrect ? "✓ " : ""}
-                      <span className={isWrong ? "line-through text-red-400" : ""}>{c}</span>
+                      <span
+                        className={isWrong ? "line-through text-red-400" : ""}
+                      >
+                        {c}
+                      </span>
                       {isWrong && (
                         <span className="absolute inset-x-2 top-1/2 border-t border-red-500 transform -translate-y-1/2"></span>
                       )}
@@ -1656,28 +1726,36 @@ function Game({
               </button>
               <button
                 onClick={() => {
-              // New heart deduction for hint usage
-              if (typeof hearts === "number" && setHearts && startHeartRestoreTimer && showNotification) {
-                if (hearts > 0) {
-                  setHearts((h) => {
-                    const newHearts = h - 0.5;
-                    if (newHearts < h) {
-                      showNotification("Hint used! You lost half a heart.");
-                      startHeartRestoreTimer();
+                  // Deduct half a heart for hint usage
+                  if (
+                    typeof hearts === "number" &&
+                    setHearts &&
+                    startHeartRestoreTimer &&
+                    showNotification
+                  ) {
+                    if (hearts > 0) {
+                      setHearts((h) => {
+                        const newHearts = h - 0.5;
+                        if (newHearts < h) {
+                          showNotification("Hint used! You lost half a heart.");
+                          startHeartRestoreTimer();
+                        }
+                        return Math.max(0, Math.round(newHearts * 2) / 2);
+                      });
                     }
-                    // Clamp to 0, and round to nearest 0.5
-                    return Math.max(0, Math.round(newHearts * 2) / 2);
-                  });
-                }
-              }
-              // Reveal one unrevealed correct option as a hint
-              const remaining = level.required.filter(r => !revealedHints.includes(r));
-              if (remaining.length > 0) {
-                const newHint = remaining[0];
-                setRevealedHints([...revealedHints, newHint]);
-                setHint(newHint); // store current hint
-              }
-              setHinted(true);
+                  }
+
+                  // Reveal one unrevealed correct option as a hint
+                  const remaining = level.required.filter(
+                    (r) => !revealedHints.includes(r)
+                  );
+                  if (remaining.length > 0) {
+                    const newHint = remaining[0];
+                    setRevealedHints((prev) => [...prev, newHint]);
+                    setHint(newHint); // only reveal the hint visually
+                  }
+
+                  setHinted(true);
                 }}
                 disabled={hinted}
                 className="px-4 py-2 rounded-xl bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/30 disabled:opacity-50 transition-all duration-200"
@@ -1700,9 +1778,7 @@ function Game({
               <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
                 <div className="text-sm text-yellow-300">
                   Hint: One required class is{" "}
-                  <code className="bg-black/20 px-1 rounded">
-                    {hint}
-                  </code>
+                  <code className="bg-black/20 px-1 rounded">{hint}</code>
                 </div>
               </div>
             )}
@@ -1712,23 +1788,14 @@ function Game({
               <div className="flex justify-between text-sm">
                 <span>Progress</span>
                 <span>
-                  {
-                    currentClasses.filter((c) => level.required.includes(c))
-                      .length
-                  }
-                  /{level.required.length}
+                  {correctCount}/{level.required.length}
                 </span>
               </div>
               <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-cyan-400 to-purple-400"
                   animate={{
-                    width: `${
-                      (currentClasses.filter((c) => level.required.includes(c))
-                        .length /
-                        level.required.length) *
-                      100
-                    }%`,
+                    width: `${(correctCount / level.required.length) * 100}%`,
                   }}
                   transition={{ duration: 0.3 }}
                 />
@@ -1745,9 +1812,13 @@ function Game({
             const hasHalf = hearts % 1 >= 0.5;
             const showHalfOn = fullHearts; // the next heart slot that may be half
             const timerTarget = Math.floor(Math.floor(hearts * 2) / 2); // which heart the next half will fill
-            const showTimer = (heartTimer ?? 0) > 0 && hearts < 3 && i === timerTarget;
+            const showTimer =
+              (heartTimer ?? 0) > 0 && hearts < 3 && i === timerTarget;
             return (
-              <div key={i} className="relative flex items-center justify-center w-6 h-10">
+              <div
+                key={i}
+                className="relative flex items-center justify-center w-6 h-10"
+              >
                 {showTimer && (
                   <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-white">
                     {Math.ceil(heartTimer ?? 0)}s
@@ -1756,7 +1827,9 @@ function Game({
                 {/* base outline / full fill */}
                 <svg
                   viewBox="0 0 24 24"
-                  className={`w-6 h-6 ${i < fullHearts ? "text-red-400" : "text-gray-700 opacity-30"}`}
+                  className={`w-6 h-6 ${
+                    i < fullHearts ? "text-red-400" : "text-gray-700 opacity-30"
+                  }`}
                   fill={i < fullHearts ? "currentColor" : "none"}
                   stroke="currentColor"
                   strokeWidth={2}
@@ -1784,22 +1857,25 @@ function Game({
         </div>
       )}
       {/* Unified popup for heart loss or out-of-hearts */}
-      {(failedPopup || (typeof hearts === "number" && hearts <= 0 && setMode)) && (
+      {(failedPopup ||
+        (typeof hearts === "number" && hearts <= 0 && setMode)) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="rounded-3xl p-8 bg-gradient-to-br from-purple-800/90 via-indigo-900/90 to-cyan-800/90 border-2 border-white/10 shadow-2xl max-w-xs w-full text-center">
             <div className="text-3xl font-extrabold text-red-400 mb-3 bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              {typeof hearts === "number" && hearts <= 0 ? "Out of Hearts!" : "Oops!"}
+              {typeof hearts === "number" && hearts <= 0
+                ? "Out of Hearts!"
+                : "Oops!"}
             </div>
             <div className="mb-4 text-white/90 text-lg">
-              {typeof hearts === "number" && hearts <= 0
-                ? (
-                  <>
-                    You ran out of hearts.<br />
-                    Play other modes or wait for hearts to restore.
-                  </>
-                )
-                : popupMessage && <p>{popupMessage}</p>
-              }
+              {typeof hearts === "number" && hearts <= 0 ? (
+                <>
+                  You ran out of hearts.
+                  <br />
+                  Play other modes or wait for hearts to restore.
+                </>
+              ) : (
+                popupMessage && <p>{popupMessage}</p>
+              )}
             </div>
             <div className="flex gap-4 mt-6 justify-center">
               {typeof hearts === "number" && hearts <= 0 && setMode ? (
