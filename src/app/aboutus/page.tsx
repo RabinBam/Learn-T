@@ -18,35 +18,37 @@ export default function AboutPage() {
   const teamSectionRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
+  const lineOffsetRef = useRef(0); // keeps current offset
+
   const members: TeamMember[] = [
     {
       name: "Rabin Bam",
       role: "Leader",
-      img: "/assets/img/Rabin.jpg",
+      img: "/icons/Rabin.jpg",
       bio: "There's only one way to live life, and that's without regrets. So I don't want regret not learning it.",
     },
     {
       name: "Sachin",
-      role: "Lead Designer",
-      img: "/assets/img/Sachin.jpg",
+      role: "Lead Developer",
+      img: "/icons/Sachin.jpg",
       bio: "Learning is boaring without a challenge. So I will change the way how you look at learning.",
     },
     {
       name: "Roshit Lamichanne",
       role: "Animation and Creative Director",
-      img: "/assets/img/Roshit.jpg",
+      img: "/icons/Roshit.jpg",
       bio: "It does not feel real when its not moving. So I will make it move.",
     },
     {
       name: "Oscar",
       role: "Tester and Developer",
-      img: "/assets/img/Oscar.jpg",
+      img: "/icons/Oscar.jpg",
       bio: "I hate bug and I will squash them all. So I will make sure everything works as expected.",
     },
     {
       name: "Sanskar",
       role: "Logic and Asset creator",
-      img: "/assets/img/Sanskar.jpg",
+      img: "/icons/Sanskar.jpg",
       bio: "I prefer logic over design and Asset over woman. So I will make sure everything is logical and assets are ready.",
     },
   ];
@@ -58,6 +60,7 @@ export default function AboutPage() {
   };
 
   useEffect(() => {
+  requestAnimationFrame(updateLineDrawing);
     const handleScroll = () => {
       if (!teamSectionRef.current) return;
 
@@ -91,111 +94,101 @@ export default function AboutPage() {
   }, []);
 
   const dropCard = (member: TeamMember, index: number) => {
-    if (!teamSectionRef.current || !svgRef.current) return;
+  if (!teamSectionRef.current || !svgRef.current) return;
 
-    const cardWidth = 520;
-    const sideMargin = 80;
-    const verticalSpacing = 280;
-    
-    // Determine side (left/right)
-    const side = index % 2 === 0 ? "left" : "right";
-    // x position depends on side
-    const xPos = side === "left"
-      ? sideMargin
-      : window.innerWidth - cardWidth - sideMargin;
-    // y position grows with index
-    const yPos = index * verticalSpacing + 50;
+  const cardWidth = 520;
+  const verticalSpacing = 280;
+  const sideMargin = 80;
 
-    // Create card element
-    const card = document.createElement("div");
-    card.className = "drop-card";
-    card.style.left = `${xPos}px`;
-    card.style.top = `${yPos}px`;
-    card.dataset.index = index.toString();
+  // Determine side (left/right)
+  const side = index % 2 === 0 ? "left" : "right";
+  const xPos = side === "left"
+    ? sideMargin
+    : window.innerWidth - cardWidth - sideMargin;
+  const yPos = index * verticalSpacing + 50;
 
-    card.innerHTML = `
-      <div class="content">
-        <div class="profile">
-          <img src="${member.img}" alt="${member.name}" />
-          <div>
-            <h3>${member.name}</h3>
-            <p class="role">${member.role}</p>
-          </div>
+  // Create card element
+  const card = document.createElement("div");
+  card.className = "drop-card";
+  card.style.left = `${xPos}px`;
+  card.style.top = `${yPos}px`;
+  card.dataset.index = index.toString();
+
+  card.innerHTML = `
+    <div class="content">
+      <div class="profile">
+        <img src="${member.img}" alt="${member.name}" />
+        <div>
+          <h3>${member.name}</h3>
+          <p class="role">${member.role}</p>
         </div>
-        <p class="bio">${member.bio}</p>
       </div>
-    `;
+      <p class="bio">${member.bio}</p>
+    </div>
+  `;
 
-    teamSectionRef.current.appendChild(card);
-    dropCardsRef.current[index] = card;
+  teamSectionRef.current.appendChild(card);
+  dropCardsRef.current[index] = card;
 
-    // Animate drop with bounce
+  // Animate drop with bounce
+  setTimeout(() => {
+    card.classList.add("show");
+
+    // Expand content after drop animation
     setTimeout(() => {
-      card.classList.add("show");
-      // Expand content after drop animation
-      setTimeout(() => {
-        card.classList.add("expanded");
-      }, 1100);
-    }, 50);
+      card.classList.add("expanded");
 
-    // Create connection line if not the first card
-    if (index > 0) {
-      const prevCard = dropCardsRef.current[index - 1];
-      if (!prevCard) return;
+      // Create straight dotted connection line after animation
+      if (index > 0) {
+        const prevCard = dropCardsRef.current[index - 1];
+        if (!prevCard || !svgRef.current) return;
 
-      // Use getBoundingClientRect for precise positioning relative to viewport + scroll offset
-      const prevRect = prevCard.getBoundingClientRect();
-      const currRect = card.getBoundingClientRect();
+        const prevRect = prevCard.getBoundingClientRect();
+        const currRect = card.getBoundingClientRect();
+        const svgRect = svgRef.current.getBoundingClientRect();
 
-      // Calculate line start (bottom center of previous card, relative to svg container)
-      const svgRect = svgRef.current.getBoundingClientRect();
-      const prevX = prevRect.left + prevRect.width / 2 - svgRect.left;
-      const prevY = prevRect.top + prevRect.height - svgRect.top;
+        // Use vertical center of each card for line alignment
+        const centerOffsetYPrev = prevRect.height / 2;
+        const centerOffsetYCurr = currRect.height / 2;
 
-      // Calculate line end (top center of current card)
-      const currX = currRect.left + currRect.width / 2 - svgRect.left;
-      const currY = currRect.top - svgRect.top;
+        const x1 = prevRect.left + prevRect.width / 2 - svgRect.left;
+        const y1 = prevRect.top + centerOffsetYPrev - svgRect.top;
+        const x2 = currRect.left + currRect.width / 2 - svgRect.left;
+        const y2 = currRect.top + centerOffsetYCurr - svgRect.top;
 
-      // Create cubic bezier path for smooth curve
-      const controlYOffset = 80;
-      const d = `M${prevX},${prevY} C${prevX},${
-        prevY + controlYOffset
-      } ${currX},${currY - controlYOffset} ${currX},${currY}`;
+        const line = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "line"
+        );
+        line.setAttribute("x1", x1.toString());
+        line.setAttribute("y1", y1.toString());
+        line.setAttribute("x2", x2.toString());
+        line.setAttribute("y2", y2.toString());
+        line.classList.add("connection-line"); // uses flowing dotted CSS
 
-      const path = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "path"
-      );
-      path.setAttribute("d", d);
-      path.classList.add("connection-line");
-      path.style.strokeDashoffset = path.getTotalLength().toString(); // Hide initially
-
-      svgRef.current.appendChild(path);
-      connectionLinesRef.current.push(path);
-    }
-  };
+        svgRef.current.appendChild(line);
+        connectionLinesRef.current.push(line);
+      }
+    }, 600);
+  }, 50);
+};
 
   const updateLineDrawing = () => {
-    if (!connectionLinesRef.current.length) return;
+  if (!connectionLinesRef.current.length) return;
 
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
+  const scrollY = window.scrollY;
 
-    connectionLinesRef.current.forEach((path) => {
-      const length = path.getTotalLength();
-      const startY = parseFloat(path.getAttribute('d')?.split(' ')[1] || '0');
-      const endY = parseFloat(path.getAttribute('d')?.split(' ')[8] || '0');
+  // Target offset based on scroll
+  const targetOffset = scrollY % 16; // 16 = dash + gap
+  // Smoothly interpolate
+  lineOffsetRef.current += (targetOffset - lineOffsetRef.current) * 0.1;
 
-      // Animate line drawing between startY-windowHeight and endY-100
-      const startScroll = startY - windowHeight + 100;
-      const endScroll = endY - 100;
+  connectionLinesRef.current.forEach((line) => {
+    line.style.strokeDashoffset = lineOffsetRef.current.toString();
+  });
 
-      let progress = (scrollY - startScroll) / (endScroll - startScroll);
-      progress = Math.min(Math.max(progress, 0), 1);
-
-      path.style.strokeDashoffset = (length * (1 - progress)).toString();
-    });
-  };
+  requestAnimationFrame(updateLineDrawing); // continue animation
+};
 
   return (
     <div className="min-h-screen">
@@ -247,15 +240,22 @@ export default function AboutPage() {
         </section>
 
         {/* Team reveal section */}
-        <section className="team-section" ref={teamSectionRef}>
           <h2 className="section-title">Meet Our Team</h2>
+        <section className="team-section" ref={teamSectionRef}>
           {/* Drop Zone */}
-          <div id="team" className="relative min-h-[1500px]">
+          <div id="team" className="relative min-h-[1400px]">
             <svg
-              ref={svgRef}
-              id="connection-svg"
-              className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            ></svg>
+  ref={svgRef}
+  id="connection-svg"
+  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+>
+  <defs>
+    <linearGradient id="gradientStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#06b6d4" />
+      <stop offset="100%" stopColor="#0284c7" />
+    </linearGradient>
+  </defs>
+</svg>
           </div>
         </section>
 
@@ -406,7 +406,7 @@ export default function AboutPage() {
           text-align: center;
           color: #0284c7;
           font-size: 2.5rem;
-          margin-bottom: 3rem;
+          margin: 3rem;
           position: relative;
         }
 
@@ -572,16 +572,15 @@ export default function AboutPage() {
         }
 
         /* Connection lines */
-        .connection-line {
-          stroke: #06b6d4;
-          stroke-width: 3;
-          stroke-dasharray: 200;
-          stroke-dashoffset: 200; /* hide initially */
-          fill: none;
-          opacity: 1;
-          transition: opacity 0.3s ease;
-          filter: drop-shadow(0 0 3px rgba(2, 132, 199, 0.2));
-        }
+       .connection-line {
+  stroke: #06b6d4;
+  stroke-width: 3;
+  fill: none;
+  stroke-dasharray: 8 8; /* makes it dotted */
+  stroke-dashoffset: 0; /* initial offset */
+  transition: stroke-dashoffset 0.1s linear; /* smooth update on scroll */
+  filter: drop-shadow(0 0 3px rgba(2, 132, 199, 0.3));
+}
 
         /* Keyframes */
         @keyframes waterDrop {
