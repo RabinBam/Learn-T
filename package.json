@@ -1,0 +1,44 @@
+{
+  "name": "tailspark",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@docsearch/react": "^3.9.0",
+    "@headlessui/react": "^2.2.7",
+    "@heroicons/react": "^2.2.0",
+    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
+    "@next/mdx": "^15.5.0",
+    "@shikijs/transformers": "^3.11.0",
+    "clsx": "^2.1.1",
+    "dedent": "^1.6.0",
+    "firebase": "^12.1.0",
+    "framer-motion": "^12.23.12",
+    "fuse.js": "^7.1.0",
+    "lucide-react": "^0.541.0",
+    "next": "^15.5.0",
+    "react": "^19.1.1",
+    "react-confetti": "^6.4.0",
+    "react-dom": "^19.1.1",
+    "react-firebase-hooks": "^5.1.1",
+    "shiki": "^3.11.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/dedent": "^0.7.2",
+    "@types/node": "^20",
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.8",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
