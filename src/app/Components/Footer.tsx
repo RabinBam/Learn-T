@@ -102,9 +102,9 @@ const TailSparkFooter: React.FC = () => {
                 key={link}
                 href={
                   link === "Docs"
-                    ? "src\\app\\docs"
+                    ? "./docs"
                     : link === "Blog"
-                    ? "src\\app\\aboutus"
+                    ? "./aboutus"
                     : "#"
                 }
                 className="text-gray-300 hover:text-transparent hover:bg-gradient-to-r hover:from-cyan-300 hover:via-pink-300 hover:to-yellow-300 hover:bg-clip-text transition-all duration-300 transform hover:scale-110 font-medium text-sm"
